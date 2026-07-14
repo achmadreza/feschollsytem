@@ -8,6 +8,11 @@ import { setToken, setUser, User, checkPermission } from "@/lib/auth";
 import { useAuth } from "../../../../components/auth/AuthProvider";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import Link from "next/link";
+import { Label } from "../../../../components/ui/Label";
+import { Button } from "../../../../components/ui/Button";
+import { Input } from "../../../../components/ui/Input";
+import { Card, CardBody } from "../../../../components/ui/Card";
+import { Form, FormField } from "../../../../components/ui/Form";
 
 function LoginContent() {
   const { t } = useTranslation();
@@ -45,50 +50,40 @@ function LoginContent() {
           </p>
 
           {errorMsg && <div className="alert alert-danger mb-3">{errorMsg}</div>}
-
-          <form>
-            <div className="mb-3">
-              <label className="form-label" style={{ fontWeight: "500", color: "#4A5568" }}>Nomor Registrasi atau Email</label>
-              <div className="input-icon">
-                <span className="input-icon-addon">
+          <Form>
+            <FormField>
+              <Label>Nomor Registrasi atau Email</Label>
+              <Input
+                type="email"
+                placeholder="Contoh: ADM-2024-001"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                icon={
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 21v-4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4" /><circle cx="12" cy="11" r="3" /></svg>
-                </span>
-                <input
-                  type="email"
-                  className="form-control"
-                  placeholder="Contoh: ADM-2024-001"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="mb-3">
-              <label className="form-label" style={{ fontWeight: "500", color: "#4A5568" }}>Password</label>
-              <div className="input-group input-group-flat">
-                <span className="input-group-text" style={{ paddingLeft: "0.75rem", paddingRight: "0.5rem" }}>
+                }
+              />
+            </FormField>
+            
+            <FormField>
+              <Label>Password</Label>
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                icon={
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                </span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className="form-control"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <span className="input-group-text">
-                  <button
-                    type="button"
-                    className="link-secondary"
-                    style={{ background: 'none', border: 'none', padding: 0 }}
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
+                }
+                rightAction={
+                  <Button variant="link" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
-                  </button>
-                </span>
-              </div>
-            </div>
+                  </Button>
+                }
+              />
+            </FormField>
+
             <div className="d-flex justify-content-between align-items-center mb-4" style={{ fontSize: "0.875rem" }}>
               <label className="form-check m-0">
                 <input 
@@ -103,21 +98,25 @@ function LoginContent() {
                 Lupa Password?
               </Link>
             </div>
+            
             <div className="form-footer">
-              <Link href="/users" type="submit" className="btn w-100" style={{ backgroundColor: "#032B88", color: "#fff", fontWeight: "500" }}>
+              <Link href="/users" className="btn w-100" style={{ backgroundColor: "#032B88", color: "#fff", fontWeight: "500" }}>
                 Masuk ke Dashboard
               </Link>
             </div>
+            
             <div style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "0.875rem", color: "#718096" }}>
               Belum punya akun?{" "}
               <Link href="/register" style={{ color: "#032B88", fontWeight: "600", textDecoration: "none" }}>
                 Register di sini
               </Link>
             </div>
-          </form>
+          </Form>
+
           <div className="mb-4"></div>
-          <div className="card mb-4" style={{ backgroundColor: "#F0F2FA", border: "none", borderRadius: "8px" }}>
-            <div className="card-body d-flex align-items-start gap-3 p-3">
+          
+          <Card>
+            <CardBody className="d-flex align-items-start gap-3 p-3">
               <div style={{ backgroundColor: "#fff", padding: "0.5rem", borderRadius: "6px", color: "#032B88", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", display: "flex" }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
               </div>
@@ -127,8 +126,9 @@ function LoginContent() {
                   Daftar PPDB ➔
                 </Link>
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
+
           <div style={{ marginTop: "2rem", textAlign: "center" }}>
             <div style={{ fontWeight: "700", color: "#A0AEC0", letterSpacing: "0.15em", marginBottom: "0.5rem" }}>
               ADMIN · GURU · ORANG TUA
@@ -219,7 +219,6 @@ function LoginContent() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

@@ -3,7 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "../../../../components/i18n/LanguageProvider";
-import { IconMail, IconArrowLeft, IconCircleCheck,IconLockCode } from "@tabler/icons-react";
+import { IconMail, IconArrowLeft, IconCircleCheck, IconLockCode } from "@tabler/icons-react";
+import { Label } from "../../../../components/ui/Label";
+import { Button } from "../../../../components/ui/Button";
+import { Input } from "../../../../components/ui/Input";
+import { Form, FormField } from "../../../../components/ui/Form";
 
 export default function ForgotPasswordPage() {
     const { t } = useTranslation();
@@ -34,61 +38,62 @@ export default function ForgotPasswordPage() {
                         <IconArrowLeft size={16} /> Kembali ke Login
                     </Link>
                 </div>
+                
                 {!isSubmitted ? (
-                <>
-                    <div style={{ marginBottom: "2rem" }}>
-                        <h1 style={{ fontSize: "2rem", fontWeight: "700", color: "#1A202C", marginBottom: "0.5rem" }}>Lupa Password?</h1>
-                        <p style={{ color: "#718096", fontSize: "0.875rem", margin: 0, lineHeight: "1.5" }}>
-                            Jangan khawatir! Masukkan email yang terdaftar di akun Anda, kami akan mengirimkan instruksi untuk mengatur ulang password Anda.
-                        </p>
-                    </div>
+                    <>
+                        <div style={{ marginBottom: "2rem" }}>
+                            <h1 style={{ fontSize: "2rem", fontWeight: "700", color: "#1A202C", marginBottom: "0.5rem" }}>Lupa Password?</h1>
+                            <p style={{ color: "#718096", fontSize: "0.875rem", margin: 0, lineHeight: "1.5" }}>
+                                Jangan khawatir! Masukkan email yang terdaftar di akun Anda, kami akan mengirimkan instruksi untuk mengatur ulang password Anda.
+                            </p>
+                        </div>
 
-                    <form>
-                        <div className="mb-4">
-                            <label className="form-label" style={{ fontWeight: "500", color: "#4A5568", fontSize: "0.875rem" }}>Alamat Email</label>
-                            <div className="input-icon">
-                            <span className="input-icon-addon">
-                                <IconMail size={18} stroke={2} style={{ color: "#A0AEC0" }} />
-                            </span>
-                            <input 
-                                type="email" 
-                                className="form-control" 
-                                placeholder="nama@email.com" 
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required 
-                            />
+                        <Form>
+                            <FormField>
+                                <Label style={{ fontSize: "0.875rem" }}>Alamat Email</Label>
+                                <Input 
+                                    type="email" 
+                                    placeholder="nama@email.com" 
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required 
+                                    icon={<IconMail size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
+                                />
+                            </FormField>
+                            
+                            <div className="form-footer mb-4">
+                                <Button type="submit" fullWidth>
+                                    Kirim Link Reset Password
+                                </Button>
                             </div>
-                        </div>
-                        <div className="form-footer mb-4">
-                            <button type="submit" className="btn w-100" style={{ backgroundColor: "#032B88", color: "#fff", fontWeight: "600", padding: "0.6rem" }}>
-                            Kirim Link Reset Password
-                            </button>
-                        </div>
-                    </form>
-                </>
+                        </Form>
+                    </>
                 ) : (
-                <div style={{ textAlign: "center", margin: "auto 0" }}>
-                    <div style={{ display: "inline-flex", padding: "1rem", backgroundColor: "#E6FFFA", borderRadius: "50%", color: "#319795", marginBottom: "1.5rem" }}>
-                        <IconCircleCheck size={48} />
+                    <div style={{ textAlign: "center", margin: "auto 0" }}>
+                        <div style={{ display: "inline-flex", padding: "1rem", backgroundColor: "#E6FFFA", borderRadius: "50%", color: "#319795", marginBottom: "1.5rem" }}>
+                            <IconCircleCheck size={48} />
+                        </div>
+                        <h2 style={{ fontSize: "1.75rem", fontWeight: "700", color: "#1A202C", marginBottom: "0.75rem" }}>Periksa Email Anda</h2>
+                        <p style={{ color: "#718096", fontSize: "0.875rem", lineHeight: "1.6", marginBottom: "2rem" }}>
+                            Kami telah mengirimkan tautan pengaturan ulang password ke <strong style={{ color: "#2D3748" }}>{email}</strong>. Silakan periksa kotak masuk atau folder spam Anda.
+                        </p>
+                        
+                        <Button 
+                            type="button" 
+                            fullWidth
+                            onClick={() => setIsSubmitted(false)} 
+                            style={{ backgroundColor: "#edf2f7", color: "#4a5568", marginBottom: "1rem" }}
+                        >
+                            Kirim Ulang Email
+                        </Button>
                     </div>
-                    <h2 style={{ fontSize: "1.75rem", fontWeight: "700", color: "#1A202C", marginBottom: "0.75rem" }}>Periksa Email Anda</h2>
-                    <p style={{ color: "#718096", fontSize: "0.875rem", lineHeight: "1.6", marginBottom: "2rem" }}>
-                        Kami telah mengirimkan tautan pengaturan ulang password ke <strong style={{ color: "#2D3748" }}>{email}</strong>. Silakan periksa kotak masuk atau folder spam Anda.
-                    </p>
-                    <button 
-                        onClick={() => setIsSubmitted(false)} 
-                        className="btn btn-light w-100" 
-                        style={{ fontWeight: "600", padding: "0.6rem", marginBottom: "1rem" }}
-                    >
-                        Kirim Ulang Email
-                    </button>
-                </div>
                 )}
+
                 <div style={{ textAlign: "center", marginTop: "auto", paddingBottom: "1rem", fontSize: "0.875rem", color: "#4A5568" }}>
                     Ingat password Anda? <Link href="/login" style={{ color: "#032B88", fontWeight: "600", textDecoration: "none" }}>Masuk di sini</Link>
                 </div>
             </div>
+
             <div className="d-none d-lg-flex" style={{ 
                 flex: 1, 
                 backgroundColor: "#111827", 
@@ -109,6 +114,7 @@ export default function ForgotPasswordPage() {
                     background: "radial-gradient(circle, rgba(107,70,193,0.35) 0%, rgba(0,0,0,0) 70%)", 
                     pointerEvents: "none" 
                 }} />
+                
                 <div style={{ maxWidth: "550px", zIndex: 2, margin: "0 auto" }}>
                     <span style={{ 
                         display: "inline-block", 
@@ -134,6 +140,7 @@ export default function ForgotPasswordPage() {
                     <p style={{ color: "#A0AEC0", fontSize: "0.95rem", lineHeight: "1.6", marginBottom: "2.5rem" }}>
                         Kami menerapkan standar enkripsi tinggi untuk memastikan data pribadi, performa akademik siswa, dan akun seluruh pengajar terlindungi dengan aman setiap waktu.
                     </p>
+                    
                     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                             <div style={{ backgroundColor: "rgba(72,187,120,0.2)", color: "#48BB78", borderRadius: "50%", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "bold" }}>✓</div>
@@ -145,6 +152,7 @@ export default function ForgotPasswordPage() {
                         </div>
                     </div>
                 </div>
+
                 <div style={{ 
                     position: "absolute", 
                     bottom: "3rem", 
@@ -168,7 +176,6 @@ export default function ForgotPasswordPage() {
                     </div>
                 </div>
             </div>
-
         </div>
     );
 }
