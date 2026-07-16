@@ -19,7 +19,7 @@ export function HeaderTop() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="navbar navbar-light bg-white border-bottom py-2 py-md-3">
+    <div className="navbar navbar-light bg-white border-bottom py-3 d-flex align-items-center" style={{ minHeight: "70px" }}>
       <Toaster position="top-right" />
       <div className="container-fluid d-flex justify-content-between align-items-center px-3 px-md-4">
         <div className="d-flex align-items-center gap-2 gap-md-4 flex-fill">

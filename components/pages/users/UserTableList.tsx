@@ -15,6 +15,8 @@ import {
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
 import { AddRole } from "./AddRole";
+import { StatCard } from "../../../components/ui/StatCard";
+import { Button } from "../../../components/ui/Button"; 
 
 export interface AdminData {
   id: number;
@@ -25,26 +27,6 @@ export interface AdminData {
   lastLogin: string;
   status: "Active" | "Pending" | "Inactive";
   avatarUrl?: string;
-}
-
-function StatCard({ title, value, badgeText, badgeColor, icon: Icon, iconBg, iconColor, progressColor, progressValue }: any) {
-  return (
-    <div className="card shadow-sm border-0 p-4 mb-4 flex-fill bg-white" style={{ borderRadius: "16px" }}>
-      <div className="d-flex justify-content-between align-items-start mb-3">
-        <div className={`p-2 rounded-3 ${iconBg} ${iconColor} d-inline-flex`}>
-          <Icon size={24} />
-        </div>
-        <span className={`badge ${badgeColor} border-0 rounded-pill px-2 py-1`} style={{ fontSize: "11px fw-semibold" }}>
-          {badgeText}
-        </span>
-      </div>
-      <div className="text-muted small fw-medium mb-1">{title}</div>
-      <h2 className="fw-bold mb-3" style={{ color: "#0A192F", fontSize: "32px" }}>{value}</h2>
-      <div className="progress" style={{ height: "4px", backgroundColor: "#F1F3F5" }}>
-        <div className="progress-bar" style={{ width: progressValue, backgroundColor: progressColor }}></div>
-      </div>
-    </div>
-  );
 }
 
 function TableRow({ data, onEdit, onView, onDelete }: { data: AdminData; onEdit: (item: AdminData) => void; onView: (item: AdminData) => void; onDelete: (item: AdminData) => void; }) {
@@ -63,7 +45,7 @@ function TableRow({ data, onEdit, onView, onDelete }: { data: AdminData; onEdit:
 
   const roleBadgeStyle = data.role === "Teacher" 
     ? { backgroundColor: "#EBE3FF", color: "#6F3AFF" } 
-    : { backgroundColor: "#E3EFFF", color: "#3A7BFF" };
+    : { backgroundColor: "#E3EFFF", color: "#3A7BFF" }
     
   return (
     <tr style={{ verticalAlign: "middle" }}>
@@ -99,9 +81,14 @@ function TableRow({ data, onEdit, onView, onDelete }: { data: AdminData; onEdit:
       </td>
       <td className="text-end">
         <div className={`dropdown ${showDropdown ? 'show' : ''}`} ref={dropdownRef} style={{ position: 'relative' }}>
-          <button className="btn btn-link text-secondary p-1 border-0" type="button" onClick={() => setShowDropdown(!showDropdown)}>
+          <Button 
+            variant="link" 
+            className="p-1 text-secondary" 
+            onClick={() => setShowDropdown(!showDropdown)}
+          >
             <IconDotsVertical size={20} />
-          </button>
+          </Button>
+          
           <div className={`dropdown-menu dropdown-menu-end shadow-sm border ${showDropdown ? 'show' : ''}`} style={{ position: 'absolute', top: '100%', right: 0, zIndex: 1050, display: showDropdown ? 'block' : 'none', minWidth: '160px', borderRadius: '8px' }}>
             <button className="dropdown-item py-2" onClick={() => { onView(data); setShowDropdown(false); }}>
               <IconEye size={16} className="me-2 text-muted"/> Lihat Detail
@@ -127,9 +114,7 @@ export function UserTableList() {
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [items] = useState<AdminData[]>([
     { id: 1, name: "Aisyah Rahmawati", subText: "NIK: 1992031201", email: "aisyah.r@school.id", role: "Teacher", lastLogin: "10 menit yang lalu", status: "Active", avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=100&auto=format&fit=crop" },
-    { id: 2, name: "Budi Santoso", subText: "Wali: Kelas 4B", email: "budi.santoso@email.com", role: "Parent", lastLogin: "Kemarin, 14:20", status: "Active", avatarUrl: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=100&auto=format&fit=crop" },
-    { id: 3, name: "Lestari Wijaya", subText: "Wali: Kelas 1A", email: "lestari.wijaya@gmail.com", role: "Parent", lastLogin: "-", status: "Pending" },
-    { id: 4, name: "Dian Pratama", subText: "NIK: 1985110302", email: "dian.pr@school.id", role: "Teacher", lastLogin: "2 jam yang lalu", status: "Active", avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=100&auto=format&fit=crop" },
+    { id: 2, name: "Lestari Wijaya", subText: "Wali: Kelas 1A", email: "lestari.wijaya@gmail.com", role: "Parent", lastLogin: "-", status: "Pending" },
   ]);
 
   const handleEdit = (item: AdminData) => toast.success(`Editing ${item.name}`);
@@ -175,15 +160,15 @@ export function UserTableList() {
             <div className="d-flex flex-wrap gap-3 align-items-center">
               <div className="btn-group p-1 bg-light rounded-3" role="group" style={{ border: "1px solid #E2E8F0" }}>
                 {["Semua", "Guru", "Wali Murid"].map((tab) => (
-                  <button
+                  <Button
                     key={tab}
-                    type="button"
-                    className={`btn btn-sm border-0 px-3 py-2 fw-medium rounded-2 ${activeTab === tab ? 'bg-primary text-white shadow-sm' : 'text-secondary bg-transparent'}`}
+                    variant="link"
+                    className={`btn-sm px-3 py-2 fw-medium rounded-2 ${activeTab === tab ? 'bg-primary text-white shadow-sm' : 'text-secondary bg-transparent'}`}
                     onClick={() => setActiveTab(tab)}
                     style={{ fontSize: "14px", transition: "all 0.2s" }}
                   >
                     {tab}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
@@ -197,13 +182,13 @@ export function UserTableList() {
             </div>
 
             <div>
-              <button 
-                className="btn text-white fw-medium px-3 py-2 rounded-3 d-flex align-items-center" 
+              <Button 
+                className="px-3 py-2 rounded-3 d-flex align-items-center" 
                 onClick={() => setViewMode("create-role")}
-                style={{ backgroundColor: "#002B7F", border: "none", fontSize: "14px" }}
+                style={{ fontSize: "14px", border: "none" }}
               >
                 <IconPlus size={18} className="me-2" /> Tambah Akses Baru
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -234,13 +219,17 @@ export function UserTableList() {
           </div>
           
           <div className="card-footer bg-white d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 px-4 py-3 border-top">
-            <p className="m-0 text-secondary" style={{ fontSize: "14px" }}>Menampilkan {filteredItems.length} dari 1,284 Pengguna</p>
+            <p className="m-0 text-secondary" style={{ fontSize: "14px" }}>Menampilkan {filteredItems.length} dari 10 Pengguna</p>
             <div className="d-flex gap-1 align-items-center">
-              <button className="btn btn-icon btn-sm btn-white border rounded-2 p-2"><IconChevronLeft size={16} className="text-secondary" /></button>
-              <button className="btn btn-sm border-0 bg-primary text-white rounded-2 px-3 fw-bold">1</button>
-              <button className="btn btn-sm btn-white border text-secondary rounded-2 px-3">2</button>
-              <button className="btn btn-sm btn-white border text-secondary rounded-2 px-3">3</button>
-              <button className="btn btn-icon btn-sm btn-white border rounded-2 p-2"><IconChevronRight size={16} className="text-secondary" /></button>
+              <Button variant="link" className="btn-icon btn-sm btn-white border rounded-2 p-2">
+                <IconChevronLeft size={16} className="text-secondary" />
+              </Button>
+              <Button className="btn-sm rounded-2 px-3 fw-bold" style={{ backgroundColor: '#002B7F', borderColor: '#002B7F' }}>1</Button>
+              <Button variant="link" className="btn-sm btn-white border text-secondary rounded-2 px-3">2</Button>
+              <Button variant="link" className="btn-sm btn-white border text-secondary rounded-2 px-3">3</Button>
+              <Button variant="link" className="btn-icon btn-sm btn-white border rounded-2 p-2">
+                <IconChevronRight size={16} className="text-secondary" />
+              </Button>
             </div>
           </div>
         </div>

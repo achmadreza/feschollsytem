@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { IconArrowLeft, IconCircleCheck } from "@tabler/icons-react";
 import { toast } from 'react-hot-toast';
+import { Label } from "../../../components/ui/Label";
+import { Button } from "../../../components/ui/Button";
+import { Input } from "../../../components/ui/Input";
+import { Form, FormField } from "../../../components/ui/Form"; 
 
 interface AddRoleProps {
   onBack: () => void;
@@ -50,23 +54,22 @@ export function AddRole({ onBack }: AddRoleProps) {
 
   return (
     <div className="container-xl py-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
-      <button 
-        type="button" 
-        className="btn btn-link text-secondary p-0 mb-4 d-flex align-items-center gap-2 text-decoration-none fw-medium" 
+      <Button 
+        variant="link"
+        className="text-secondary mb-4 d-flex align-items-center gap-2 text-decoration-none fw-medium" 
         onClick={onBack}
         style={{ fontSize: "14px" }}
       >
         <IconArrowLeft size={18} /> Kembali ke Daftar Pengguna
-      </button>
+      </Button>
 
-      <form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit}>
         <div className="card shadow-sm border mb-4 p-4 bg-white" style={{ borderRadius: "16px", borderColor: "#E2E8F0" }}>
           <h5 className="fw-bold mb-4" style={{ color: "#0A192F", fontSize: "18px" }}>Role Creation Form</h5>
-          
           <div className="mb-4">
-            <label className="text-muted small fw-bold text-uppercase mb-3 d-block" style={{ letterSpacing: "0.5px" }}>
+            <Label className="text-muted small fw-bold text-uppercase mb-3 d-block" style={{ letterSpacing: "0.5px" }}>
               USER TYPE
-            </label>
+            </Label>
             <div className="row g-3">
               {[
                 { id: "Guru", label: "Guru", desc: "Teaching faculty access" },
@@ -86,7 +89,7 @@ export function AddRole({ onBack }: AddRoleProps) {
                     onClick={() => setUserType(item.id as any)}
                   >
                     <div className="d-flex align-items-center gap-3">
-                      <input 
+                      <Input 
                         type="radio" 
                         className="form-check-input m-0" 
                         checked={userType === item.id} 
@@ -105,9 +108,9 @@ export function AddRole({ onBack }: AddRoleProps) {
           </div>
 
           <div className="row g-3 mb-3">
-            <div className="col-md-6">
-              <label className="text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: "0.5px" }}>NAME</label>
-              <input 
+            <FormField className="col-md-6 mb-3">
+              <Label className="text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: "0.5px" }}>NAME</Label>
+              <Input 
                 type="text" 
                 className="form-control rounded-3 p-2.5" 
                 placeholder="Type Name Role" 
@@ -116,10 +119,11 @@ export function AddRole({ onBack }: AddRoleProps) {
                 style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
                 required
               />
-            </div>
-            <div className="col-md-6">
-              <label className="text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: "0.5px" }}>DESCRIPTION</label>
-              <input 
+            </FormField>
+            
+            <FormField className="col-md-6 mb-3">
+              <Label className="text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: "0.5px" }}>DESCRIPTION</Label>
+              <Input 
                 type="text" 
                 className="form-control rounded-3 p-2.5" 
                 placeholder="Type Description" 
@@ -127,14 +131,14 @@ export function AddRole({ onBack }: AddRoleProps) {
                 onChange={(e) => setDescription(e.target.value)}
                 style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
               />
-            </div>
+            </FormField>
           </div>
 
           {(userType === "Wali Murid" || userType === "Admin") && (
             <div className="row g-3 mt-1">
-              <div className="col-12">
-                <label className="text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: "0.5px" }}>EMAIL ADDRESS</label>
-                <input 
+              <FormField className="col-12 mb-3">
+                <Label className="text-muted small fw-bold text-uppercase mb-2 d-block" style={{ letterSpacing: "0.5px" }}>EMAIL ADDRESS</Label>
+                <Input 
                   type="email" 
                   className="form-control rounded-3 p-2.5" 
                   placeholder="Type Email Address" 
@@ -143,7 +147,7 @@ export function AddRole({ onBack }: AddRoleProps) {
                   style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}
                   required
                 />
-              </div>
+              </FormField>
             </div>
           )}
         </div>
@@ -197,23 +201,24 @@ export function AddRole({ onBack }: AddRoleProps) {
         )}
 
         <div className="d-flex justify-content-end gap-3 mb-5">
-          <button 
+          <Button 
             type="button" 
-            className="btn btn-outline-secondary px-4 py-2 rounded-3 fw-medium" 
+            className="btn-outline-secondary px-4 py-2 fw-medium" 
             onClick={onBack}
-            style={{ borderRadius: "8px" }}
+            style={{ borderRadius: "8px", backgroundColor: "transparent", color: "#0d0d0d" }}
           >
             Cancel
-          </button>
-          <button 
+          </Button>
+          
+          <Button 
             type="submit" 
-            className="btn text-white px-4 py-2 rounded-3 fw-medium d-flex align-items-center gap-2" 
-            style={{ backgroundColor: "#002B7F", borderRadius: "8px" }}
+            className="px-4 py-2 rounded-3 fw-medium d-flex align-items-center gap-2" 
+            style={{ borderRadius: "8px" }}
           >
             <IconCircleCheck size={18} /> Create Role
-          </button>
+          </Button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }
