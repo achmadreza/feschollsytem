@@ -9,12 +9,7 @@ export interface MenuItem {
 
 export const mainMenu: MenuItem[] = [
   {
-    label: "Dashboard Admin",
-    icon: "dashboard",
-    href: "/dashboard-admin",
-  },
-  {
-    label: "User Management",
+    label: "Kelola User",
     icon: "users",
     href: "/users",
   },
