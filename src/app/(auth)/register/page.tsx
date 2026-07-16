@@ -8,11 +8,9 @@ import {
     IconSchool, 
     IconEye, 
     IconEyeOff,
-    IconAlertTriangle, 
     IconUser, 
     IconMail, 
     IconPhone, 
-    IconKey, 
     IconBell 
 } from "@tabler/icons-react";
 import { Label } from "../../../../components/ui/Label";
@@ -153,19 +151,6 @@ export default function SignupPage() {
                             icon={<IconPhone size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
                         />
                         <div style={{ fontSize: "0.75rem", color: "#718096", marginTop: "0.25rem" }}>Untuk verifikasi OTP</div>
-                    </FormField>
-
-                    <FormField>
-                        <Label>Kode Registrasi Sekolah</Label>
-                        <Input 
-                            type="text" 
-                            placeholder="Masukkan kode dari admin sekolah" 
-                            required 
-                            icon={<IconKey size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
-                        />
-                        <div style={{ backgroundColor: "#FFF5F5", color: "#C53030", padding: "0.5rem 0.75rem", borderRadius: "6px", fontSize: "0.75rem", marginTop: "0.5rem", border: "1px solid #FEB2B2", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <IconAlertTriangle size={16} /> Hubungi TU sekolah jika belum memiliki kode
-                        </div>
                     </FormField>
 
                     <div className="row mb-3">

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "../../../../components/i18n/LanguageProvider";
 import { callApi } from "@/lib/api";
-import { setToken, setUser, User, checkPermission } from "@/lib/auth";
+import { setToken, setUser } from "@/lib/auth";
 import { useAuth } from "../../../../components/auth/AuthProvider";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import Link from "next/link";
@@ -25,6 +25,39 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+
+  const handleLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg("");
+
+    try {
+      const response = await callApi("auth/signin", {
+        method: "POST",
+        body: {
+          email,
+          password,
+        },
+      });
+
+      if (response && response.accessToken) {
+        setToken(response.accessToken);
+        if (response.user) {
+          setUser(response.user);
+          setContextUser(response.user);
+        }
+
+        router.push("/users");
+      } else {
+        throw new Error("Token tidak ditemukan dalam respons server.");
+      }
+    } catch (err: any) {
+      console.error("Login Error:", err);
+      setErrorMsg(err.message || "Gagal masuk. Silakan periksa kembali email dan password Anda.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#ffffff" }}>
@@ -50,18 +83,17 @@ function LoginContent() {
           </p>
 
           {errorMsg && <div className="alert alert-danger mb-3">{errorMsg}</div>}
-          <Form>
+
+          <Form onSubmit={handleLogin}>
             <FormField>
-              <Label>Nomor Registrasi atau Email</Label>
+              <Label>Email</Label>
               <Input
                 type="email"
-                placeholder="Contoh: ADM-2024-001"
+                placeholder="john@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M7 21v-4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4" /><circle cx="12" cy="11" r="3" /></svg>
-                }
+                disabled={loading}
               />
             </FormField>
             
@@ -73,11 +105,9 @@ function LoginContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                }
+                disabled={loading}
                 rightAction={
-                  <Button variant="link" onClick={() => setShowPassword(!showPassword)}>
+                  <Button variant="link" onClick={() => setShowPassword(!showPassword)} disabled={loading}>
                     {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                   </Button>
                 }
@@ -86,13 +116,14 @@ function LoginContent() {
 
             <div className="d-flex justify-content-between align-items-center mb-4" style={{ fontSize: "0.875rem" }}>
               <label className="form-check m-0">
-                <input 
+                {/* <input 
                   type="checkbox" 
                   className="form-check-input" 
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={loading}
                 />
-                <span className="form-check-label">Ingat Saya</span>
+                <span className="form-check-label">Ingat Saya</span> */}
               </label>
               <Link href="/forgot-password" style={{ color: "#032B88", fontWeight: "600", textDecoration: "none" }}>
                 Lupa Password?
@@ -100,9 +131,14 @@ function LoginContent() {
             </div>
             
             <div className="form-footer">
-              <Link href="/users" className="btn w-100" style={{ backgroundColor: "#032B88", color: "#fff", fontWeight: "500" }}>
-                Masuk ke Dashboard
-              </Link>
+              <Button 
+                type="submit" 
+                className="btn w-100" 
+                style={{ backgroundColor: "#032B88", color: "#fff", fontWeight: "500" }}
+                disabled={loading}
+              >
+                {loading ? "Memproses..." : "Masuk ke Dashboard"}
+              </Button>
             </div>
             
             <div style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "0.875rem", color: "#718096" }}>
@@ -136,11 +172,16 @@ function LoginContent() {
           </div>
         </div>
         <div style={{ marginTop: "2rem", textAlign: "center" }}>
-          <p className="text-dark" style={{ fontSize: "10px", color: "#A0AEC0", margin: 0 }}>
-            © 2026 Lumina Learn Technology. Seluruh hak cipta dilindungi undang-undang.
+          <p 
+            suppressHydrationWarning 
+            className="text-dark" 
+            style={{ fontSize: "10px", color: "#A0AEC0", margin: 0 }}
+          >
+            © {new Date().getFullYear()} Lumina Learn Technology. Seluruh hak cipta dilindungi undang-undang.
           </p>
         </div>
       </div>
+      
       <div className="d-none d-lg-flex" style={{ 
         flex: 1, 
         backgroundColor: "#032B88", 

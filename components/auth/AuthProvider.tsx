@@ -55,8 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.replace("/force-change-password");
     }
 
-    auth.loadUserPermissions();
-
   }, [user, pathname, router]);
 
   return (

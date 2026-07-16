@@ -101,7 +101,7 @@ export function HeaderTop() {
               </span>
               <div className="d-none d-xl-block text-start lh-1 ms-2">
                 <div className="fw-bold text-dark" style={{ fontSize: "13px" }}>
-                  {user?.name || "Loading..."}
+                  {user?.fullName || "Loading..."}
                 </div>
                 <small className="text-muted" style={{ fontSize: "11px" }}>
                   {user?.role?.name || user?.email}

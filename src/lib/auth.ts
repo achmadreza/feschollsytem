@@ -39,11 +39,7 @@ export interface User {
     id: number | string;
     name: string;
   };
-  tenant?: {
-    id: number | string;
-    name: string;
-    code: string;
-  };
+  fullName?: string;
   avatar?: string;
   [key: string]: any;
 }
@@ -99,7 +95,6 @@ export async function logout() {
 
     await Swal.fire({
       title: "Logged Out!",
-      text: "Logged out and device removed",
       icon: "warning",
       confirmButtonText: "OK",
       confirmButtonColor: "#3085d6",
@@ -112,28 +107,28 @@ export async function logout() {
 let permissionCache: Permission[] | null = null;
 let permissionLoaded = false;
 
-export async function loadUserPermissions(): Promise<Permission[]> {
-  try {
-    const user = getUser();
+// export async function loadUserPermissions(): Promise<Permission[]> {
+//   try {
+//     const user = getUser();
 
-    if (!user) return [];
+//     if (!user) return [];
 
-    if (permissionCache != null) {
-      return permissionCache;
-    }
+//     if (permissionCache != null) {
+//       return permissionCache;
+//     }
 
-    const res = await callApi<{ permissions: Permission[] }>(
-      "auth/me/permissions",
-    );
-    permissionCache = res.permissions ?? [];
+//     const res = await callApi<{ permissions: Permission[] }>(
+//       "auth/me/permissions",
+//     );
+//     permissionCache = res.permissions ?? [];
 
-    permissionLoaded = true;
+//     permissionLoaded = true;
 
-    return permissionCache;
-  } catch {
-    return [];
-  }
-}
+//     return permissionCache;
+//   } catch {
+//     return [];
+//   }
+// }
 
 export function getPermissionUser(): Permission[] {
   return permissionCache ?? [];
