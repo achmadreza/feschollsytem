@@ -13,16 +13,86 @@ import {
     IconPhone, 
     IconBell 
 } from "@tabler/icons-react";
+import { callApi } from "@/lib/api";
 import { Label } from "../../../../components/ui/Label";
 import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Form, FormField } from "../../../../components/ui/Form";
+import Swal from 'sweetalert2';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function SignupPage() {
     const { t } = useTranslation();
-    const [role, setRole] = useState("orang_tua");
+    const [role, setRole] = useState("teacher");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        const numericValue = value.replace(/[^0-9]/g, "");
+        setPhone(numericValue);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (password !== confirmPassword) {
+            const msg = "Password dan Konfirmasi Password tidak cocok!";
+            toast.error(msg);
+            return;
+        }
+
+        const confirmResult = await Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Pastikan data yang Anda masukkan sudah benar.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: "#f59e0b",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: 'Ya, Kirim Data!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        });
+
+        if (!confirmResult.isConfirmed) {
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await callApi("auth/register", {
+                method: "POST",
+                body: {
+                    fullName,
+                    email,
+                    password,
+                    phone,
+                    role,
+                    confirmPassword,
+                    googleOAuthID: "",
+                },
+            });
+
+            toast.success('Pendaftaran berhasil! Silakan tunggu konfirmasi verifikasi.');
+
+            setTimeout(() => {
+                window.location.href = "/login";
+            }, 3000);
+            
+        } catch (error: any) {
+            console.error(error);
+            const finalErrorMsg = error?.message || "Gagal menyambung ke server.";
+            toast.error(finalErrorMsg);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div style={{ display: "flex", height: "100vh", width: "100vw", backgroundColor: "#ffffff", overflow: "hidden" }}>
@@ -56,54 +126,54 @@ export default function SignupPage() {
                     </p>
                 </div>
 
-                <Form onSubmit={(e) => e.preventDefault()}>
+                <Form onSubmit={handleSubmit}>
                     <FormField>
                         <Label>Saya adalah...</Label>
                         <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
                             <div 
-                                onClick={() => setRole("guru")}
+                                onClick={() => setRole("teacher")}
                                 style={{
                                     flex: 1,
-                                    border: role === "guru" ? "2px solid #032B88" : "1px solid #E2E8F0",
+                                    border: role === "teacher" ? "2px solid #032B88" : "1px solid #E2E8F0",
                                     borderRadius: "8px",
                                     padding: "1rem",
                                     textAlign: "center",
                                     cursor: "pointer",
                                     position: "relative",
-                                    backgroundColor: role === "guru" ? "#F7FAFC" : "#ffffff",
+                                    backgroundColor: role === "teacher" ? "#F7FAFC" : "#ffffff",
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
                                     justifyContent: "center"
                                 }}
                             >
-                                <IconSchool size={32} color={role === "guru" ? "#032B88" : "#A0AEC0"} style={{ marginBottom: "0.5rem" }} />
+                                <IconSchool size={32} color={role === "teacher" ? "#032B88" : "#A0AEC0"} style={{ marginBottom: "0.5rem" }} />
                                 <div style={{ fontWeight: "600", fontSize: "0.875rem", color: "#1A202C" }}>Guru</div>
-                                {role === "guru" && (
+                                {role === "teacher" && (
                                     <div style={{ position: "absolute", top: "8px", right: "8px", backgroundColor: "#032B88", color: "#fff", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>✓</div>
                                 )}
                             </div>
 
                             <div 
-                                onClick={() => setRole("orang_tua")}
+                                onClick={() => setRole("parent")}
                                 style={{
                                     flex: 1,
-                                    border: role === "orang_tua" ? "2px solid #032B88" : "1px solid #E2E8F0",
+                                    border: role === "parent" ? "2px solid #032B88" : "1px solid #E2E8F0",
                                     borderRadius: "8px",
                                     padding: "1rem",
                                     textAlign: "center",
                                     cursor: "pointer",
                                     position: "relative",
-                                    backgroundColor: role === "orang_tua" ? "#F7FAFC" : "#ffffff",
+                                    backgroundColor: role === "parent" ? "#F7FAFC" : "#ffffff",
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
                                     justifyContent: "center"
                                 }}
                             >
-                                <IconUsersGroup size={32} color={role === "orang_tua" ? "#032B88" : "#A0AEC0"} style={{ marginBottom: "0.5rem" }} />
+                                <IconUsersGroup size={32} color={role === "parent" ? "#032B88" : "#A0AEC0"} style={{ marginBottom: "0.5rem" }} />
                                 <div style={{ fontWeight: "600", fontSize: "0.875rem", color: "#1A202C" }}>Orang Tua</div>
-                                {role === "orang_tua" && (
+                                {role === "parent" && (
                                     <div style={{ position: "absolute", top: "8px", right: "8px", backgroundColor: "#032B88", color: "#fff", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>✓</div>
                                 )}
                             </div>
@@ -126,6 +196,8 @@ export default function SignupPage() {
                         <Input 
                             type="text" 
                             placeholder="Sesuai data di sekolah" 
+                            value={fullName}
+                            onChange={(e: any) => setFullName(e.target.value)}
                             required 
                             icon={<IconUser size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
                         />
@@ -136,6 +208,8 @@ export default function SignupPage() {
                         <Input 
                             type="email" 
                             placeholder="email@aktif.com" 
+                            value={email}
+                            onChange={(e: any) => setEmail(e.target.value)}
                             required 
                             icon={<IconMail size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
                         />
@@ -147,6 +221,8 @@ export default function SignupPage() {
                         <Input 
                             type="text" 
                             placeholder="08xxxxxxxxxx" 
+                            value={phone}
+                            onChange={handlePhoneChange}
                             required 
                             icon={<IconPhone size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
                         />
@@ -160,6 +236,8 @@ export default function SignupPage() {
                                 <Input 
                                     type={showPassword ? "text" : "password"} 
                                     placeholder="••••••••" 
+                                    value={password}
+                                    onChange={(e: any) => setPassword(e.target.value)}
                                     required 
                                     iconAction={{
                                         icon: showPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />,
@@ -167,13 +245,14 @@ export default function SignupPage() {
                                     }}
                                 />
                                 <div style={{ display: "flex", gap: "2px", marginTop: "0.25rem" }}>
-                                    <span style={{ flex: 1, height: "4px", backgroundColor: "#48BB78", borderRadius: "2px" }} />
-                                    <span style={{ flex: 1, height: "4px", backgroundColor: "#48BB78", borderRadius: "2px" }} />
-                                    <span style={{ flex: 1, height: "4px", backgroundColor: "#48BB78", borderRadius: "2px" }} />
-                                    <span style={{ flex: 1, height: "4px", backgroundColor: "#E2E8F0", borderRadius: "2px" }} />
+                                    <span style={{ flex: 1, height: "4px", backgroundColor: password.length >= 8 ? "#48BB78" : "#E2E8F0", borderRadius: "2px" }} />
+                                    <span style={{ flex: 1, height: "4px", backgroundColor: password.length >= 8 ? "#48BB78" : "#E2E8F0", borderRadius: "2px" }} />
+                                    <span style={{ flex: 1, height: "4px", backgroundColor: password.length >= 8 ? "#48BB78" : "#E2E8F0", borderRadius: "2px" }} />
                                 </div>
-                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "10px", color: "#718096", marginTop: "2px" }}>
-                                    <span style={{ color: "#48BB78" }}>Kekuatan: Kuat</span>
+                                <div style={{ display: "flex", fontSize: "10px", color: "#718096", marginTop: "2px", justifyContent: "space-between" }}>
+                                    <span style={{ color: password.length >= 8 ? "#48BB78" : "#718096" }}>
+                                        {password.length >= 8 ? "Kekuatan: Kuat" : "Kekuatan: Kurang"}
+                                    </span>
                                     <span>Min. 8 Karakter</span>
                                 </div>
                             </FormField>
@@ -185,15 +264,26 @@ export default function SignupPage() {
                                 <Input 
                                     type={showConfirmPassword ? "text" : "password"} 
                                     placeholder="••••••••" 
+                                    value={confirmPassword}
+                                    onChange={(e: any) => setConfirmPassword(e.target.value)}
                                     required 
                                     iconAction={{
                                         icon: showConfirmPassword ? <IconEyeOff size={16} /> : <IconEye size={16} />,
                                         onClick: () => setShowConfirmPassword(!showConfirmPassword)
                                     }}
                                 />
-                                <div style={{ fontSize: "10px", color: "#48BB78", marginTop: "4px", display: "flex", alignItems: "center", gap: "2px" }}>
-                                    ✓ Password cocok
-                                </div>
+                                {password && confirmPassword && (
+                                    <div style={{ 
+                                        fontSize: "10px", 
+                                        color: password === confirmPassword ? "#48BB78" : "#E53E3E", 
+                                        marginTop: "4px", 
+                                        display: "flex", 
+                                        alignItems: "center", 
+                                        gap: "2px" 
+                                    }}>
+                                        {password === confirmPassword ? "✓ Password cocok" : "✗ Password tidak cocok"}
+                                    </div>
+                                )}
                             </FormField>
                         </div>
                     </div>
@@ -206,8 +296,8 @@ export default function SignupPage() {
                     </div>
 
                     <div className="form-footer">
-                        <Button type="submit" fullWidth>
-                            Daftar & Minta Verifikasi →
+                        <Button type="submit" fullWidth disabled={loading}>
+                            {loading ? "Memproses..." : "Daftar & Minta Verifikasi →"}
                         </Button>
                     </div>
                 </Form>
@@ -303,6 +393,7 @@ export default function SignupPage() {
                     </div>
                 </div>
             </div>
+            <Toaster position="top-right" />
         </div>
     );
 }
