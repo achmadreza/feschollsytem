@@ -23,17 +23,6 @@ export function HeaderTop() {
       <Toaster position="top-right" />
       <div className="container-fluid d-flex justify-content-between align-items-center px-3 px-md-4">
         <div className="d-flex align-items-center gap-2 gap-md-4 flex-fill">
-          <button
-            className="navbar-toggler d-lg-none border-0 px-2 text-dark"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#sidebar-menu"
-            aria-controls="sidebar-menu"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <IconMenu2 size={24} />
-          </button>
           <div className="d-lg-none">
             <span className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>School Manager</span>
           </div>

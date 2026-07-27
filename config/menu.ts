@@ -13,4 +13,9 @@ export const mainMenu: MenuItem[] = [
     icon: "users",
     href: "/users",
   },
+  {
+    label: "Students",
+    icon: "users",
+    href: "/students",
+  },
 ];
