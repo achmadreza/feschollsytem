@@ -108,23 +108,6 @@ export function StudentDetailModal({ isOpen, onClose, student, onEdit, onSaveSuc
 
                     <div className="col-12 col-md-6">
                         <div className="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
-                            <IconSchool size={18} className="text-primary" />
-                            <h6 className="fw-bold m-0" style={{ color: "#0F172A", fontSize: "14px" }}>Data Akademik</h6>
-                        </div>
-                        <div className="row g-3">
-                            <div className="col-12">
-                                <span className="text-muted d-block small mb-1">Target Jenjang/Kelas</span>
-                                <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>{student.grade}</span>
-                            </div>
-                            <div className="col-12">
-                                <span className="text-muted d-block small mb-1">Asal Sekolah Sebelumnya</span>
-                                <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>SMP Negeri 1 Jakarta</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="col-12 col-md-6">
-                        <div className="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
                             <IconUsers size={18} className="text-primary" />
                             <h6 className="fw-bold m-0" style={{ color: "#0F172A", fontSize: "14px" }}>Data Orang Tua / Wali</h6>
                         </div>

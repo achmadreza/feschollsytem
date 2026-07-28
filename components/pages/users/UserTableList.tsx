@@ -108,7 +108,7 @@ export function UserTableList() {
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await callApi<AdminData[] | { data: AdminData[] }>("auth/users", { 
+      const response = await callApi<AdminData[] | { data: AdminData[] }>("users", { 
         method: "GET" 
       });
       const dataUsers = Array.isArray(response) ? response : response?.data || [];

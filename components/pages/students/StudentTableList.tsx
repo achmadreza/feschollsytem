@@ -228,7 +228,7 @@ export function StudentTableList() {
                     </div>
                 </div>
 
-                <div className="rounded-4 p-4 text-white shadow-sm" style={{ background: "linear-gradient(135deg, #051329 0%, #0A2540 50%, #111C44 100%)" }}>
+                {/* <div className="rounded-4 p-4 text-white shadow-sm" style={{ background: "linear-gradient(135deg, #051329 0%, #0A2540 50%, #111C44 100%)" }}>
                     <h4 className="fw-bold mb-2" style={{ fontSize: "16px" }}>Informasi Sistem Pendaftaran</h4>
                     <p className="text-white-50 mb-4" style={{ fontSize: "13px", maxWidth: "800px", lineHeight: "1.6" }}>
                         Update terakhir dilakukan pada pukul 08:30 WIB. Semua data dokumen yang diunggah akan melalui verifikasi otomatis oleh sistem AI sebelum divalidasi oleh administrator.
@@ -254,7 +254,7 @@ export function StudentTableList() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             <StudentDetailModal 

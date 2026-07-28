@@ -225,69 +225,6 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             </div>
                         </div>
 
-                        <div className="mb-4">
-                            <div className="d-flex align-items-center gap-2 mb-3">
-                                <IconSchool size={18} className="text-primary" />
-                                <h6 className="fw-bold m-0" style={{ color: "#0F172A", fontSize: "14px" }}>Data Akademik</h6>
-                            </div>
-                            <div className="p-3 rounded-3" style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}>
-                                <div className="row g-3">
-                                    <div className="col-6">
-                                        <label className="text-uppercase text-secondary fw-semibold mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>Current Grade / Kelas</label>
-                                        <input type="text" name="grade" placeholder="cth. Kelas 10 - IPA 1" value={formData.grade} onChange={handleChange} className="form-control form-control-sm bg-white" style={{ fontSize: "12px" }} />
-                                    </div>
-                                    <div className="col-6">
-                                        <label className="text-uppercase text-secondary fw-semibold mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>Previous School/Class</label>
-                                        <input type="text" name="prevSchool" placeholder="cth. SMP Nusantara Jaya" value={formData.prevSchool} onChange={handleChange} className="form-control form-control-sm bg-white" style={{ fontSize: "12px" }} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mb-3">
-                            <div className="d-flex align-items-center gap-2 mb-3">
-                                <IconShieldCheck size={18} className="text-primary" />
-                                <h6 className="fw-bold m-0" style={{ color: "#0F172A", fontSize: "14px" }}>Status Keanggotaan</h6>
-                            </div>
-                            <div className="table-responsive rounded-3 border" style={{ backgroundColor: "#F8FAFC" }}>
-                                <table className="table table-borderless m-0 align-middle" style={{ fontSize: "12px" }}>
-                                    <thead className="border-bottom" style={{ color: "#64748B" }}>
-                                        <tr>
-                                            <th>Tahun Ajaran</th>
-                                            <th>Tingkat</th>
-                                            <th>Status</th>
-                                            <th>Catatan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {isEditMode ? (
-                                            <>
-                                                <tr className="border-bottom">
-                                                    <td className="fw-semibold">2023 / 2024</td>
-                                                    <td>SMA - Kelas 10</td>
-                                                    <td><span className="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Terdaftar</span></td>
-                                                    <td className="text-muted">Internal Migration</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="fw-semibold">2022 / 2023</td>
-                                                    <td>SMP - Kelas 9</td>
-                                                    <td><span className="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">Lulus</span></td>
-                                                    <td className="text-muted">Eks-SMP Nusantara</td>
-                                                </tr>
-                                            </>
-                                        ) : (
-                                            <tr>
-                                                <td className="fw-semibold">2024 / 2025</td>
-                                                <td>{formData.grade || "-"}</td>
-                                                <td><span className="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Pendaftaran Baru</span></td>
-                                                <td className="text-muted">Menunggu Verifikasi</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
                     </div>
 
                     <div className="col-12 col-lg-4">
@@ -316,34 +253,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                     </div>
                                 ))}
                             </div>
-
-                            <div>
-                                <div className="d-flex justify-content-between text-muted mb-1" style={{ fontSize: "11px" }}>
-                                    <span>Progres Kelengkapan</span>
-                                    <span className="fw-bold text-dark">{isEditMode ? "80%" : "0%"}</span>
-                                </div>
-                                <div className="progress" style={{ height: "6px" }}>
-                                    <div className="progress-bar bg-dark" style={{ width: isEditMode ? "80%" : "0%" }}></div>
-                                </div>
-                            </div>
                         </div>
-
-                        <div className="p-3 rounded-3 text-white mb-3" style={{ backgroundColor: "#1E293B" }}>
-                            <h6 className="fw-bold mb-1" style={{ fontSize: "13px" }}>Riwayat Pembayaran</h6>
-                            <p className="text-white-50 mb-3" style={{ fontSize: "11px" }}>
-                                {isEditMode ? "Semua administrasi untuk semester ganjil 2024 telah lunas." : "Belum ada tagihan pembayaran diterbitkan."}
-                            </p>
-                            <Button type="button" variant="link" className="p-0 text-white text-decoration-none d-flex align-items-center gap-1" style={{ fontSize: "12px" }} disabled={!isEditMode}>
-                                <IconReceipt size={14} /> Lihat Invoice Terakhir
-                            </Button>
-                        </div>
-
-                        <div className="rounded-3 overflow-hidden border" style={{ height: "120px", backgroundColor: "#E2E8F0" }}>
-                            <div className="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style={{ fontSize: "11px" }}>
-                                [ Lokasi Alamat - Map View ]
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
