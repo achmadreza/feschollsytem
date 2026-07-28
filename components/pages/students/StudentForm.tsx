@@ -131,7 +131,6 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                     style={{ fontSize: "16px", color: "#0F172A" }}
                                     required
                                 />
-                                <BadgeStatus status={isEditMode ? (student?.status || "Aktif") : "Draft"} />
                             </div>
                             <p className="text-secondary m-0 ps-1" style={{ fontSize: "12px" }}>
                                 ID: {isEditMode ? (student?.regId || student?.id) : "Auto Generated • Registrasi Baru"}
@@ -166,7 +165,14 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                     </div>
                                     <div className="col-6">
                                         <label className="text-uppercase text-secondary fw-semibold mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>Agama</label>
-                                        <input type="text" name="religion" placeholder="cth. Islam" value={formData.religion} onChange={handleChange} className="form-control form-control-sm bg-white" style={{ fontSize: "12px" }} />
+                                        <select name="religion" value={formData.religion} onChange={handleChange} className="form-select form-select-sm bg-white" style={{ fontSize: "12px" }}>
+                                            <option value="Islam">Islam</option>
+                                            <option value="Kristen">Kristen</option>
+                                            <option value="Katholik">Katholik</option>
+                                            <option value="Buddha">Buddha</option>
+                                            <option value="Hindu">Hindu</option>
+                                            <option value="Konghucu">Konghucu</option>
+                                        </select>
                                     </div>
                                     <div className="col-6">
                                         <label className="text-uppercase text-secondary fw-semibold mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>Alamat Rumah</label>
@@ -175,6 +181,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                     <div className="col-6">
                                         <label className="text-uppercase text-secondary fw-semibold mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>Email Kontak</label>
                                         <input type="email" name="email" placeholder="email@domain.com" value={formData.email} onChange={handleChange} className="form-control form-control-sm bg-white mb-2" style={{ fontSize: "12px" }} />
+                                    </div>
+                                    <div className="col-6">
                                         <label className="text-uppercase text-secondary fw-semibold mb-1" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NIK / No. Identitas</label>
                                         <input type="text" name="nik" placeholder="317..." value={formData.nik} onChange={handleChange} className="form-control form-control-sm bg-white" style={{ fontSize: "12px" }} />
                                     </div>

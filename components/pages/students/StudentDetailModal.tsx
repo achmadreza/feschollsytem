@@ -67,9 +67,6 @@ export function StudentDetailModal({ isOpen, onClose, student, onEdit, onSaveSuc
                     </div>
 
                     <div className="d-flex align-items-center gap-2">
-                        <Button variant="link" className="btn-light bg-white border text-dark fw-medium px-3 py-2 rounded-2 d-flex align-items-center gap-1.5 text-decoration-none shadow-sm" style={{ fontSize: "13px" }}>
-                            <IconPrinter size={16} /> Print Summary
-                        </Button>
                         <Button 
                             className="btn-primary fw-medium px-3 py-2 rounded-2 d-flex align-items-center gap-1.5 shadow-sm" 
                             style={{ backgroundColor: "#0F172A", borderColor: "#0F172A", fontSize: "13px" }}

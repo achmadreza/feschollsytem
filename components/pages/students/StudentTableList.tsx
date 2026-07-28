@@ -183,9 +183,6 @@ export function StudentTableList() {
                         <h3 className="fw-semibold text-dark m-0" style={{ fontSize: "16px" }}>Enrollment Registry</h3>
                         <div className="d-flex align-items-center gap-2">
                             <Button variant="link" className="btn-sm btn-white border rounded-2 px-3 py-1.5 text-secondary d-flex align-items-center text-decoration-none">
-                                <IconFilter size={16} className="me-1.5" /> Filter
-                            </Button>
-                            <Button variant="link" className="btn-sm btn-white border rounded-2 px-3 py-1.5 text-secondary d-flex align-items-center text-decoration-none">
                                 <IconDownload size={16} className="me-1.5" /> Export CSV
                             </Button>
                         </div>
