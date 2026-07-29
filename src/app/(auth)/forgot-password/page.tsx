@@ -8,11 +8,33 @@ import { Label } from "../../../../components/ui/Label";
 import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Form, FormField } from "../../../../components/ui/Form";
+import { callApi } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
     const { t } = useTranslation();
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [email, setEmail] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+
+        try {
+            await callApi("auth/forget-password", {
+                method: "POST",
+                body: { email },
+            });
+            
+            setIsSubmitted(true);
+        } catch (err: any) {
+            setError(err?.message || "Gagal mengirim permintaan reset password. Silakan coba lagi.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div style={{ display: "flex", height: "100vh", width: "100vw", backgroundColor: "#ffffff", overflow: "hidden" }}>
@@ -48,7 +70,21 @@ export default function ForgotPasswordPage() {
                             </p>
                         </div>
 
-                        <Form>
+                        {error && (
+                            <div style={{ 
+                                padding: "0.75rem 1rem", 
+                                backgroundColor: "#FFF5F5", 
+                                border: "1px solid #FEB2B2", 
+                                borderRadius: "6px", 
+                                color: "#C53030", 
+                                fontSize: "0.875rem", 
+                                marginBottom: "1.5rem" 
+                            }}>
+                                {error}
+                            </div>
+                        )}
+
+                        <Form onSubmit={handleSubmit}>
                             <FormField>
                                 <Label style={{ fontSize: "0.875rem" }}>Alamat Email</Label>
                                 <Input 
@@ -57,13 +93,14 @@ export default function ForgotPasswordPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required 
+                                    disabled={loading}
                                     icon={<IconMail size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
                                 />
                             </FormField>
                             
                             <div className="form-footer mb-4">
-                                <Button type="submit" fullWidth>
-                                    Kirim Link Reset Password
+                                <Button type="submit" fullWidth disabled={loading}>
+                                    {loading ? "Mengirim..." : "Kirim Link Reset Password"}
                                 </Button>
                             </div>
                         </Form>

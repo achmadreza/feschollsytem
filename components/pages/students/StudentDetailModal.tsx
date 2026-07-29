@@ -28,7 +28,7 @@ export function StudentDetailModal({ isOpen, onClose, student, onEdit, onSaveSuc
 
     if (!student) return null;
 
-    const initials = student.initials || student.studentName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+    const initials = student.initials || student.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
 
     const handleEditClick = () => {
         if (onEdit) {

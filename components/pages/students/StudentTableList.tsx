@@ -9,7 +9,6 @@ import {
     IconShieldCheck,
     IconReceipt,
     IconCircleCheck,
-    IconFilter,
     IconDownload,
     IconArrowRight
 } from "@tabler/icons-react";
@@ -24,47 +23,79 @@ import { BadgeStatus } from "../../../components/ui/BadgeStatus";
 export interface StudentData {
   _id: string;
   id: string;
-  studentName: string;
-  regId: string;
-  grade: string;
-  regDate: string;
-  status: "Selesai" | "Proses" | "Ditolak/Bermasalah" | string;
+  name: string;
+  class: string;
+  gender: string;
+  religion: string;
+  status: string;
+  address: string;
+  birthPlace: string;
+  birthdate: string;
+  fatherName: string;
+  motherName: string;
+  emailParent: string;
+  phoneNumber: string;
+  schoolYear: string;
+  kk: string;
+  birthCertificate?: string;
+  photo?: string;
+  createdAt: string;
+  updatedAt?: string;
+  studentName?: string;
+  regId?: string;
+  grade?: string;
+  regDate?: string;
   avatarUrl?: string;
   initials?: string;
 }
 
 function TableRow({ 
     data, 
-    onEdit, 
-    onView, 
-    onDelete 
+    onView 
 }: { 
     data: StudentData; 
     onEdit: (item: StudentData) => void; 
     onView: (item: StudentData) => void; 
     onDelete: (item: StudentData) => void; 
 }) {
-    const initials = data.initials || data.studentName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+    const displayName = data.name || data.studentName || "Tanpa Nama";
+    const initials = data.initials || displayName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+    
+    // Format ISO Date string to readable format
+    const formattedDate = data.createdAt ? new Date(data.createdAt).toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    }) : data.regDate || "-";
 
     return (
         <tr style={{ verticalAlign: "middle" }}>
             <td>
                 <div className="d-flex align-items-center py-2 px-3">
-                {data.avatarUrl ? (
-                    <img src={data.avatarUrl} alt={data.studentName} className="rounded-circle me-3" style={{ width: "40px", height: "40px", objectFit: "cover" }} />
+                {data.photo || data.avatarUrl ? (
+                    <img 
+                        src={data.photo || data.avatarUrl} 
+                        alt={displayName} 
+                        className="rounded-circle me-3" 
+                        style={{ width: "40px", height: "40px", objectFit: "cover" }} 
+                    />
                 ) : (
                     <div className="rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style={{ width: "40px", height: "40px", backgroundColor: "#EEF2FF", color: "#4F46E5", fontSize: "13px" }}>
                     {initials}
                     </div>
                 )}
                 <div>
-                    <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{data.studentName}</div>
-                    <div className="text-muted small" style={{ fontSize: "12px" }}>ID: {data.regId || data.id}</div>
+                    <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{displayName}</div>
+                    <div className="text-muted small" style={{ fontSize: "12px" }}>ID: {data.id || data.regId || data._id}</div>
                 </div>
                 </div>
             </td>
-            <td className="text-secondary font-medium" style={{ fontSize: "14px" }}>{data.grade}</td>
-            <td className="text-muted" style={{ fontSize: "14px" }}>{data.regDate}</td>
+            <td className="text-secondary font-medium" style={{ fontSize: "14px" }}>
+                {data.class || data.grade || "-"}
+            </td>
+            <td className="text-muted" style={{ fontSize: "14px" }}>
+                {formattedDate}
+            </td>
             <td>
                 <BadgeStatus status={data.status} />
             </td>
@@ -86,22 +117,27 @@ export function StudentTableList() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
 
-    const dummyStudents: StudentData[] = [
-        { _id: "1", id: "REG-2024-0012", regId: "REG-2024-0012", studentName: "Ahmad Maulana", initials: "AM", grade: "Grade 10 - Science", regDate: "12 Oct 2023", status: "Selesai" },
-        { _id: "2", id: "REG-2024-0015", regId: "REG-2024-0015", studentName: "Siti Pertiwi", initials: "SP", grade: "Grade 11 - Art", regDate: "14 Oct 2023", status: "Proses" },
-        { _id: "3", id: "REG-2024-0019", regId: "REG-2024-0019", studentName: "Budi Kusuma", initials: "BK", grade: "Grade 10 - Social", regDate: "15 Oct 2023", status: "Ditolak/Bermasalah" },
-    ];
-
     const fetchStudents = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await callApi<StudentData[] | { data: StudentData[] }>("students/registrations", { 
+            const response = await callApi<StudentData[] | { data: StudentData[] }>("students", { 
                 method: "GET" 
             });
-            const dataStudents = Array.isArray(response) ? response : response?.data || [];
-            setItems(dataStudents.length > 0 ? dataStudents : dummyStudents);
+            const rawData = Array.isArray(response) ? response : response?.data || [];
+            
+            const dataStudents: StudentData[] = rawData.map(item => ({
+                ...item,
+                studentName: item.name || item.studentName,
+                grade: item.class || item.grade,
+                regId: item.id || item._id,
+                regDate: item.createdAt ? new Date(item.createdAt).toLocaleDateString("id-ID") : item.regDate
+            }));
+
+            setItems(dataStudents);
         } catch (error) {
-            setItems(dummyStudents);
+            console.error("Error fetching students:", error);
+            toast.error("Gagal mengambil data siswa.");
+            setItems([]);
         } finally {
             setIsLoading(false);
         }
@@ -127,15 +163,15 @@ export function StudentTableList() {
         setIsDetailModalOpen(true);
     };
     
-    const handleDelete = (item: StudentData) => toast.error(`Deleting ${item.studentName}`);
+    const handleDelete = (item: StudentData) => toast.error(`Deleting ${item.name || item.studentName}`);
 
     const handleSaveStudent = (savedStudent: StudentData) => {
         if (selectedStudent) {
             setItems(prev => prev.map(item => item._id === savedStudent._id || item.id === savedStudent.id ? { ...item, ...savedStudent } : item));
-            toast.success(`Data ${savedStudent.studentName} berhasil diperbarui!`);
+            toast.success(`Data ${savedStudent.name || savedStudent.studentName} berhasil diperbarui!`);
         } else {
             setItems(prev => [savedStudent, ...prev]);
-            toast.success(`Registrasi ${savedStudent.studentName} berhasil ditambahkan!`);
+            toast.success(`Registrasi ${savedStudent.name || savedStudent.studentName} berhasil ditambahkan!`);
         }
         setIsFormOpen(false);
     };
@@ -193,7 +229,7 @@ export function StudentTableList() {
                             <thead>
                                 <tr style={{ backgroundColor: "#F8FAFC", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0" }}>
                                     <th className="text-muted fw-semibold py-3 px-4" style={{ fontSize: "12px" }}>STUDENT NAME</th>
-                                    <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>GRADE</th>
+                                    <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>CLASS</th>
                                     <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>REG. DATE</th>
                                     <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>STATUS</th>
                                     <th className="text-muted fw-semibold text-end py-3 px-4" style={{ fontSize: "12px" }}>ACTIONS</th> 
@@ -204,7 +240,13 @@ export function StudentTableList() {
                                     <tr><td colSpan={5} className="text-center p-5 text-muted">Memuat data...</td></tr>
                                 ) : items.length > 0 ? (
                                     items.map((item) => (
-                                        <TableRow key={item._id} data={item} onEdit={handleEdit} onView={handleView} onDelete={handleDelete} />
+                                        <TableRow 
+                                            key={item._id || item.id} 
+                                            data={item} 
+                                            onEdit={handleEdit} 
+                                            onView={handleView} 
+                                            onDelete={handleDelete} 
+                                        />
                                     ))
                                 ) : (
                                     <tr><td colSpan={5} className="text-center p-5 text-muted">Tidak ada data pendaftaran ditemukan</td></tr>
@@ -214,7 +256,7 @@ export function StudentTableList() {
                     </div>
                 
                     <div className="card-footer bg-white d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 px-4 py-3 border-top">
-                        <p className="m-0 text-secondary" style={{ fontSize: "14px" }}>Menampilkan {items.length} dari 124 entri</p>
+                        <p className="m-0 text-secondary" style={{ fontSize: "14px" }}>Menampilkan {items.length} dari {items.length} entri</p>
                         <div className="d-flex gap-1 align-items-center">
                             <Button variant="link" className="btn-icon btn-sm btn-white border rounded-2 p-2" disabled={true}><IconChevronLeft size={16} className="text-secondary" /></Button>
                             <Button className="btn-sm rounded-2 px-3 fw-bold text-white" style={{ backgroundColor: '#002B7F', borderColor: '#002B7F' }}>1</Button>
@@ -224,34 +266,6 @@ export function StudentTableList() {
                         </div>
                     </div>
                 </div>
-
-                {/* <div className="rounded-4 p-4 text-white shadow-sm" style={{ background: "linear-gradient(135deg, #051329 0%, #0A2540 50%, #111C44 100%)" }}>
-                    <h4 className="fw-bold mb-2" style={{ fontSize: "16px" }}>Informasi Sistem Pendaftaran</h4>
-                    <p className="text-white-50 mb-4" style={{ fontSize: "13px", maxWidth: "800px", lineHeight: "1.6" }}>
-                        Update terakhir dilakukan pada pukul 08:30 WIB. Semua data dokumen yang diunggah akan melalui verifikasi otomatis oleh sistem AI sebelum divalidasi oleh administrator.
-                    </p>
-
-                    <div className="row g-3">
-                        <div className="col-12 col-md-4">
-                            <div className="p-3 rounded-3" style={{ backgroundColor: "rgba(255, 255, 255, 0.08)", backdropFilter: "blur(10px)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
-                                <div className="h2 fw-bold m-0">98%</div>
-                                <div className="text-white-50 text-uppercase fw-bold mt-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>VERIFIKASI AKURASI</div>
-                            </div>
-                        </div>
-                        <div className="col-12 col-md-4">
-                            <div className="p-3 rounded-3" style={{ backgroundColor: "rgba(255, 255, 255, 0.08)", backdropFilter: "blur(10px)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
-                                <div className="h2 fw-bold m-0">~15m</div>
-                                <div className="text-white-50 text-uppercase fw-bold mt-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>WAKTU RATA-RATA</div>
-                            </div>
-                        </div>
-                        <div className="col-12 col-md-4">
-                            <div className="p-3 rounded-3" style={{ backgroundColor: "rgba(255, 255, 255, 0.08)", backdropFilter: "blur(10px)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
-                                <div className="h2 fw-bold m-0">24/7</div>
-                                <div className="text-white-50 text-uppercase fw-bold mt-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>SYSTEM UPTIME</div>
-                            </div>
-                        </div>
-                    </div>
-                </div> */}
             </div>
 
             <StudentDetailModal 

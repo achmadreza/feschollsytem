@@ -20,7 +20,7 @@ export function BadgeStatus({
             case "Selesai":
             case "VERIFIED":
                 return { backgroundColor: "#D1FAE5", color: "#065F46" };
-            case "Proses":
+            case "PROCESS":
             case "PENDING":
                 return { backgroundColor: "#FEF3C7", color: "#92400E" };
             case "Ditolak/Bermasalah":
