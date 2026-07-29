@@ -6,11 +6,10 @@ import {
     IconChevronLeft,
     IconChevronRight,
     IconUsers,
-    IconShieldCheck,
-    IconReceipt,
     IconCircleCheck,
-    IconDownload,
-    IconArrowRight
+    IconArrowRight,
+    IconX,
+    IconProgressCheck
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
 import { StatCard } from "../../../components/ui/StatCard";
@@ -60,8 +59,6 @@ function TableRow({
 }) {
     const displayName = data.name || data.studentName || "Tanpa Nama";
     const initials = data.initials || displayName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
-    
-    // Format ISO Date string to readable format
     const formattedDate = data.createdAt ? new Date(data.createdAt).toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "short",
@@ -147,6 +144,23 @@ export function StudentTableList() {
         fetchStudents();
     }, [fetchStudents]);
 
+    const totalRegistrasi = items.length;
+
+    const totalProses = items.filter(item => {
+        const status = item.status?.toUpperCase();
+        return status === "PROCESS" || status === "PROSES" || status === "PENDING";
+    }).length;
+
+    const totalDitolak = items.filter(item => {
+        const status = item.status?.toUpperCase();
+        return status === "REJECTED" || status === "DITOLAK";
+    }).length;
+
+    const totalSelesai = items.filter(item => {
+        const status = item.status?.toUpperCase();
+        return status === "FINISHED" || status === "COMPLETED" || status === "APPROVED" || status === "SELESAI";
+    }).length;
+
     const handleCreateNew = () => {
         setSelectedStudent(null);
         setIsFormOpen(true);
@@ -201,27 +215,22 @@ export function StudentTableList() {
 
                 <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-4">
                     <div className="col">
-                        <StatCard title="Total Registrasi" value="1,284" badgeText="+12%" badgeColor="bg-success-lt text-success" icon={IconUsers} iconBg="bg-light" iconColor="text-dark" progressColor="#0F3B8C" progressValue="100%" />
+                        <StatCard title="Total Registrasi" value={totalRegistrasi.toString()} badgeText="Total" badgeColor="bg-primary-lt text-primary" icon={IconUsers} iconBg="bg-light" iconColor="text-dark" progressColor="#0F3B8C" progressValue="100%" />
                     </div>
                     <div className="col">
-                        <StatCard title="Verifikasi Dokumen" value="412" badgeText="Aktif" badgeColor="bg-purple-lt text-purple" icon={IconShieldCheck} iconBg="bg-purple-lt" iconColor="text-purple" progressColor="#6F3AFF" progressValue="100%" />
+                        <StatCard title="Proses" value={totalProses.toString()} badgeText="Proses" badgeColor="bg-warning-lt text-warning" icon={IconProgressCheck} iconBg="bg-warning-lt" iconColor="text-warning" progressColor="#FF9F43" progressValue="100%" />
                     </div>
                     <div className="col">
-                        <StatCard title="Menunggu Pembayaran" value="89" badgeText="Pending" badgeColor="bg-warning-lt text-warning" icon={IconReceipt} iconBg="bg-warning-lt" iconColor="text-warning" progressColor="#FF9F43" progressValue="100%" />
+                        <StatCard title="Ditolak" value={totalDitolak.toString()} badgeText="Ditolak" badgeColor="bg-danger-lt text-danger" icon={IconX} iconBg="bg-danger-lt" iconColor="text-danger" progressColor="#f93328" progressValue="100%" />
                     </div>
                     <div className="col">
-                        <StatCard title="Selesai" value="783" badgeText="Finish" badgeColor="bg-success-lt text-success" icon={IconCircleCheck} iconBg="bg-success-lt" iconColor="text-success" progressColor="#28C76F" progressValue="100%" />
+                        <StatCard title="Selesai" value={totalSelesai.toString()} badgeText="Finish" badgeColor="bg-success-lt text-success" icon={IconCircleCheck} iconBg="bg-success-lt" iconColor="text-success" progressColor="#28C76F" progressValue="100%" />
                     </div>
                 </div>
 
                 <div className="card shadow-sm border-0 mb-4" style={{ borderRadius: "16px", overflow: "hidden" }}>
                     <div className="card-header bg-white py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom-0">
                         <h3 className="fw-semibold text-dark m-0" style={{ fontSize: "16px" }}>Enrollment Registry</h3>
-                        <div className="d-flex align-items-center gap-2">
-                            <Button variant="link" className="btn-sm btn-white border rounded-2 px-3 py-1.5 text-secondary d-flex align-items-center text-decoration-none">
-                                <IconDownload size={16} className="me-1.5" /> Export CSV
-                            </Button>
-                        </div>
                     </div>
 
                     <div className="table-responsive">
@@ -273,6 +282,7 @@ export function StudentTableList() {
                 onClose={() => setIsDetailModalOpen(false)}
                 student={selectedStudent}
                 onEdit={handleEdit}
+                onSaveSuccess={handleSaveStudent}
             />
 
             <StudentForm
