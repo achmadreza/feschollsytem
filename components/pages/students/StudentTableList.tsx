@@ -9,7 +9,8 @@ import {
     IconCircleCheck,
     IconArrowRight,
     IconX,
-    IconProgressCheck
+    IconProgressCheck,
+    IconTrash
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
 import { StatCard } from "../../../components/ui/StatCard";
@@ -18,6 +19,7 @@ import { callApi } from "@/lib/api";
 import { StudentDetailModal } from "./StudentDetailModal";
 import { StudentForm } from "./StudentForm";
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
+import Swal from 'sweetalert2';
 
 export interface StudentData {
   _id: string;
@@ -50,12 +52,15 @@ export interface StudentData {
 
 function TableRow({ 
     data, 
-    onView 
+    onView,
+    onDelete,
+    onStatusChange
 }: { 
     data: StudentData; 
     onEdit: (item: StudentData) => void; 
     onView: (item: StudentData) => void; 
     onDelete: (item: StudentData) => void; 
+    onStatusChange: (item: StudentData, newStatus: string) => void;
 }) {
     const displayName = data.name || data.studentName || "Tanpa Nama";
     const initials = data.initials || displayName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
@@ -65,6 +70,7 @@ function TableRow({
         year: "numeric"
     }) : data.regDate || "-";
     const [imgError, setImgError] = useState(false);
+    
     const getPhotoUrl = (path?: string) => {
         if (!path) return "";
         if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
@@ -108,11 +114,38 @@ function TableRow({
             <td>
                 <BadgeStatus status={data.status} />
             </td>
+            <td>
+                <select 
+                    className="form-select form-select-sm border-light-subtle shadow-none" 
+                    value={data.status || "PROCESS"}
+                    onChange={(e) => onStatusChange(data, e.target.value)}
+                    style={{ fontSize: "13px", width: "130px", cursor: "pointer", borderRadius: '8px' }}
+                >
+                    <option value="PROCESS">PROCESS</option>
+                    <option value="REJECTED">REJECTED</option>
+                    <option value="FINISHED">FINISHED</option>
+                </select>
+            </td>
             <td className="text-end px-3">
                 <div className="d-flex align-items-center justify-content-end gap-2">
-                <Button variant="link" className="p-0 text-primary text-decoration-none fw-semibold d-inline-flex align-items-center" onClick={() => onView(data)} style={{ fontSize: "13px" }}>
-                    View Details <IconArrowRight size={14} className="ms-1" />
-                </Button>
+                    <Button 
+                        type="button" 
+                        variant="danger"
+                        size="sm"
+                        title="Hapus Data Siswa"
+                        onClick={() => onDelete(data)}
+                    >
+                        <IconTrash size={16} />
+                    </Button>
+                    <Button 
+                        type="button" 
+                        onClick={() => onView(data)}
+                        variant="link"
+                        size="sm"
+                    >
+                        <span>View Details</span>
+                        <IconArrowRight size={12} />
+                    </Button>
                 </div>
             </td>
         </tr>
@@ -189,7 +222,54 @@ export function StudentTableList() {
         setIsDetailModalOpen(true);
     };
     
-    const handleDelete = (item: StudentData) => toast.error(`Deleting ${item.name || item.studentName}`);
+    const handleStatusChange = async (item: StudentData, newStatus: string) => {
+        const targetId = item._id || item.id;
+        try {
+            await callApi(`students/${targetId}`, {
+                method: "PUT",
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            setItems(prev => prev.map(s => (s._id === targetId || s.id === targetId) ? { ...s, status: newStatus } : s));
+            toast.success(`Status ${item.name || item.studentName} diperbarui menjadi ${newStatus}`);
+        } catch (error) {
+            console.error("Error updating status:", error);
+            toast.error("Gagal memperbarui status.");
+        }
+    };
+
+    const handleDelete = async (item: StudentData) => {
+        const name = item.name || item.studentName || "Siswa";
+        const targetId = item._id || item.id;
+
+        const confirmResult = await Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: `Data ${name} akan dihapus secara permanen.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        });
+
+        if (!confirmResult.isConfirmed) {
+            return;
+        }
+
+        try {
+            await callApi(`students/${targetId}`, {
+                method: "DELETE"
+            });
+
+            setItems(prev => prev.filter(s => (s._id !== targetId && s.id !== targetId)));
+            toast.success(`Data ${name} berhasil dihapus.`);
+        } catch (error) {
+            console.error("Error deleting student:", error);
+            toast.error(`Gagal menghapus data ${name}.`);
+        }
+    };
 
     const handleSaveStudent = (savedStudent: StudentData) => {
         if (selectedStudent) {
@@ -214,9 +294,9 @@ export function StudentTableList() {
                     </div>
 
                     <div className="d-flex align-items-center gap-2">
-                        <Button 
-                            className="btn-primary px-3 py-2 rounded-3 fw-medium d-flex align-items-center shadow-sm" 
-                            style={{ backgroundColor: "#0F2C59", borderColor: "#0F2C59" }}
+                        <Button
+                            variant="default"
+                            size="lg"
                             onClick={handleCreateNew}
                         >
                             <IconPlus size={18} className="me-2" />
@@ -230,10 +310,10 @@ export function StudentTableList() {
                         <StatCard title="Total Registrasi" value={totalRegistrasi.toString()} badgeText="Total" badgeColor="bg-primary-lt text-primary" icon={IconUsers} iconBg="bg-light" iconColor="text-dark" progressColor="#0F3B8C" progressValue="100%" />
                     </div>
                     <div className="col">
-                        <StatCard title="Proses" value={totalProses.toString()} badgeText="Proses" badgeColor="bg-warning-lt text-warning" icon={IconProgressCheck} iconBg="bg-warning-lt" iconColor="text-warning" progressColor="#FF9F43" progressValue="100%" />
+                        <StatCard title="Ditolak" value={totalDitolak.toString()} badgeText="Ditolak" badgeColor="bg-danger-lt text-danger" icon={IconX} iconBg="bg-danger-lt" iconColor="text-danger" progressColor="#f93328" progressValue="100%" />
                     </div>
                     <div className="col">
-                        <StatCard title="Ditolak" value={totalDitolak.toString()} badgeText="Ditolak" badgeColor="bg-danger-lt text-danger" icon={IconX} iconBg="bg-danger-lt" iconColor="text-danger" progressColor="#f93328" progressValue="100%" />
+                        <StatCard title="Proses" value={totalProses.toString()} badgeText="Proses" badgeColor="bg-warning-lt text-warning" icon={IconProgressCheck} iconBg="bg-warning-lt" iconColor="text-warning" progressColor="#FF9F43" progressValue="100%" />
                     </div>
                     <div className="col">
                         <StatCard title="Selesai" value={totalSelesai.toString()} badgeText="Finish" badgeColor="bg-success-lt text-success" icon={IconCircleCheck} iconBg="bg-success-lt" iconColor="text-success" progressColor="#28C76F" progressValue="100%" />
@@ -253,12 +333,13 @@ export function StudentTableList() {
                                     <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>CLASS</th>
                                     <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>REG. DATE</th>
                                     <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>STATUS</th>
+                                    <th className="text-muted fw-semibold py-3" style={{ fontSize: "12px" }}>UPDATE STATUS</th>
                                     <th className="text-muted fw-semibold text-end py-3 px-4" style={{ fontSize: "12px" }}>ACTIONS</th> 
                                 </tr>
                             </thead>
                             <tbody>
                                 {isLoading ? (
-                                    <tr><td colSpan={5} className="text-center p-5 text-muted">Memuat data...</td></tr>
+                                    <tr><td colSpan={6} className="text-center p-5 text-muted">Memuat data...</td></tr>
                                 ) : items.length > 0 ? (
                                     items.map((item) => (
                                         <TableRow 
@@ -267,10 +348,11 @@ export function StudentTableList() {
                                             onEdit={handleEdit} 
                                             onView={handleView} 
                                             onDelete={handleDelete} 
+                                            onStatusChange={handleStatusChange}
                                         />
                                     ))
                                 ) : (
-                                    <tr><td colSpan={5} className="text-center p-5 text-muted">Tidak ada data pendaftaran ditemukan</td></tr>
+                                    <tr><td colSpan={6} className="text-center p-5 text-muted">Tidak ada data pendaftaran ditemukan</td></tr>
                                 )}
                             </tbody>
                         </table>

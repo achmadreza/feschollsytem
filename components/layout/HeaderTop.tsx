@@ -93,7 +93,7 @@ export function HeaderTop() {
             </a>
 
             <div className="dropdown-menu dropdown-menu-end shadow-sm mt-2">
-              <Link href="user-changepassword" className="dropdown-item w-100 text-start text-dark py-2">
+              <Link href="change-password" className="dropdown-item w-100 text-start text-dark py-2">
                 <IconPasswordUser size={16} className="me-2 text-muted" />
                 Change Password
               </Link>

@@ -19,12 +19,15 @@ export function BadgeStatus({
         switch (statusName) {
             case "Selesai":
             case "VERIFIED":
+            case "LUNAS":
                 return { backgroundColor: "#D1FAE5", color: "#065F46" };
             case "PROCESS":
             case "PENDING":
+            case "MENUNGGU":
                 return { backgroundColor: "#FEF3C7", color: "#d37438" };
             case "Ditolak/Bermasalah":
             case "REJECTED":
+            case "DITOLAK":
                 return { backgroundColor: "#FEE2E2", color: "#991B1B" };
             default:
                 return { backgroundColor: "#E2E8F0", color: "#475569" };

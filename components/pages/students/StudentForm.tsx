@@ -19,6 +19,7 @@ import { callApi } from "@/lib/api";
 import { Toaster, toast } from "react-hot-toast";
 import { Label } from "../../ui/Label";
 import { Input } from "../../ui/Input";
+import { Form } from "../../ui/Form";
 
 interface StudentFormProps {
     isOpen: boolean;
@@ -32,8 +33,22 @@ interface DocumentItem {
     label: string;
     file: File | null;
     fileName?: string;
+    fileData?: string;
     isUploaded: boolean;
 }
+
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const result = reader.result as string;
+            const rawBase64 = result.split(',')[1] || result;
+            resolve(rawBase64);
+        };
+        reader.onerror = (error) => reject(error);
+    });
+};
 
 export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormProps) {
     const isEditMode = Boolean(student);
@@ -138,26 +153,34 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
         }
     };
 
-    const handleFileChange = (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setDocuments(prev =>
-                prev.map(doc => {
-                    if (doc.id === docId) {
-                        return {
-                            ...doc,
-                            file: file,
-                            fileName: file.name,
-                            isUploaded: true
-                        };
-                    }
-                    return doc;
-                })
-            );
+            try {
+                const base64String = await fileToBase64(file);
 
-            if (docId === "photo") setFormData(prev => ({ ...prev, photo: file.name }));
-            if (docId === "birthCertificate") setFormData(prev => ({ ...prev, birthCertificate: file.name }));
-            if (docId === "kk") setFormData(prev => ({ ...prev, kk: file.name }));
+                setDocuments(prev =>
+                    prev.map(doc => {
+                        if (doc.id === docId) {
+                            return {
+                                ...doc,
+                                file: file,
+                                fileName: file.name,
+                                fileData: base64String,
+                                isUploaded: true
+                            };
+                        }
+                        return doc;
+                    })
+                );
+
+                if (docId === "photo") setFormData(prev => ({ ...prev, photo: base64String }));
+                if (docId === "birthCertificate") setFormData(prev => ({ ...prev, birthCertificate: base64String }));
+                if (docId === "kk") setFormData(prev => ({ ...prev, kk: base64String }));
+            } catch (err) {
+                console.error("Gagal mengonversi file ke Base64:", err);
+                toast.error("Gagal memproses file.");
+            }
         }
     };
 
@@ -199,9 +222,9 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
         setIsSubmitting(true);
 
         try {
-            const kkDoc = documents.find(d => d.id === "kk")?.fileName || formData.kk;
-            const certDoc = documents.find(d => d.id === "birthCertificate")?.fileName || formData.birthCertificate;
-            const photoDoc = documents.find(d => d.id === "photo")?.fileName || formData.photo;
+            const kkDoc = documents.find(d => d.id === "kk")?.fileData || formData.kk;
+            const certDoc = documents.find(d => d.id === "birthCertificate")?.fileData || formData.birthCertificate;
+            const photoDoc = documents.find(d => d.id === "photo")?.fileData || formData.photo;
 
             let response;
             const cleanPayload = {
@@ -269,8 +292,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 title="" 
                 size="xl"
             >
-                <form onSubmit={handleSubmit} className="p-1" style={{ backgroundColor: "#FAFBFD" }}>
-                    <div className="p-3 mb-4 d-flex align-items-center gap-3">
+                <Form onSubmit={handleSubmit} className="p-1" style={{ backgroundColor: "#FAFBFD" }}>
+                    <div className="mb-4 d-flex align-items-center gap-3">
                         <div 
                             className="rounded-4 p-1 bg-white shadow-sm d-flex align-items-center justify-content-center flex-shrink-0"
                             style={{ border: "2px solid #3B82F6", width: "64px", height: "64px" }}
@@ -284,12 +307,20 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             <h5 className="fw-bold mb-1" style={{ color: "#0F172A" }}>
                                 {isEditMode ? (formData.studentName || "Edit Data Siswa") : "Pendaftaran Siswa Baru"}
                             </h5>
-                            <div className="d-flex align-items-center gap-2">
-                                <span className="fw-bold" style={{ fontSize: "13px", color: "#1E3A8A" }}>
-                                    {isEditMode ? (student?.id || "REGISTRASI") : "Auto Generated • Registrasi Baru"}
+
+                            <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2">
+                                <span 
+                                    className="fw-bold text-break" 
+                                    style={{ fontSize: "13px", color: "#1E3A8A", wordBreak: "break-word" }}
+                                >
+                                    {isEditMode ? (student?.id || "REGISTRASI") : "Registrasi Baru"}
                                 </span>
-                                <span className="text-muted">•</span>
-                                <BadgeStatus status={formData.status} /> 
+
+                                <span className="text-muted d-none d-sm-inline">•</span>
+
+                                <div>
+                                    <BadgeStatus status={formData.status} />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -478,7 +509,6 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             </div>
                         </div>
 
-                        {/* Checklist Dokumen */}
                         <div className="col-12 col-lg-4">
                             <div className="p-4 rounded-4" style={{ backgroundColor: "#EEF2F6" }}>
                                 <div className="d-flex align-items-center gap-2 mb-4">
@@ -580,21 +610,21 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             type="button" 
                             onClick={onClose} 
                             disabled={isSubmitting}
-                            className="btn btn-light border px-4 py-2 rounded-3 fw-medium" 
-                            style={{ fontSize: "13px", backgroundColor: "#FFF", borderColor: "#E2E8F0", color: "#0F172A" }}
+                            variant="outline" 
+                            size="lg"
                         >
                             Batal
                         </Button>
                         <Button 
                             type="submit" 
                             disabled={isSubmitting}
-                            className="btn btn-primary px-4 py-2 rounded-3 fw-medium" 
-                            style={{ fontSize: "13px" }}
+                            variant="default"
+                            size="lg"
                         >
                             {isSubmitting ? "Menyimpan..." : "Simpan Data"}
                         </Button>
                     </div>
-                </form>
+                </Form>
             </Modal>
         </>
     );

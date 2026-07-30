@@ -340,7 +340,7 @@ export default function SignupPage() {
                     </div>
 
                     <div className="form-footer">
-                        <Button type="submit" fullWidth disabled={loading}>
+                        <Button type="submit" variant="default" size="lg" fullWidth disabled={loading}>
                             {loading ? "Memproses..." : "Daftar & Minta Verifikasi →"}
                         </Button>
                     </div>

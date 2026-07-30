@@ -122,8 +122,8 @@ export function StudentDetailModal({
 
                             <div className="d-flex align-items-center gap-2">
                                 <Button 
-                                    className="btn-primary fw-medium px-3 py-2 rounded-2 d-flex align-items-center gap-1.5 shadow-sm" 
-                                    style={{ backgroundColor: "#0F172A", borderColor: "#0F172A", fontSize: "13px" }}
+                                    variant="default"
+                                    size="lg"
                                     onClick={handleEditClick}
                                 >
                                     <IconPencil size={16} /> Edit Data

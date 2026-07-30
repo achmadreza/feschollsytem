@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { IconX } from "@tabler/icons-react";
 
 export interface ModalProps {
     isOpen: boolean;
@@ -11,6 +10,7 @@ export interface ModalProps {
     size?: "sm" | "md" | "lg" | "xl" | "full";
     maxWidth?: string;
     showCloseButton?: boolean;
+    closeOnOverlayClick?: boolean; 
 }
 
 export function Modal({
@@ -21,6 +21,7 @@ export function Modal({
     size = "xl",
     maxWidth = "1000px",
     showCloseButton = true,
+    closeOnOverlayClick = false,
 }: ModalProps) {
     useEffect(() => {
         if (isOpen) {
@@ -56,13 +57,14 @@ export function Modal({
                 zIndex: 1050,
                 overflowY: "auto",
             }}
-            onClick={onClose}
+            onClick={closeOnOverlayClick ? onClose : undefined}
         >
             <div
-                className={`modal-dialog modal-dialog-centered ${getSizeClass()}`}
+                className={`modal-dialog modal-dialog-centered mx-auto ${getSizeClass()}`}
                 style={{
                     maxWidth: maxWidth || undefined,
-                    width: "92%",
+                    width: "90%",
+                    margin: "1.75rem auto",
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -87,7 +89,7 @@ export function Modal({
                             )}
                         </div>
                     )}
-                    <div className="modal-body p-4">{children}</div>
+                    <div className="modal-body">{children}</div>
                 </div>
             </div>
         </div>

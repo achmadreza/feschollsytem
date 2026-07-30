@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
                             </FormField>
                             
                             <div className="form-footer mb-4">
-                                <Button type="submit" fullWidth disabled={loading}>
+                                <Button type="submit" variant="default" size="lg" fullWidth disabled={loading}>
                                     {loading ? "Mengirim..." : "Kirim Link Reset Password"}
                                 </Button>
                             </div>

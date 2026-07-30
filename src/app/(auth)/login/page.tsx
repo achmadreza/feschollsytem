@@ -47,7 +47,7 @@ function LoginContent() {
           setContextUser(response.user);
         }
 
-        router.push("/users");
+        router.push("/students");
       } else {
         throw new Error("Token tidak ditemukan dalam respons server.");
       }
@@ -134,7 +134,8 @@ function LoginContent() {
               <Button 
                 type="submit" 
                 className="btn w-100" 
-                style={{ backgroundColor: "#032B88", color: "#fff", fontWeight: "500" }}
+                variant="default"
+                size="lg"
                 disabled={loading}
               >
                 {loading ? "Memproses..." : "Masuk ke Dashboard"}

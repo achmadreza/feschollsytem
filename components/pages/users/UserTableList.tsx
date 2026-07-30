@@ -187,9 +187,9 @@ export function UserTableList() {
 
             <div>
               <Button 
-                className="px-3 py-2 rounded-3 d-flex align-items-center" 
                 onClick={() => setViewMode("create-role")}
-                style={{ fontSize: "14px", border: "none" }}
+                variant="default"
+                size="lg"
               >
                 <IconPlus size={18} className="me-2" /> Tambah Akses Baru
               </Button>
