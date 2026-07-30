@@ -192,7 +192,7 @@ export function StudentTableList() {
 
     return (
         <>
-            <div className="container-xl py-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
+            <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
                 <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
                     <div>
                         <h2 className="fw-bold text-dark m-0" style={{ fontSize: "24px" }}>Registrasi & Data Siswa</h2>

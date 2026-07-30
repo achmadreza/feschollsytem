@@ -23,12 +23,6 @@ export function HeaderTop() {
       <Toaster position="top-right" />
       <div className="container-fluid d-flex justify-content-between align-items-center px-3 px-md-4">
         <div className="d-flex align-items-center gap-2 gap-md-4 flex-fill">
-          <div className="d-lg-none">
-            <span className="fw-bold text-dark" style={{ fontSize: "1.1rem" }}>School Manager</span>
-          </div>
-          <h2 className="mb-0 text-dark fw-bold d-none d-lg-block" style={{ fontSize: "1.25rem" }}>
-            Dashboard Overview
-          </h2>
           <div className="input-icon d-none d-md-block flex-fill max-w-md" style={{ maxWidth: "350px" }}>
             <span className="input-icon-addon">
               <IconSearch size={18} className="text-muted" />

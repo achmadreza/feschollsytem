@@ -145,7 +145,7 @@ export function HeaderNav() {
           </div>
 
           <div 
-            className="w-100 mt-lg-3 px-3 py-2 py-lg-0"
+            className="w-100 mt-lg-3 px-2 py-2 py-lg-0"
             style={{
               maxHeight: "calc(100vh - 100px)",
               overflowY: "auto",

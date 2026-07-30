@@ -53,7 +53,7 @@ export function AddRole({ onBack }: AddRoleProps) {
   };
 
   return (
-    <div className="container-xl py-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
+    <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
       <Button 
         variant="link"
         className="text-secondary mb-4 d-flex align-items-center gap-2 text-decoration-none fw-medium" 

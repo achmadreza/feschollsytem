@@ -154,7 +154,7 @@ export function UserTableList() {
 
   return (
     <>
-      <div className="container-xl py-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
+      <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
         <div className="row row-cols-1 row-cols-md-3 g-3 mb-4">
           <div className="col">
             <StatCard title="Total Users" value={totalUsers.toString()} badgeText="Realtime" badgeColor="bg-success-lt text-success" icon={IconUsers} iconBg="bg-primary-lt" iconColor="text-primary" progressColor="#0F3B8C" progressValue="100%"/>
