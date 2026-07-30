@@ -8,7 +8,6 @@ import {
     IconUsers, 
     IconFileText,
     IconEye,
-    IconStar,
     IconCheck,
     IconUpload,
     IconTrash
@@ -18,6 +17,8 @@ import { Modal } from "../../ui/Modal";
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
 import { callApi } from "@/lib/api";
 import { Toaster, toast } from "react-hot-toast";
+import { Label } from "../../ui/Label";
+import { Input } from "../../ui/Input";
 
 interface StudentFormProps {
     isOpen: boolean;
@@ -41,8 +42,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
         studentName: "",
         pob: "",
         dob: "",
-        gender: "male",
-        religion: "Islam",
+        gender: "",
         address: "",
         email: "",
         fatherName: "",
@@ -76,8 +76,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                     studentName: student.name || "",
                     pob: student.birthPlace || "",
                     dob: formattedDob,
-                    gender: student.gender || "male",
-                    religion: (student as any).religion || "Islam",
+                    gender: student.gender || "",
                     address: student.address || "",
                     email: student.emailParent || "",
                     fatherName: student.fatherName || "",
@@ -85,7 +84,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                     emergencyContact: student.phoneNumber || "",
                     grade: student.class || "",
                     status: student.status || "PROCESS",
-                    schoolYear: (student as any).schoolYear || "2026/2027",
+                    schoolYear: (student as any).schoolYear || "",
                     kk: (student as any).kk || "",
                     birthCertificate: (student as any).birthCertificate || "",
                     photo: student.photo || ""
@@ -209,7 +208,6 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 name: formData.studentName,
                 class: formData.grade,
                 gender: formData.gender,
-                religion: formData.religion,
                 status: formData.status,
                 address: formData.address,
                 birthPlace: formData.pob,
@@ -272,44 +270,30 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 size="xl"
             >
                 <form onSubmit={handleSubmit} className="p-1" style={{ backgroundColor: "#FAFBFD" }}>
-                    <div className="p-3 mb-4 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-                        <div className="d-flex align-items-center gap-3 w-100">
-                            <div 
-                                className="rounded-4 p-1 bg-white shadow-sm d-flex align-items-center justify-content-center flex-shrink-0"
-                                style={{ border: "2px solid #3B82F6", width: "72px", height: "72px" }}
-                            >
-                                {isEditMode && formData.photo ? (
-                                    <img src={formData.photo} alt={formData.studentName} className="rounded-3 w-100 h-100" style={{ objectFit: "cover" }} />
-                                ) : (
-                                    <div className="rounded-3 w-100 h-100 d-flex align-items-center justify-content-center fw-bold" style={{ backgroundColor: "#E0E7FF", color: "#1E40AF", fontSize: "22px" }}>
-                                        {initials}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex-grow-1">
-                                <input 
-                                    type="text" 
-                                    name="studentName"
-                                    value={formData.studentName}
-                                    onChange={handleChange}
-                                    placeholder="Masukkan Nama Lengkap Siswa..."
-                                    className="form-control form-control-lg fw-bold mb-1"
-                                    style={{ 
-                                        fontSize: "18px", 
-                                        color: "#0F172A",
-                                        backgroundColor: isEditMode ? "transparent" : "#FFF",
-                                        borderColor: isEditMode ? "transparent" : "#CBD5E1"
-                                    }}
-                                    required
-                                />
-                                <div className="d-flex align-items-center gap-2">
-                                    <span className="fw-bold" style={{ fontSize: "13px", color: "#1E3A8A" }}>
-                                        {isEditMode ? (student?.id || "REGISTRASI") : "Auto Generated • Registrasi Baru"}
-                                    </span>
-                                    <span className="text-muted">•</span>
-                                    <BadgeStatus status={formData.status} /> 
+                    <div className="p-3 mb-4 d-flex align-items-center gap-3">
+                        <div 
+                            className="rounded-4 p-1 bg-white shadow-sm d-flex align-items-center justify-content-center flex-shrink-0"
+                            style={{ border: "2px solid #3B82F6", width: "64px", height: "64px" }}
+                        >
+                            {isEditMode && formData.photo ? (
+                                <img src={formData.photo} alt={formData.studentName} className="rounded-3 w-100 h-100" style={{ objectFit: "cover" }} />
+                            ) : (
+                                <div className="rounded-3 w-100 h-100 d-flex align-items-center justify-content-center fw-bold" style={{ backgroundColor: "#E0E7FF", color: "#1E40AF", fontSize: "20px" }}>
+                                    {initials}
                                 </div>
+                            )}
+                        </div>
+
+                        <div>
+                            <h5 className="fw-bold mb-1" style={{ color: "#0F172A" }}>
+                                {isEditMode ? (formData.studentName || "Edit Data Siswa") : "Pendaftaran Siswa Baru"}
+                            </h5>
+                            <div className="d-flex align-items-center gap-2">
+                                <span className="fw-bold" style={{ fontSize: "13px", color: "#1E3A8A" }}>
+                                    {isEditMode ? (student?.id || "REGISTRASI") : "Auto Generated • Registrasi Baru"}
+                                </span>
+                                <span className="text-muted">•</span>
+                                <BadgeStatus status={formData.status} /> 
                             </div>
                         </div>
                     </div>
@@ -324,9 +308,23 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
+                                        <div className="col-12">
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA LENGKAP SISWA</Label>
+                                            <Input 
+                                                type="text" 
+                                                name="studentName"
+                                                value={formData.studentName}
+                                                onChange={handleChange}
+                                                placeholder="Masukkan nama lengkap siswa..."
+                                                className="form-control form-control-sm rounded-3 shadow-none"
+                                                style={inputStyle}
+                                                required
+                                            />
+                                        </div>
+
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TEMPAT LAHIR</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TEMPAT LAHIR</Label>
+                                            <Input 
                                                 type="text" 
                                                 name="pob" 
                                                 placeholder="cth. Bandung"
@@ -338,8 +336,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TANGGAL LAHIR</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TANGGAL LAHIR</Label>
+                                            <Input 
                                                 type="date" 
                                                 name="dob" 
                                                 value={formData.dob} 
@@ -350,7 +348,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>JENIS KELAMIN</label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>JENIS KELAMIN</Label>
                                             <select 
                                                 name="gender" 
                                                 value={formData.gender} 
@@ -358,31 +356,14 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 className="form-select form-select-sm rounded-3 shadow-none cursor-pointer" 
                                                 style={inputStyle}
                                             >
+                                                <option value="" disabled>Pilih Jenis Kelamin</option>
                                                 <option value="male">Laki-laki</option>
                                                 <option value="female">Perempuan</option>
                                             </select>
                                         </div>
 
-                                        <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>AGAMA</label>
-                                            <select 
-                                                name="religion" 
-                                                value={formData.religion} 
-                                                onChange={handleChange} 
-                                                className="form-select form-select-sm rounded-3 shadow-none cursor-pointer" 
-                                                style={inputStyle}
-                                            >
-                                                <option value="Islam">Islam</option>
-                                                <option value="Kristen">Kristen</option>
-                                                <option value="Katolik">Katolik</option>
-                                                <option value="Hindu">Hindu</option>
-                                                <option value="Buddha">Buddha</option>
-                                                <option value="Konghucu">Konghucu</option>
-                                            </select>
-                                        </div>
-
                                         <div className="col-12">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>ALAMAT RUMAH</label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>ALAMAT RUMAH</Label>
                                             <textarea 
                                                 name="address" 
                                                 rows={2}
@@ -406,8 +387,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA AYAH</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA AYAH</Label>
+                                            <Input 
                                                 type="text" 
                                                 name="fatherName" 
                                                 placeholder="Nama Lengkap Ayah"
@@ -419,8 +400,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA IBU</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA IBU</Label>
+                                            <Input 
                                                 type="text" 
                                                 name="motherName" 
                                                 placeholder="Nama Lengkap Ibu"
@@ -432,8 +413,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>EMAIL ORANG TUA</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>EMAIL ORANG TUA</Label>
+                                            <Input 
                                                 type="email" 
                                                 name="email" 
                                                 placeholder="parent@example.com"
@@ -445,13 +426,14 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NO. TELEPON</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NO. WHATSAPP</Label>
+                                            <Input 
                                                 type="tel" 
                                                 name="emergencyContact" 
                                                 placeholder="081234567890"
                                                 value={formData.emergencyContact} 
                                                 onChange={handleChange} 
+                                                maxLength={14}
                                                 inputMode="numeric"
                                                 className="form-control form-control-sm rounded-3 shadow-none" 
                                                 style={inputStyle}
@@ -461,6 +443,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 </div>
                             </div>
 
+                            {/* Data Akademik */}
                             <div className="mb-4">
                                 <div className="d-flex align-items-center gap-2 mb-3">
                                     <IconSchool size={18} style={{ color: "#1E3A8A" }} />
@@ -470,8 +453,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>KELAS (CLASS)</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>KELAS (CLASS)</Label>
+                                            <Input 
                                                 type="text" 
                                                 name="grade" 
                                                 placeholder="cth. 5A"
@@ -483,8 +466,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TAHUN AJARAN</label>
-                                            <input 
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TAHUN AJARAN</Label>
+                                            <Input 
                                                 type="text" 
                                                 name="schoolYear" 
                                                 placeholder="cth. 2026/2027"
@@ -499,6 +482,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             </div>
                         </div>
 
+                        {/* Checklist Dokumen */}
                         <div className="col-12 col-lg-4">
                             <div className="p-4 rounded-4" style={{ backgroundColor: "#EEF2F6" }}>
                                 <div className="d-flex align-items-center gap-2 mb-4">
@@ -609,14 +593,9 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             type="submit" 
                             disabled={isSubmitting}
                             className="btn btn-primary px-4 py-2 rounded-3 fw-medium" 
-                            style={{ backgroundColor: "#0A192F", borderColor: "#0A192F", fontSize: "13px" }}
+                            style={{ fontSize: "13px" }}
                         >
-                            {isSubmitting 
-                                ? "Memproses..." 
-                                : isEditMode 
-                                    ? "Simpan Perubahan" 
-                                    : "Simpan Registrasi Baru"
-                            }
+                            {isSubmitting ? "Menyimpan..." : "Simpan Data"}
                         </Button>
                     </div>
                 </form>

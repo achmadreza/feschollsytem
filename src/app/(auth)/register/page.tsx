@@ -11,7 +11,9 @@ import {
     IconUser, 
     IconMail, 
     IconPhone, 
-    IconBell 
+    IconBell,
+    IconKey,
+    IconAlertTriangle
 } from "@tabler/icons-react";
 import { callApi } from "@/lib/api";
 import { Label } from "../../../../components/ui/Label";
@@ -21,6 +23,14 @@ import { Form, FormField } from "../../../../components/ui/Form";
 import Swal from 'sweetalert2';
 import { toast, Toaster } from 'react-hot-toast';
 
+async function hashPassword(plainPassword: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plainPassword);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export default function SignupPage() {
     const { t } = useTranslation();
     const [role, setRole] = useState("teacher");
@@ -29,13 +39,14 @@ export default function SignupPage() {
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
+    const [schoolCode, setSchoolCode] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        const numericValue = value.replace(/[^0-9]/g, "");
+        const numericValue = value.replace(/[^0-9]/g, "").slice(0, 14);
         setPhone(numericValue);
     };
 
@@ -66,15 +77,19 @@ export default function SignupPage() {
 
         try {
             setLoading(true);
+            const hashedPassword = await hashPassword(password);
+            const hashedConfirmPassword = await hashPassword(confirmPassword);
+
             await callApi("auth/register", {
                 method: "POST",
                 body: {
                     fullName,
                     email,
-                    password,
+                    password: hashedPassword,
                     phone,
+                    schoolCode,
                     role,
-                    confirmPassword,
+                    confirmPassword: hashedConfirmPassword,
                     googleOAuthID: "",
                 },
             });
@@ -223,10 +238,39 @@ export default function SignupPage() {
                             placeholder="08xxxxxxxxxx" 
                             value={phone}
                             onChange={handlePhoneChange}
+                            maxLength={14}
                             required 
                             icon={<IconPhone size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
                         />
                         <div style={{ fontSize: "0.75rem", color: "#718096", marginTop: "0.25rem" }}>Untuk verifikasi OTP</div>
+                    </FormField>
+
+                    <FormField>
+                        <Label>Kode Registrasi Sekolah</Label>
+                        <Input 
+                            type="text" 
+                            placeholder="Masukkan kode dari admin sekolah" 
+                            value={schoolCode}
+                            onChange={(e: any) => setSchoolCode(e.target.value)}
+                            required 
+                            icon={<IconKey size={18} stroke={2} style={{ color: "#A0AEC0" }} />}
+                        />
+                        <div style={{ 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "0.5rem", 
+                            backgroundColor: "#FFF5F5", 
+                            border: "1px solid #FED7D7", 
+                            borderRadius: "6px", 
+                            padding: "0.5rem 0.75rem", 
+                            marginTop: "0.5rem",
+                            color: "#E53E3E",
+                            fontSize: "0.75rem",
+                            fontWeight: "500"
+                        }}>
+                            <IconAlertTriangle size={16} color="#E53E3E" style={{ flexShrink: 0 }} />
+                            <span>Hubungi TU sekolah jika belum memiliki kode</span>
+                        </div>
                     </FormField>
 
                     <div className="row mb-3">
