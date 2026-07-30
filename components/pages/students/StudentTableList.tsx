@@ -64,20 +64,32 @@ function TableRow({
         month: "short",
         year: "numeric"
     }) : data.regDate || "-";
+    const [imgError, setImgError] = useState(false);
+    const getPhotoUrl = (path?: string) => {
+        if (!path) return "";
+        if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) {
+            return path;
+        }
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL; 
+        return `${baseUrl}/${path.replace(/^\//, "")}`;
+    };
+
+    const photoSrc = getPhotoUrl(data.photo || data.avatarUrl);
 
     return (
         <tr style={{ verticalAlign: "middle" }}>
             <td>
                 <div className="d-flex align-items-center py-2 px-3">
-                {data.photo || data.avatarUrl ? (
+                {photoSrc && !imgError ? (
                     <img 
-                        src={data.photo || data.avatarUrl} 
+                        src={photoSrc} 
                         alt={displayName} 
                         className="rounded-circle me-3" 
                         style={{ width: "40px", height: "40px", objectFit: "cover" }} 
+                        onError={() => setImgError(true)}
                     />
                 ) : (
-                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold" style={{ width: "40px", height: "40px", backgroundColor: "#EEF2FF", color: "#4F46E5", fontSize: "13px" }}>
+                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style={{ width: "40px", height: "40px", backgroundColor: "#EEF2FF", color: "#4F46E5", fontSize: "13px" }}>
                     {initials}
                     </div>
                 )}

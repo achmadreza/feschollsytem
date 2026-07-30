@@ -275,13 +275,9 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             className="rounded-4 p-1 bg-white shadow-sm d-flex align-items-center justify-content-center flex-shrink-0"
                             style={{ border: "2px solid #3B82F6", width: "64px", height: "64px" }}
                         >
-                            {isEditMode && formData.photo ? (
-                                <img src={formData.photo} alt={formData.studentName} className="rounded-3 w-100 h-100" style={{ objectFit: "cover" }} />
-                            ) : (
-                                <div className="rounded-3 w-100 h-100 d-flex align-items-center justify-content-center fw-bold" style={{ backgroundColor: "#E0E7FF", color: "#1E40AF", fontSize: "20px" }}>
-                                    {initials}
-                                </div>
-                            )}
+                            <div className="rounded-3 w-100 h-100 bg-light d-flex align-items-center justify-content-center">
+                                <IconUser size={20} className="text-muted" />
+                            </div>
                         </div>
 
                         <div>

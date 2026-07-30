@@ -9,13 +9,13 @@ export interface MenuItem {
 
 export const mainMenu: MenuItem[] = [
   {
-    label: "Kelola User",
-    icon: "users",
-    href: "/users",
-  },
-  {
     label: "Students",
     icon: "users",
     href: "/students",
+  },
+  {
+    label: "Kelola User",
+    icon: "users",
+    href: "/users",
   },
 ];

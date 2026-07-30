@@ -89,10 +89,6 @@ export function StudentDetailModal({
         }
     };
 
-    const handlePrintSummary = () => {
-        window.print();
-    };
-
     return (
         <>
             <Modal 
@@ -110,18 +106,9 @@ export function StudentDetailModal({
                     <>
                         <div className="p-4 mb-4 rounded-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3" style={{ backgroundColor: "#F1F5F9", border: "1px solid #E2E8F0" }}>
                             <div className="d-flex align-items-center gap-3">
-                                {data.photo || data.avatarUrl ? (
-                                    <img 
-                                        src={data.photo || data.avatarUrl} 
-                                        alt={displayName} 
-                                        className="rounded-3" 
-                                        style={{ width: "64px", height: "64px", objectFit: "cover" }} 
-                                    />
-                                ) : (
-                                    <div className="rounded-3 d-flex align-items-center justify-content-center fw-bold" style={{ width: "64px", height: "64px", backgroundColor: "#CBD5E1", color: "#1E293B", fontSize: "20px" }}>
-                                        {initials}
-                                    </div>
-                                )}
+                                <div className="rounded-3 bg-light d-flex align-items-center justify-content-center" style={{ width: "64px", height: "64px" }}>
+                                    <IconUser size={32} className="text-muted" />
+                                </div>
                                 <div>
                                     <div className="d-flex align-items-center gap-2 mb-1">
                                         <h4 className="fw-bold m-0 text-dark" style={{ fontSize: "20px" }}>{displayName}</h4>
@@ -164,10 +151,6 @@ export function StudentDetailModal({
                                         <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>
                                             {data.gender === "male" ? "Laki-laki" : data.gender === "female" ? "Perempuan" : data.gender || "-"}
                                         </span>
-                                    </div>
-                                    <div className="col-6">
-                                        <span className="text-muted d-block small mb-1">Agama</span>
-                                        <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>{data.religion || "-"}</span>
                                     </div>
                                     <div className="col-12">
                                         <span className="text-muted d-block small mb-1">Alamat</span>
