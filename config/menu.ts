@@ -19,6 +19,11 @@ export const mainMenu: MenuItem[] = [
     href: "/payments-admin",
   },
   {
+    label: "Payments",
+    icon: "moneybag",
+    href: "/payments-parent",
+  },
+  {
     label: "Kelola User",
     icon: "users",
     href: "/users",
