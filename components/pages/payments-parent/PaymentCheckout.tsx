@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { 
     IconCopy, 
     IconUpload, 
@@ -12,16 +13,28 @@ import {
     IconInfoCircle,
     IconArrowRight
 } from "@tabler/icons-react";
+import { UploadProof } from "./UploadProof";
 
 interface PaymentCheckoutProps {
     onBack: () => void;
 }
 
 export function PaymentCheckout({ onBack }: PaymentCheckoutProps) {
+    const [view, setView] = useState<"checkout" | "upload">("checkout");
+
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
         alert("Nomor rekening berhasil disalin!");
     };
+
+    if (view === "upload") {
+        return (
+            <UploadProof 
+                onBack={() => setView("checkout")} 
+                onSubmitSuccess={() => setView("checkout")}
+            />
+        );
+    }
 
     return (
         <div className="container">
@@ -55,9 +68,7 @@ export function PaymentCheckout({ onBack }: PaymentCheckoutProps) {
                 </div>
             </div>
 
-            {/* Main Content Layout */}
             <div className="row g-4">
-                {/* Left Column: Bill Breakdown */}
                 <div className="col-12 col-lg-6">
                     <div className="d-flex align-items-center gap-2 mb-3 text-secondary">
                         <IconChartBar size={20} />
@@ -160,6 +171,7 @@ export function PaymentCheckout({ onBack }: PaymentCheckoutProps) {
                         </div>
 
                         <button 
+                            onClick={() => setView("upload")}
                             className="btn w-100 py-3 rounded-3 text-white fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm"
                             style={{ backgroundColor: "#001B48" }}
                         >
