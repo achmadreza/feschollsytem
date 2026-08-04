@@ -10,7 +10,8 @@ import {
     IconEye,
     IconCheck,
     IconUpload,
-    IconTrash
+    IconTrash,
+    IconPhoneCall
 } from "@tabler/icons-react";
 import { Button } from "../../ui/Button"; 
 import { Modal } from "../../ui/Modal";
@@ -37,6 +38,13 @@ interface DocumentItem {
     isUploaded: boolean;
 }
 
+interface ParentOption {
+    id: string;
+    parentName: string;
+    email?: string;
+    whatsapp?: string;
+}
+
 const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -53,16 +61,24 @@ const fileToBase64 = (file: File): Promise<string> => {
 export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormProps) {
     const isEditMode = Boolean(student);
 
+    // List opsi orang tua (Bisa diambil dari API)
+    const [parentsList, setParentsList] = useState<ParentOption[]>([
+        { id: "p1", parentName: "Budi Santoso", email: "budi@example.com", whatsapp: "081234567890" },
+        { id: "p2", parentName: "Ahmad Dahlan", email: "ahmad@example.com", whatsapp: "089876543210" },
+    ]);
+
     const initialFormState = {
         studentName: "",
         pob: "",
         dob: "",
         gender: "",
         address: "",
+        parentId: "", // ID Orang Tua yang dipilih
+        isNewParent: false, // Flag jika memilih tambah manual
+        parentName: "", // Nama Orang Tua
         email: "",
-        fatherName: "",
-        motherName: "",
-        emergencyContact: "",
+        parentWhatsapp: "", // Nomor WA Orang Tua (Masuk di Selection)
+        emergencyContact: "", // Kontak Darurat TERPISAH
         grade: "",
         status: "PROCESS",
         schoolYear: "",
@@ -93,9 +109,11 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                     dob: formattedDob,
                     gender: student.gender || "",
                     address: student.address || "",
+                    parentId: (student as any).parentId || "",
+                    isNewParent: false,
+                    parentName: (student as any).parentName || student.fatherName || student.motherName || "",
                     email: student.emailParent || "",
-                    fatherName: student.fatherName || "",
-                    motherName: student.motherName || "",
+                    parentWhatsapp: (student as any).parentWhatsapp || "",
                     emergencyContact: student.phoneNumber || "",
                     grade: student.class || "",
                     status: student.status || "PROCESS",
@@ -138,9 +156,33 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
 
-        if (name === "emergencyContact") {
+        if (name === "emergencyContact" || name === "parentWhatsapp") {
             const numericValue = value.replace(/\D/g, "");
             setFormData(prev => ({ ...prev, [name]: numericValue }));
+            return;
+        }
+
+        if (name === "parentId") {
+            if (value === "new") {
+                setFormData(prev => ({
+                    ...prev,
+                    parentId: "new",
+                    isNewParent: true,
+                    parentName: "",
+                    email: "",
+                    parentWhatsapp: ""
+                }));
+            } else {
+                const selectedParent = parentsList.find(p => p.id === value);
+                setFormData(prev => ({
+                    ...prev,
+                    parentId: value,
+                    isNewParent: false,
+                    parentName: selectedParent?.parentName || "",
+                    email: selectedParent?.email || "",
+                    parentWhatsapp: selectedParent?.whatsapp || ""
+                }));
+            }
             return;
         }
 
@@ -235,10 +277,11 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 address: formData.address,
                 birthPlace: formData.pob,
                 birthdate: formData.dob ? new Date(formData.dob).toISOString() : "",
-                fatherName: formData.fatherName,
-                motherName: formData.motherName,
+                parentId: formData.isNewParent ? null : formData.parentId,
+                parentName: formData.parentName,
                 emailParent: formData.email,
-                phoneNumber: formData.emergencyContact,
+                parentWhatsapp: formData.parentWhatsapp,
+                phoneNumber: formData.emergencyContact, // Kontak darurat terpisah
                 schoolYear: formData.schoolYear,
                 kk: kkDoc,
                 birthCertificate: certDoc,
@@ -271,10 +314,6 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
             setIsSubmitting(false);
         }
     };
-
-    const initials = formData.studentName 
-        ? formData.studentName.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() 
-        : "BK";
 
     const inputStyle = {
         fontSize: "13px",
@@ -327,6 +366,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
 
                     <div className="row g-4 px-2">
                         <div className="col-12 col-lg-8">
+                            {/* Data Pribadi */}
                             <div className="mb-4">
                                 <div className="d-flex align-items-center gap-2 mb-3">
                                     <IconUser size={18} style={{ color: "#1E3A8A" }} />
@@ -405,6 +445,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 </div>
                             </div>
 
+                            {/* Data Orang Tua / Wali */}
                             <div className="mb-4">
                                 <div className="d-flex align-items-center gap-2 mb-3">
                                     <IconUsers size={18} style={{ color: "#1E3A8A" }} />
@@ -413,57 +454,111 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
 
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
-                                        <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA AYAH</Label>
-                                            <Input 
-                                                type="text" 
-                                                name="fatherName" 
-                                                placeholder="Nama Lengkap Ayah"
-                                                value={formData.fatherName} 
+                                        <div className="col-12">
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>PILIH ORANG TUA / WALI</Label>
+                                            <select 
+                                                name="parentId" 
+                                                value={formData.parentId} 
                                                 onChange={handleChange} 
-                                                className="form-control form-control-sm rounded-3 shadow-none" 
+                                                className="form-select form-select-sm rounded-3 shadow-none cursor-pointer" 
                                                 style={inputStyle}
-                                            />
+                                                required
+                                            >
+                                                <option value="" disabled>-- Pilih Orang Tua / Wali --</option>
+                                                {parentsList.map((parent) => (
+                                                    <option key={parent.id} value={parent.id}>
+                                                        {parent.parentName} {parent.whatsapp ? `(${parent.whatsapp})` : ''}
+                                                    </option>
+                                                ))}
+                                                <option value="new" className="fw-bold text-primary">+ Tambah Orang Tua Baru Manual</option>
+                                            </select>
                                         </div>
 
-                                        <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA IBU</Label>
-                                            <Input 
-                                                type="text" 
-                                                name="motherName" 
-                                                placeholder="Nama Lengkap Ibu"
-                                                value={formData.motherName} 
-                                                onChange={handleChange} 
-                                                className="form-control form-control-sm rounded-3 shadow-none" 
-                                                style={inputStyle}
-                                            />
-                                        </div>
+                                        {/* Form Tambah Manual jika memilih Orang Tua Baru */}
+                                        {formData.isNewParent && (
+                                            <>
+                                                <div className="col-12">
+                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA ORANG TUA / WALI</Label>
+                                                    <Input 
+                                                        type="text" 
+                                                        name="parentName" 
+                                                        placeholder="Masukkan Nama Orang Tua / Wali"
+                                                        value={formData.parentName} 
+                                                        onChange={handleChange} 
+                                                        className="form-control form-control-sm rounded-3 shadow-none" 
+                                                        style={inputStyle}
+                                                        required={formData.isNewParent}
+                                                    />
+                                                </div>
 
-                                        <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>EMAIL ORANG TUA</Label>
-                                            <Input 
-                                                type="email" 
-                                                name="email" 
-                                                placeholder="parent@example.com"
-                                                value={formData.email} 
-                                                onChange={handleChange} 
-                                                className="form-control form-control-sm rounded-3 shadow-none" 
-                                                style={inputStyle}
-                                            />
-                                        </div>
+                                                <div className="col-12 col-md-6">
+                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>EMAIL ORANG TUA</Label>
+                                                    <Input 
+                                                        type="email" 
+                                                        name="email" 
+                                                        placeholder="parent@example.com"
+                                                        value={formData.email} 
+                                                        onChange={handleChange} 
+                                                        className="form-control form-control-sm rounded-3 shadow-none" 
+                                                        style={inputStyle}
+                                                    />
+                                                </div>
 
-                                        <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NO. WHATSAPP</Label>
+                                                <div className="col-12 col-md-6">
+                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NO. WHATSAPP ORANG TUA</Label>
+                                                    <Input 
+                                                        type="tel" 
+                                                        name="parentWhatsapp" 
+                                                        placeholder="081234567890"
+                                                        value={formData.parentWhatsapp} 
+                                                        onChange={handleChange} 
+                                                        maxLength={14}
+                                                        inputMode="numeric"
+                                                        className="form-control form-control-sm rounded-3 shadow-none" 
+                                                        style={inputStyle}
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {/* Detail Singkat Jika Memilih Orang Tua Eksisting */}
+                                        {!formData.isNewParent && formData.parentId && (
+                                            <div className="col-12">
+                                                <div className="p-3 bg-light rounded-3 border">
+                                                    <div className="row g-2" style={{ fontSize: "12px" }}>
+                                                        <div className="col-12 col-md-4"><strong>Nama Orang Tua:</strong> {formData.parentName || "-"}</div>
+                                                        <div className="col-12 col-md-4"><strong>Email:</strong> {formData.email || "-"}</div>
+                                                        <div className="col-12 col-md-4"><strong>WA Orang Tua:</strong> {formData.parentWhatsapp || "-"}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section Kontak Darurat - Terpisah Mandiri */}
+                            <div className="mb-4">
+                                <div className="d-flex align-items-center gap-2 mb-3">
+                                    <IconPhoneCall size={18} style={{ color: "#1E3A8A" }} />
+                                    <h6 className="fw-semibold m-0" style={{ color: "#1E293B", fontSize: "14px" }}>Kontak Darurat</h6>
+                                </div>
+
+                                <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                                    <div className="row g-3">
+                                        <div className="col-12">
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NO. TELEPON / KONTAK DARURAT</Label>
                                             <Input 
                                                 type="tel" 
                                                 name="emergencyContact" 
-                                                placeholder="081234567890"
+                                                placeholder="081234567890 (Kerabat / Kontak Darurat)"
                                                 value={formData.emergencyContact} 
                                                 onChange={handleChange} 
                                                 maxLength={14}
                                                 inputMode="numeric"
                                                 className="form-control form-control-sm rounded-3 shadow-none" 
                                                 style={inputStyle}
+                                                required
                                             />
                                         </div>
                                     </div>

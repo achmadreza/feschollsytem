@@ -18,6 +18,7 @@ import { AddRole } from "./AddRole";
 import { StatCard } from "../../../components/ui/StatCard";
 import { Button } from "../../../components/ui/Button"; 
 import { callApi } from "@/lib/api";
+import Swal from 'sweetalert2';
 
 export interface AdminData {
   _id: string;
@@ -83,13 +84,13 @@ function TableRow({ data, onEdit, onView, onDelete }: { data: AdminData; onEdit:
           </Button>
           
           <div className={`dropdown-menu dropdown-menu-end shadow-sm border ${showDropdown ? 'show' : ''}`} style={{ position: 'absolute', top: '100%', right: 0, zIndex: 1050, display: showDropdown ? 'block' : 'none', minWidth: '160px', borderRadius: '8px' }}>
-            <button className="dropdown-item py-2" onClick={() => { onView(data); setShowDropdown(false); }}>
+            {/* <button className="dropdown-item py-2" onClick={() => { onView(data); setShowDropdown(false); }}>
               <IconEye size={16} className="me-2 text-muted"/> Lihat Detail
             </button>
             <button className="dropdown-item py-2" onClick={() => { onEdit(data); setShowDropdown(false); }}>
               <IconPencil size={16} className="me-2 text-muted"/> Edit
             </button>
-            <div className="dropdown-divider my-1"></div>
+            <div className="dropdown-divider my-1"></div> */}
             <button className="dropdown-item py-2 text-danger" onClick={() => { onDelete(data); setShowDropdown(false); }}>
               <IconTrash size={16} className="me-2"/> Hapus
             </button>
@@ -128,9 +129,33 @@ export function UserTableList() {
 
   const handleEdit = (item: AdminData) => toast.success(`Editing ${item.fullName}`);
   const handleView = (item: AdminData) => toast.success(`Viewing ${item.fullName}`);
-  const handleDelete = (item: AdminData) => toast.error(`Deleting ${item.fullName}`);
+  const handleDelete = async (item: AdminData) => {
+    const confirmResult = await Swal.fire({
+      title: 'Apakah Anda yakin?',
+      text: `Data ${item.fullName} akan dihapus secara permanen.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+      reverseButtons: true
+    });
 
-  // 4. Lakukan penyaringan (filtering) data secara lokal berdasarkan tab yang dipilih
+    if (confirmResult.isConfirmed) {
+      try {
+        const userId = item.id || item._id;
+        await callApi(`users/${userId}`, {
+          method: "DELETE"
+        });
+        toast.success(`Data ${item.fullName} berhasil dihapus`);
+        fetchUsers();
+      } catch (error) {
+        toast.error(`Gagal menghapus data ${item.fullName}`);
+      }
+    }
+  };
+  
   const filteredItems = items.filter(item => {
     if (activeTab === "Semua") return true;
     if (activeTab === "Guru") return item.role.toLowerCase() === "teacher" || item.role.toLowerCase() === "guru";
