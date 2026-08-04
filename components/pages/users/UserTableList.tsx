@@ -31,20 +31,7 @@ export interface AdminData {
   avatarUrl?: string;
 }
 
-function TableRow({ data, onEdit, onView, onDelete }: { data: AdminData; onEdit: (item: AdminData) => void; onView: (item: AdminData) => void; onDelete: (item: AdminData) => void; }) {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
+function TableRow({ data, onDelete }: { data: AdminData; onEdit: (item: AdminData) => void; onView: (item: AdminData) => void; onDelete: (item: AdminData) => void; }) {
   const isTeacher = data.role.toLowerCase() === "teacher" || data.role.toLowerCase() === "guru";
   const roleBadgeStyle = isTeacher 
     ? { backgroundColor: "#EBE3FF", color: "#6F3AFF" } 
@@ -74,28 +61,14 @@ function TableRow({ data, onEdit, onView, onDelete }: { data: AdminData; onEdit:
         </span>
       </td>
       <td className="text-end">
-        <div className={`dropdown ${showDropdown ? 'show' : ''}`} ref={dropdownRef} style={{ position: 'relative' }}>
-          <Button 
-            variant="link" 
-            className="p-1 text-secondary" 
-            onClick={() => setShowDropdown(!showDropdown)}
-          >
-            <IconDotsVertical size={20} />
-          </Button>
-          
-          <div className={`dropdown-menu dropdown-menu-end shadow-sm border ${showDropdown ? 'show' : ''}`} style={{ position: 'absolute', top: '100%', right: 0, zIndex: 1050, display: showDropdown ? 'block' : 'none', minWidth: '160px', borderRadius: '8px' }}>
-            {/* <button className="dropdown-item py-2" onClick={() => { onView(data); setShowDropdown(false); }}>
-              <IconEye size={16} className="me-2 text-muted"/> Lihat Detail
-            </button>
-            <button className="dropdown-item py-2" onClick={() => { onEdit(data); setShowDropdown(false); }}>
-              <IconPencil size={16} className="me-2 text-muted"/> Edit
-            </button>
-            <div className="dropdown-divider my-1"></div> */}
-            <button className="dropdown-item py-2 text-danger" onClick={() => { onDelete(data); setShowDropdown(false); }}>
-              <IconTrash size={16} className="me-2"/> Hapus
-            </button>
-          </div>
-        </div>
+        <Button 
+          variant="link" 
+          className="p-1 text-danger" 
+          onClick={() => onDelete(data)}
+          title="Hapus"
+        >
+          <IconTrash size={20} />
+        </Button>
       </td>
     </tr>
   );
