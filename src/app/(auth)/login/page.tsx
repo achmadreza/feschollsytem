@@ -13,6 +13,7 @@ import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Card, CardBody } from "../../../../components/ui/Card";
 import { Form, FormField } from "../../../../components/ui/Form";
+import { mainMenu, MenuItem } from "../../../../config/menu"; 
 
 function LoginContent() {
   const { t } = useTranslation();
@@ -25,6 +26,42 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+
+  const getFirstAllowedRoute = (userRoleInput: any): string => {
+    const userRole = (typeof userRoleInput === "object" ? userRoleInput?.name : userRoleInput) || "";
+    const filterMenuByRole = (items: MenuItem[]): MenuItem[] => {
+      return items
+        .filter((item) => {
+          if (!item.role || item.role.length === 0) return true;
+          return userRole ? item.role.map((r) => r.toLowerCase()).includes(userRole.toLowerCase()) : false;
+        })
+        .map((item) => {
+          if (item.children) {
+            return {
+              ...item,
+              children: filterMenuByRole(item.children),
+            };
+          }
+          return item;
+        });
+    };
+
+    const allowedMenus = filterMenuByRole(mainMenu);
+    for (const item of allowedMenus) {
+      if (item.href && item.href !== "#") {
+        return item.href;
+      }
+      if (item.children && item.children.length > 0) {
+        for (const child of item.children) {
+          if (child.href && child.href !== "#") {
+            return child.href;
+          }
+        }
+      }
+    }
+
+    return "/dashboard";
+  };
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -45,9 +82,12 @@ function LoginContent() {
         if (response.user) {
           setUser(response.user);
           setContextUser(response.user);
-        }
 
-        router.push("/students");
+          const targetRoute = getFirstAllowedRoute(response.user.role);
+          router.push(targetRoute);
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         throw new Error("Token tidak ditemukan dalam respons server.");
       }
@@ -115,16 +155,7 @@ function LoginContent() {
             </FormField>
 
             <div className="d-flex justify-content-between align-items-center mb-4" style={{ fontSize: "0.875rem" }}>
-              <label className="form-check m-0">
-                {/* <input 
-                  type="checkbox" 
-                  className="form-check-input" 
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  disabled={loading}
-                />
-                <span className="form-check-label">Ingat Saya</span> */}
-              </label>
+              <label className="form-check m-0"></label>
               <Link href="/forgot-password" style={{ color: "#032B88", fontWeight: "600", textDecoration: "none" }}>
                 Lupa Password?
               </Link>

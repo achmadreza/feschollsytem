@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { mainMenu } from "../../config/menu";
+import { mainMenu, MenuItem } from "../../config/menu";
 import * as TablerIcons from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "../auth/AuthProvider";
 
 function IconResolver(name?: string) {
   if (!name) return null;
@@ -17,6 +18,8 @@ function IconResolver(name?: string) {
 
 export function HeaderNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  console.log(user);
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -27,6 +30,27 @@ export function HeaderNav() {
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
+
+  const filterMenuByRole = (items: MenuItem[]): MenuItem[] => {
+    const userRole = typeof user?.role === "object" ? user.role.name : user?.role;
+
+    return items
+      .filter((item) => {
+        if (!item.role || item.role.length === 0) return true;
+        return userRole ? item.role.includes(userRole.toLowerCase()) : false;
+      })
+      .map((item) => {
+        if (item.children) {
+          return {
+            ...item,
+            children: filterMenuByRole(item.children),
+          };
+        }
+        return item;
+      });
+  };
+
+  const filteredMenu = filterMenuByRole(mainMenu);
 
   if (!mounted) {
     return (
@@ -118,7 +142,7 @@ export function HeaderNav() {
               Lumina Learn
             </h2>
             <small className="text-uppercase fw-bold" style={{ fontSize: "10px", color: "#6c7a91", letterSpacing: "1px" }}>
-              Admin Portal
+              {user?.role ? `${user.role} Portal` : "Portal"}
             </small>
           </div>
           <button 
@@ -139,7 +163,7 @@ export function HeaderNav() {
                 Lumina Learn
               </h2>
               <small className="text-uppercase fw-bold" style={{ fontSize: "11px", color: "#6c7a91", letterSpacing: "1px" }}>
-                Admin Portal
+                {user?.role ? `${user.role} Portal` : "Portal"}
               </small>
             </Link>
           </div>
@@ -152,14 +176,14 @@ export function HeaderNav() {
             }}
           >
             <ul className="navbar-nav flex-column gap-1">
-              {mainMenu.map((menu) => {
+              {filteredMenu.map((menu) => {
                 const isActive =
                   menu.href &&
                   (pathname === menu.href || pathname.startsWith(menu.href + "/"));
                 
                 if (!menu.children || menu.children.length === 0) {
                   return (
-                    <li key={menu.label} className="nav-item">
+                    <li key={menu.href || menu.label} className="nav-item">
                       <Link
                         href={menu.href ?? "#"}
                         className="nav-link d-flex align-items-center justify-content-start py-2.5 px-3 rounded-3"
