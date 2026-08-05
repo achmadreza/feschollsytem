@@ -23,14 +23,6 @@ import { Form, FormField } from "../../../../components/ui/Form";
 import Swal from 'sweetalert2';
 import { toast, Toaster } from 'react-hot-toast';
 
-async function hashPassword(plainPassword: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(plainPassword);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 export default function SignupPage() {
     const { t } = useTranslation();
     const [role, setRole] = useState("teacher");
@@ -77,19 +69,17 @@ export default function SignupPage() {
 
         try {
             setLoading(true);
-            const hashedPassword = await hashPassword(password);
-            const hashedConfirmPassword = await hashPassword(confirmPassword);
 
             await callApi("auth/register", {
                 method: "POST",
                 body: {
                     fullName,
                     email,
-                    password: hashedPassword,
+                    password,
                     phone,
                     schoolCode,
                     role,
-                    confirmPassword: hashedConfirmPassword,
+                    confirmPassword,
                     googleOAuthID: "",
                 },
             });

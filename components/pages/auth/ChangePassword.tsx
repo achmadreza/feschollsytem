@@ -9,14 +9,6 @@ import { FormField, Form } from "../../../components/ui/Form";
 import { Toaster, toast } from 'react-hot-toast';
 import { callApi } from "@/lib/api";
 
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
 export function ChangePassword() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -52,14 +44,11 @@ export function ChangePassword() {
         setLoading(true);
 
         try {
-            const hashedCurrentPassword = await hashPassword(currentPassword);
-            const hashedNewPassword = await hashPassword(newPassword);
-
             const response = await callApi("auth/change-password", {
                 method: "POST",
                 body: {
-                    currentPassword: hashedCurrentPassword,
-                    newPassword: hashedNewPassword,
+                    currentPassword,
+                    newPassword,
                 },
             });
 
