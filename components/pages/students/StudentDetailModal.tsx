@@ -190,7 +190,7 @@ export function StudentDetailModal({
                                     </div>
                                     <div className="col-12">
                                         <span className="text-muted d-block small mb-1">Email Orang Tua</span>
-                                        <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>{data.emailParent || "-"}</span>
+                                        <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>{data.parentEmail || "-"}</span>
                                     </div>
                                     <div className="col-12">
                                         <span className="text-muted d-block small mb-1">Nomor Telepon</span>
@@ -206,27 +206,54 @@ export function StudentDetailModal({
                                 </div>
                                 <div className="d-flex flex-column gap-2">
                                     <div className="p-3 rounded-2 d-flex align-items-center justify-content-between" style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}>
-                                        <div>
+                                        <div className="overflow-hidden me-2">
                                             <span className="fw-medium d-block text-dark" style={{ fontSize: "13px" }}>Kartu Keluarga (KK)</span>
-                                            <small className="text-muted">{data.kk || "Belum diunggah"}</small>
+                                            <small className="text-muted d-block text-truncate">
+                                                {data.kk ? "Sudah diunggah" : "Belum diunggah"}
+                                            </small>
                                         </div>
-                                        <BadgeStatus status={data.kk ? "VERIFIED" : "PENDING"} showDot={false} style={{ fontSize: "10px" }} />
+                                        <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                            {data.kk && (
+                                                <a href={data.kk} target="_blank" rel="noreferrer" className="btn btn-sm btn-light py-1 px-2 border" style={{ fontSize: "11px" }}>
+                                                    Lihat
+                                                </a>
+                                            )}
+                                            <BadgeStatus status={data.kk ? "VERIFIED" : "PENDING"} showDot={false} style={{ fontSize: "10px" }} />
+                                        </div>
                                     </div>
 
                                     <div className="p-3 rounded-2 d-flex align-items-center justify-content-between" style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}>
-                                        <div>
+                                        <div className="overflow-hidden me-2">
                                             <span className="fw-medium d-block text-dark" style={{ fontSize: "13px" }}>Akta Kelahiran</span>
-                                            <small className="text-muted">{data.birthCertificate || "Belum diunggah"}</small>
+                                            <small className="text-muted d-block text-truncate">
+                                                {data.birthCertificate ? "Sudah diunggah" : "Belum diunggah"}
+                                            </small>
                                         </div>
-                                        <BadgeStatus status={data.birthCertificate ? "VERIFIED" : "PENDING"} showDot={false} style={{ fontSize: "10px" }} />
+                                        <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                            {data.birthCertificate && (
+                                                <a href={data.birthCertificate} target="_blank" rel="noreferrer" className="btn btn-sm btn-light py-1 px-2 border" style={{ fontSize: "11px" }}>
+                                                    Lihat
+                                                </a>
+                                            )}
+                                            <BadgeStatus status={data.birthCertificate ? "VERIFIED" : "PENDING"} showDot={false} style={{ fontSize: "10px" }} />
+                                        </div>
                                     </div>
 
                                     <div className="p-3 rounded-2 d-flex align-items-center justify-content-between" style={{ backgroundColor: "#F8FAFC", border: "1px solid #E2E8F0" }}>
-                                        <div>
+                                        <div className="overflow-hidden me-2">
                                             <span className="fw-medium d-block text-dark" style={{ fontSize: "13px" }}>Pas Foto 3x4</span>
-                                            <small className="text-muted">{data.photo || "Belum diunggah"}</small>
+                                            <small className="text-muted d-block text-truncate">
+                                                {data.photo ? "Sudah diunggah" : "Belum diunggah"}
+                                            </small>
                                         </div>
-                                        <BadgeStatus status={data.photo ? "VERIFIED" : "PENDING"} showDot={false} style={{ fontSize: "10px" }} />
+                                        <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                                            {data.photo && (
+                                                <a href={data.photo} target="_blank" rel="noreferrer" className="btn btn-sm btn-light py-1 px-2 border" style={{ fontSize: "11px" }}>
+                                                    Lihat
+                                                </a>
+                                            )}
+                                            <BadgeStatus status={data.photo ? "VERIFIED" : "PENDING"} showDot={false} style={{ fontSize: "10px" }} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -32,7 +32,7 @@ export interface StudentData {
   address: string;
   birthPlace: string;
   birthdate: string;
-  emailParent: string;
+  parentEmail: string;
   parentName: string;
   phoneNumber: string;
   schoolYear: string;

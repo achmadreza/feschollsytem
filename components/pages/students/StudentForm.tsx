@@ -139,7 +139,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                     parentId: (student as any).parentId || "",
                     isNewParent: false,
                     parentName: (student as any).parentName || "",
-                    email: student.emailParent || (student as any).parentEmail || "",
+                    email: student.parentEmail || (student as any).parentEmail || "",
                     parentWhatsapp: parentPhone,
                     phoneNumber: parentPhone,
                     emergencyContact: (student as any).emergencyContact || student.phoneNumber || "",
@@ -386,6 +386,13 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
         backgroundColor: "#FFFFFF",
         borderColor: "#E2E8F0"
     };
+
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: 5 }, (_, i) => {
+        const startYear = currentYear + i;
+        const endYear = startYear + 1;
+        return `${startYear}/${endYear}`;
+    });
 
     return (
         <>
@@ -676,18 +683,23 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                             />
                                         </div>
 
-                                        <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TAHUN AJARAN</Label>
-                                            <Input 
-                                                type="text" 
-                                                name="schoolYear" 
-                                                placeholder="Masukkan Tahun Ajaran"
-                                                value={formData.schoolYear} 
-                                                onChange={handleChange} 
-                                                className="form-control form-control-sm rounded-3 shadow-none" 
-                                                style={inputStyle}
-                                            />
-                                        </div>
+                                       <div className="col-12 col-md-6">
+                                        <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TAHUN AJARAN</Label>
+                                        <select 
+                                            name="schoolYear" 
+                                            value={formData.schoolYear} 
+                                            onChange={handleChange} 
+                                            className="form-select form-select-sm rounded-3 shadow-none"
+                                            style={inputStyle}
+                                        >
+                                            <option value="" disabled>Pilih Tahun Ajaran</option>
+                                            {yearOptions.map((year) => (
+                                                <option key={year} value={year}>
+                                                    {year}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
