@@ -292,6 +292,27 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
         setIsSubmitting(true);
 
         try {
+            let createdParentId = formData.parentId;
+            if (formData.isNewParent) {
+                const defaultPassword = "Parent321!";
+                const parentRegisterPayload = {
+                    fullName: formData.parentName,
+                    email: formData.email,
+                    password: defaultPassword,
+                    phone: formData.parentWhatsapp,
+                    schoolCode: formData.schoolCode,
+                    role: "parent",
+                    googleOAuthID: "",
+                    confirmPassword: defaultPassword
+                };
+
+                const registerRes = await callApi("auth/register", {
+                    method: "POST",
+                    body: parentRegisterPayload
+                });
+                createdParentId = registerRes?.id || registerRes?._id || registerRes?.data?.id || registerRes?.data?._id || "";
+            }
+
             const kkDoc = documents.find(d => d.id === "kk")?.fileData || formData.kk;
             const certDoc = documents.find(d => d.id === "birthCertificate")?.fileData || formData.birthCertificate;
             const photoDoc = documents.find(d => d.id === "photo")?.fileData || formData.photo;
@@ -306,7 +327,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 address: formData.address,
                 birthPlace: formData.pob,
                 birthdate: formData.dob ? new Date(formData.dob).toISOString() : "",
-                parentId: formData.isNewParent ? "" : formData.parentId,
+                parentId: createdParentId,
                 parentEmail: formData.email,
                 parentName: formData.parentName,
                 phoneNumber: formData.parentWhatsapp || formData.phoneNumber,
@@ -333,7 +354,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
             if (onSave) onSave(response);
             onClose();
         } catch (error: any) {
-            console.error("Gagal menyimpan data siswa:", error);
+            console.error("Gagal menyimpan data:", error);
 
             const errMessage = Array.isArray(error?.message) 
                 ? error.message.join(", ") 
@@ -529,6 +550,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                         onChange={handleChange} 
                                                         className="form-control form-control-sm rounded-3 shadow-none" 
                                                         style={inputStyle}
+                                                        required={formData.isNewParent}
                                                     />
                                                 </div>
 
@@ -544,6 +566,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                         inputMode="numeric"
                                                         className="form-control form-control-sm rounded-3 shadow-none" 
                                                         style={inputStyle}
+                                                        required={formData.isNewParent}
                                                     />
                                                 </div>
                                             </>
