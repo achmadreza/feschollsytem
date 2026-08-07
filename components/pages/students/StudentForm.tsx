@@ -106,7 +106,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 if (Array.isArray(response)) {
                     const mappedParents: ParentOption[] = response.map((item: any) => ({
                         id: item.id || item._id,
-                        parentName: item.fullName || item.name || "Tanpa Nama",
+                        parentName: item.fullName || item.name || "",
                         email: item.email || "",
                         whatsapp: item.phone || item.whatsapp || "",
                         schoolCode: item.schoolCode || ""
@@ -135,7 +135,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                     address: student.address || "",
                     parentId: (student as any).parentId || "",
                     isNewParent: false,
-                    parentName: (student as any).parentName || student.fatherName || student.motherName || "",
+                    parentName: (student as any).parentName || "",
                     email: student.emailParent || (student as any).parentEmail || "",
                     parentWhatsapp: (student as any).parentWhatsapp || "",
                     phoneNumber: student.phoneNumber || "",
@@ -308,6 +308,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 birthdate: formData.dob ? new Date(formData.dob).toISOString() : "",
                 parentId: formData.isNewParent ? "" : formData.parentId,
                 parentEmail: formData.email,
+                parentName: formData.parentName,
                 phoneNumber: formData.parentWhatsapp || formData.phoneNumber,
                 emergencyContact: formData.emergencyContact,
                 schoolYear: formData.schoolYear,

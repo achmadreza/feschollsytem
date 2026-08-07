@@ -240,7 +240,7 @@ export function StudentTableList() {
 
     const handleDelete = async (item: StudentData) => {
         const name = item.name || item.studentName || "Siswa";
-        const targetId = item._id || item.id;
+        const targetId = item.id;
 
         const confirmResult = await Swal.fire({
             title: 'Apakah Anda yakin?',
@@ -264,10 +264,10 @@ export function StudentTableList() {
             });
 
             setItems(prev => prev.filter(s => (s._id !== targetId && s.id !== targetId)));
-            toast.success(`Data ${name} berhasil dihapus.`);
+            toast.success(`Data ${name} berhasil dihapus.`, { duration: 3000 });
         } catch (error) {
             console.error("Error deleting student:", error);
-            toast.error(`Gagal menghapus data ${name}.`);
+            toast.error(`Gagal menghapus data ${name}.`, { duration: 3000 });
         }
     };
 
