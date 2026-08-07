@@ -123,7 +123,7 @@ function TableRow({
                 >
                     <option value="PROCESS">PROCESS</option>
                     <option value="REJECTED">REJECTED</option>
-                    <option value="FINISHED">FINISHED</option>
+                    <option value="DONE">DONE</option>
                 </select>
             </td>
             <td className="text-end px-3">
@@ -203,7 +203,7 @@ export function StudentTableList() {
 
     const totalSelesai = items.filter(item => {
         const status = item.status?.toUpperCase();
-        return status === "FINISHED" || status === "COMPLETED" || status === "APPROVED" || status === "SELESAI";
+        return status === "DONE" || status === "COMPLETED" || status === "APPROVED" || status === "SELESAI";
     }).length;
 
     const handleCreateNew = () => {
@@ -223,18 +223,26 @@ export function StudentTableList() {
     };
     
     const handleStatusChange = async (item: StudentData, newStatus: string) => {
-        const targetId = item._id || item.id;
+        const targetId = item.id;
         try {
-            await callApi(`students/${targetId}`, {
-                method: "PUT",
-                body: JSON.stringify({ status: newStatus })
+            await callApi(`students/${targetId}/status`, {
+                method: "PATCH",
+                body: { status: newStatus }
             });
 
             setItems(prev => prev.map(s => (s._id === targetId || s.id === targetId) ? { ...s, status: newStatus } : s));
             toast.success(`Status ${item.name || item.studentName} diperbarui menjadi ${newStatus}`);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating status:", error);
-            toast.error("Gagal memperbarui status.");
+            const apiError = error.response?.data || error.data || error;
+            
+            let errorMessage = "Gagal memperbarui status.";
+            if (apiError && apiError.message) {
+                errorMessage = Array.isArray(apiError.message) 
+                    ? apiError.message[0]
+                    : apiError.message;
+            }
+            toast.error(errorMessage);
         }
     };
 
