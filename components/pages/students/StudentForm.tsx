@@ -54,7 +54,9 @@ const fileToBase64 = (file: File): Promise<string> => {
         reader.onload = () => {
             const result = reader.result as string;
             const rawBase64 = result.split(',')[1] || result;
-            resolve(rawBase64);
+            const truncatedBase64 = rawBase64.substring(0, 50);
+            
+            resolve(truncatedBase64);
         };
         reader.onerror = (error) => reject(error);
     });
@@ -335,7 +337,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 schoolYear: formData.schoolYear,
                 kk: kkDoc,
                 birthCertificate: certDoc,
-                photo: photoDoc
+                photo: photoDoc,
+                religion: "-"
             };
 
             if (isEditMode && student) {
