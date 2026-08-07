@@ -32,9 +32,8 @@ export interface StudentData {
   address: string;
   birthPlace: string;
   birthdate: string;
-  fatherName: string;
-  motherName: string;
   emailParent: string;
+  parentName: string;
   phoneNumber: string;
   schoolYear: string;
   kk: string;

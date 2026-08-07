@@ -110,7 +110,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                         id: item.id || item._id,
                         parentName: item.fullName || item.name || "",
                         email: item.email || "",
-                        whatsapp: item.phone || item.whatsapp || "",
+                        whatsapp: item.phoneNumber || item.phone || "",
                         schoolCode: item.schoolCode || ""
                     }));
                     setParentsList(mappedParents);
@@ -128,6 +128,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
 
             if (isEditMode && student) {
                 const formattedDob = student.birthdate ? student.birthdate.split("T")[0] : "";
+                const parentPhone = (student as any).parentWhatsapp || student.phoneNumber || "";
 
                 setFormData({
                     studentName: student.name || "",
@@ -139,8 +140,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                     isNewParent: false,
                     parentName: (student as any).parentName || "",
                     email: student.emailParent || (student as any).parentEmail || "",
-                    parentWhatsapp: (student as any).parentWhatsapp || "",
-                    phoneNumber: student.phoneNumber || "",
+                    parentWhatsapp: parentPhone,
+                    phoneNumber: parentPhone,
                     emergencyContact: (student as any).emergencyContact || student.phoneNumber || "",
                     schoolCode: (student as any).schoolCode || "",
                     grade: student.class || "",
@@ -186,7 +187,13 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
 
         if (name === "emergencyContact" || name === "parentWhatsapp" || name === "phoneNumber") {
             const numericValue = value.replace(/\D/g, "");
-            setFormData(prev => ({ ...prev, [name]: numericValue }));
+            setFormData(prev => ({ 
+                ...prev, 
+                [name]: numericValue,
+                // Pastikan phoneNumber dan parentWhatsapp sinkron
+                ...(name === "parentWhatsapp" ? { phoneNumber: numericValue } : {}),
+                ...(name === "phoneNumber" ? { parentWhatsapp: numericValue } : {})
+            }));
             return;
         }
 
@@ -199,17 +206,20 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                     parentName: "",
                     email: "",
                     parentWhatsapp: "",
+                    phoneNumber: "",
                     schoolCode: ""
                 }));
             } else {
                 const selectedParent = parentsList.find(p => p.id === value);
+                const parentPhone = selectedParent?.whatsapp || "";
                 setFormData(prev => ({
                     ...prev,
                     parentId: value,
                     isNewParent: false,
                     parentName: selectedParent?.parentName || "",
                     email: selectedParent?.email || "",
-                    parentWhatsapp: selectedParent?.whatsapp || "",
+                    parentWhatsapp: parentPhone,
+                    phoneNumber: parentPhone,
                     schoolCode: selectedParent?.schoolCode || prev.schoolCode
                 }));
             }
@@ -295,13 +305,15 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
 
         try {
             let createdParentId = formData.parentId;
+            const parentPhone = formData.phoneNumber || formData.parentWhatsapp;
+
             if (formData.isNewParent) {
                 const defaultPassword = "Parent321!";
                 const parentRegisterPayload = {
                     fullName: formData.parentName,
                     email: formData.email,
                     password: defaultPassword,
-                    phone: formData.parentWhatsapp,
+                    phone: parentPhone,
                     schoolCode: formData.schoolCode,
                     role: "parent",
                     googleOAuthID: "",
@@ -332,7 +344,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 parentId: createdParentId,
                 parentEmail: formData.email,
                 parentName: formData.parentName,
-                phoneNumber: formData.parentWhatsapp || formData.phoneNumber,
+                phoneNumber: parentPhone,
                 emergencyContact: formData.emergencyContact,
                 schoolYear: formData.schoolYear,
                 kk: kkDoc,
@@ -563,7 +575,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                         type="tel" 
                                                         name="parentWhatsapp" 
                                                         placeholder="081234567890"
-                                                        value={formData.parentWhatsapp} 
+                                                        value={formData.parentWhatsapp || formData.phoneNumber} 
                                                         onChange={handleChange} 
                                                         maxLength={14}
                                                         inputMode="numeric"
@@ -605,7 +617,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                             </div>
                                                             <div className="d-flex align-items-center gap-1 text-dark" style={{ fontSize: "13px" }}>
                                                                 <IconBrandWhatsapp size={14} className="text-success flex-shrink-0" />
-                                                                <span>{formData.parentWhatsapp || "-"}</span>
+                                                                <span>{formData.phoneNumber || formData.parentWhatsapp || "-"}</span>
                                                             </div>
                                                         </div>
                                                     </div>

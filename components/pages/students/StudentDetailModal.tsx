@@ -185,12 +185,8 @@ export function StudentDetailModal({
                                 </div>
                                 <div className="row g-3">
                                     <div className="col-6">
-                                        <span className="text-muted d-block small mb-1">Nama Ayah</span>
-                                        <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>{data.fatherName || "-"}</span>
-                                    </div>
-                                    <div className="col-6">
-                                        <span className="text-muted d-block small mb-1">Nama Ibu</span>
-                                        <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>{data.motherName || "-"}</span>
+                                        <span className="text-muted d-block small mb-1">Nama Orang Tua</span>
+                                        <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>{data.parentName || "-"}</span>
                                     </div>
                                     <div className="col-12">
                                         <span className="text-muted d-block small mb-1">Email Orang Tua</span>
