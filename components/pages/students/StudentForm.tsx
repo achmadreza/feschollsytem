@@ -349,8 +349,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                 schoolYear: formData.schoolYear,
                 kk: kkDoc,
                 birthCertificate: certDoc,
-                photo: photoDoc,
-                religion: "-"
+                photo: photoDoc
             };
 
             if (isEditMode && student) {

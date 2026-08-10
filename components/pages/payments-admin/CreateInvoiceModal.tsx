@@ -7,7 +7,9 @@ import {
     IconFilePlus,
     IconLoader2,
     IconCheck,
-    IconChevronDown
+    IconChevronDown,
+    IconSearch,
+    IconX
 } from "@tabler/icons-react";
 import { Modal } from "../../ui/Modal";
 import { Input } from "../../ui/Input";
@@ -23,13 +25,19 @@ export interface Student {
     class?: string;
 }
 
+export interface PaymentItem {
+    type: string;
+    amount: string;
+}
+
 export interface InvoiceFormData {
     studentId: string | number;
     studentName: string;
-    paymentType: string;
+    paymentTypes: string[];
+    items: PaymentItem[];
+    totalAmount: number;
     month: string;
     year: string;
-    amount: string;
     dueDate: string;
     notes: string;
 }
@@ -40,6 +48,14 @@ interface CreateInvoiceModalProps {
     onSubmit?: (data: InvoiceFormData) => void;
 }
 
+const PAYMENT_OPTIONS = [
+    "SPP Bulanan",
+    "Uang Buku / LKS",
+    "Uang Gedung",
+    "Ekskul",
+    "Seragam"
+];
+
 export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceModalProps) {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 5 }, (_, i) => currentYear + i);
@@ -47,10 +63,14 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
     const [formData, setFormData] = useState<InvoiceFormData>({
         studentId: "",
         studentName: "",
-        paymentType: "",
-        month: "",
+        paymentTypes: ["Uang Gedung", "Ekskul"],
+        items: [
+            { type: "Uang Gedung", amount: "400000" },
+            { type: "Ekskul", amount: "0" }
+        ],
+        totalAmount: 400000,
+        month: "Januari",
         year: currentYear.toString(),
-        amount: "",
         dueDate: `${currentYear}-10-05`,
         notes: ""
     });
@@ -59,7 +79,10 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
     const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+    const [isPaymentDropdownOpen, setIsPaymentDropdownOpen] = useState<boolean>(false);
+
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const paymentDropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -67,13 +90,18 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
         } else {
             setSearchQuery("");
             setIsDropdownOpen(false);
+            setIsPaymentDropdownOpen(false);
             setFormData({
                 studentId: "",
                 studentName: "",
-                paymentType: "",
-                month: "",
+                paymentTypes: ["Uang Gedung", "Ekskul"],
+                items: [
+                    { type: "Uang Gedung", amount: "400000" },
+                    { type: "Ekskul", amount: "0" }
+                ],
+                totalAmount: 400000,
+                month: "Januari",
                 year: currentYear.toString(),
-                amount: "",
                 dueDate: `${currentYear}-10-05`,
                 notes: ""
             });
@@ -84,6 +112,9 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsDropdownOpen(false);
+            }
+            if (paymentDropdownRef.current && !paymentDropdownRef.current.contains(event.target as Node)) {
+                setIsPaymentDropdownOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -121,15 +152,55 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
         setIsDropdownOpen(false);
     };
 
-    const formatNumber = (val: string) => {
-        const rawValue = val.replace(/\D/g, "");
-        if (!rawValue) return "";
-        return new Intl.NumberFormat("id-ID").format(Number(rawValue));
+    const togglePaymentType = (type: string, closeDropdown: boolean = false) => {
+        let updatedTypes: string[];
+        let updatedItems: PaymentItem[];
+
+        if (formData.paymentTypes.includes(type)) {
+            updatedTypes = formData.paymentTypes.filter((t) => t !== type);
+            updatedItems = formData.items.filter((item) => item.type !== type);
+        } else {
+            updatedTypes = [...formData.paymentTypes, type];
+            updatedItems = [...formData.items, { type, amount: "0" }];
+        }
+
+        const total = calculateTotal(updatedItems);
+        setFormData({
+            ...formData,
+            paymentTypes: updatedTypes,
+            items: updatedItems,
+            totalAmount: total
+        });
+
+        // Tutup dropdown jika dipicu dari menu pilihan
+        if (closeDropdown) {
+            setIsPaymentDropdownOpen(false);
+        }
     };
 
-    const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatNumber(e.target.value);
-        setFormData({ ...formData, amount: formatted });
+    const handleItemAmountChange = (type: string, value: string) => {
+        const rawValue = value.replace(/\D/g, "");
+        const updatedItems = formData.items.map((item) =>
+            item.type === type ? { ...item, amount: rawValue } : item
+        );
+        const total = calculateTotal(updatedItems);
+
+        setFormData({
+            ...formData,
+            items: updatedItems,
+            totalAmount: total
+        });
+    };
+
+    const calculateTotal = (items: PaymentItem[]) => {
+        return items.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    };
+
+    const formatNumber = (val: string | number) => {
+        if (!val && val !== 0) return "0";
+        const rawValue = val.toString().replace(/\D/g, "");
+        if (!rawValue) return "0";
+        return new Intl.NumberFormat("id-ID").format(Number(rawValue));
     };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -140,13 +211,8 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
             return;
         }
 
-        const cleanAmount = formData.amount.replace(/\D/g, "");
-        
         if (onSubmit) {
-            onSubmit({
-                ...formData,
-                amount: cleanAmount
-            });
+            onSubmit(formData);
         }
         onClose();
     };
@@ -157,7 +223,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                 <div className="d-flex align-items-center gap-3">
                     <div 
                         className="d-flex align-items-center justify-content-center rounded-4 flex-shrink-0" 
-                        style={{ width: "48px", height: "48px", backgroundColor: "#EEF2FF", color: "#3B82F6" }}
+                        style={{ width: "48px", height: "48px", color: "#3B82F6" }}
                     >
                         <IconReceipt size={26} />
                     </div>
@@ -176,13 +242,18 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                 <div className="p-3 p-sm-4 d-flex flex-column gap-3">
                     <div className="position-relative" ref={dropdownRef}>
                         <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                            Pilih Siswa
+                            Pilih Siswa <span className="text-danger">*</span>
                         </Label>
                         <div className="position-relative">
+                            <IconSearch 
+                                size={18} 
+                                className="position-absolute top-50 translate-middle-y text-secondary" 
+                                style={{ left: "14px" }} 
+                            />
                             <Input 
                                 type="text" 
-                                className="form-control border-0 py-2.5" 
-                                placeholder="Pilih Nama Siswa..."
+                                className="form-control border-0 py-2.5 ps-5"
+                                placeholder="Cari Nama Siswa atau ID (e.g. 2024001)"
                                 value={searchQuery}
                                 onFocus={() => setIsDropdownOpen(true)}
                                 onChange={(e) => {
@@ -194,17 +265,11 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                 }}
                                 required
                             />
-                            {isLoadingStudents ? (
+                            {isLoadingStudents && (
                                 <IconLoader2 
                                     size={18} 
                                     className="position-absolute top-50 translate-middle-y text-secondary animate-spin" 
                                     style={{ right: "14px" }} 
-                                />
-                            ) : (
-                                <IconChevronDown 
-                                    size={18} 
-                                    className="position-absolute top-50 translate-middle-y text-secondary" 
-                                    style={{ right: "14px", pointerEvents: "none" }} 
                                 />
                             )}
                         </div>
@@ -250,96 +315,145 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                         )}
                     </div>
 
-                    <div className="row g-3">
-                        <div className="col-12 col-md-6">
-                            <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                                Jenis Pembayaran
-                            </Label>
-                            <select 
-                                className="form-select border-0 py-2.5 px-3"
-                                value={formData.paymentType}
-                                onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })}
-                            >
-                                <option value="" disabled>Pilih Jenis Pembayaran</option>
-                                <option value="SPP Bulanan">SPP Bulanan</option>
-                                <option value="Uang Gedung">Uang Gedung</option>
-                                <option value="Ekskul">Ekskul</option>
-                            </select>
+                    <div className="position-relative" ref={paymentDropdownRef}>
+                        <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
+                            Jenis Pembayaran (Multi-select)
+                        </Label>
+                        <div 
+                            className="form-control border-0 py-2 px-3 d-flex align-items-center flex-wrap gap-2 cursor-pointer"
+                            style={{ minHeight: "44px" }}
+                            onClick={() => setIsPaymentDropdownOpen(!isPaymentDropdownOpen)}
+                        >
+                            {formData.paymentTypes.map((type) => (
+                                <span 
+                                    key={type} 
+                                    className="badge d-inline-flex align-items-center gap-1.5 py-1.5 px-2.5 rounded-pill text-white"
+                                    style={{ backgroundColor: "#818CF8", fontWeight: 500, fontSize: "12px" }}
+                                >
+                                    {type}
+                                    <IconX 
+                                        size={14} 
+                                        className="cursor-pointer" 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            togglePaymentType(type, false);
+                                        }} 
+                                    />
+                                </span>
+                            ))}
+                            <span className="text-secondary flex-grow-1" style={{ fontSize: "13px" }}>
+                                Pilih jenis lainnya...
+                            </span>
+                            <IconChevronDown size={18} className="text-secondary ms-auto" />
                         </div>
-                        <div className="col-12 col-md-6">
-                            <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                                Periode Tagihan
-                            </Label>
-                            <div className="d-flex gap-2">
-                                <select 
-                                    className="form-select border-0 py-2.5 px-2 px-sm-3 flex-grow-1"
-                                    value={formData.month}
-                                    onChange={(e) => setFormData({ ...formData, month: e.target.value })}
-                                >
-                                    <option value="" disabled>Pilih Bulan</option>
-                                    <option value="Januari">Januari</option>
-                                    <option value="Februari">Februari</option>
-                                    <option value="Maret">Maret</option>
-                                    <option value="April">April</option>
-                                    <option value="Mei">Mei</option>
-                                    <option value="Juni">Juni</option>
-                                    <option value="Juli">Juli</option>
-                                    <option value="Agustus">Agustus</option>
-                                    <option value="September">September</option>
-                                    <option value="Oktober">Oktober</option>
-                                    <option value="November">November</option>
-                                    <option value="Desember">Desember</option>
-                                </select>
-                                
-                                <select 
-                                    className="form-select border-0 py-2.5 px-2 px-sm-3"
-                                    style={{ width: "100px" }}
-                                    value={formData.year}
-                                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                                >
-                                    {years.map((year) => (
-                                        <option key={year} value={year.toString()}>
-                                            {year}
-                                        </option>
-                                    ))}
-                                </select>
+
+                        {isPaymentDropdownOpen && (
+                            <div className="position-absolute w-100 mt-1 bg-white border rounded-3 shadow-sm z-3 py-1">
+                                {PAYMENT_OPTIONS.map((option) => {
+                                    const isChecked = formData.paymentTypes.includes(option);
+                                    return (
+                                        <div 
+                                            key={option}
+                                            className="d-flex align-items-center justify-content-between px-3 py-2 cursor-pointer hover-bg-light"
+                                            style={{ fontSize: "13px", cursor: "pointer" }}
+                                            onClick={() => togglePaymentType(option, true)}
+                                        >
+                                            <span>{option}</span>
+                                            {isChecked && <IconCheck size={16} className="text-primary" />}
+                                        </div>
+                                    );
+                                })}
                             </div>
+                        )}
+                    </div>
+
+                    {formData.items.length > 0 && (
+                        <div className="d-flex flex-column gap-2 mt-1">
+                            <span className="fw-bold text-uppercase text-secondary" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                RINCIAN ITEM
+                            </span>
+                            {formData.items.map((item) => (
+                                <div 
+                                    key={item.type} 
+                                    className="p-3 d-flex align-items-center justify-content-between rounded-3"
+                                >
+                                    <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>
+                                        {item.type}
+                                    </span>
+                                    <div className="d-flex align-items-center bg-white rounded-2 px-3 py-1.5 border" style={{ width: "160px" }}>
+                                        <span className="text-secondary fw-medium me-2" style={{ fontSize: "12px" }}>Rp</span>
+                                        <input 
+                                            type="text" 
+                                            className="border-0 p-0 text-end fw-bold w-100 text-dark"
+                                            style={{ outline: "none", fontSize: "13px" }}
+                                            value={formatNumber(item.amount)}
+                                            onChange={(e) => handleItemAmountChange(item.type, e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                    )}
+
+                    <div 
+                        className="p-3 px-4 d-flex align-items-center justify-content-between rounded-3 mt-1"
+                    >
+                        <span className="fw-bold text-dark" style={{ fontSize: "15px", color: "#1E1B4B" }}>
+                            Total Pembayaran
+                        </span>
+                        <span className="fw-bold" style={{ fontSize: "22px", color: "#1E1B4B" }}>
+                            Rp {formatNumber(formData.totalAmount)}
+                        </span>
                     </div>
 
                     <div className="row g-3">
-                        <div className="col-12 col-md-6">
+                        <div className="col-12 col-md-8">
                             <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                                Jumlah Tagihan (Amount)
+                                Periode Tagihan
                             </Label>
-                            <div className="input-group">
-                                <span 
-                                    className="input-group-text border-0 fw-medium text-secondary px-3" 
-                                    style={{ backgroundColor: "#F1F5F9", borderRadius: "12px 0 0 12px", fontSize: "14px" }}
-                                >
-                                    Rp
-                                </span>
-                                <Input 
-                                    type="text" 
-                                    className="form-control border-0 py-2.5 fw-bold text-dark"
-                                    placeholder="0"
-                                    value={formData.amount}
-                                    onChange={handleAmountChange}
-                                />
-                            </div>
+                            <select 
+                                className="form-select border-0 py-2.5 px-3"
+                                value={formData.month}
+                                onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                            >
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
                         </div>
-                        <div className="col-12 col-md-6">
-                            <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                                Tanggal Jatuh Tempo
-                            </Label>
-                            <div className="position-relative">
-                                <input 
-                                    type="date" 
-                                    className="form-control border-0 py-2.5 px-3" 
-                                    value={formData.dueDate}
-                                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                                />
-                            </div>
+                        <div className="col-12 col-md-4 d-flex align-items-end">
+                            <select 
+                                className="form-select border-0 py-2.5 px-3"
+                                value={formData.year}
+                                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                            >
+                                {years.map((y) => (
+                                    <option key={y} value={y.toString()}>{y}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
+                            Tanggal Jatuh Tempo
+                        </Label>
+                        <div className="position-relative">
+                            <input 
+                                type="date" 
+                                className="form-control border-0 py-2.5 px-3"
+                                value={formData.dueDate}
+                                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                            />
                         </div>
                     </div>
 
@@ -348,7 +462,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                             Catatan Tambahan (Opsional)
                         </Label>
                         <textarea 
-                            className="form-control border-0 p-3" 
+                            className="form-control border-0 p-3"
                             rows={3}
                             placeholder="Contoh: Termasuk biaya seragam olahraga tambahan..."
                             value={formData.notes}
@@ -358,7 +472,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
 
                     <div 
                         className="p-3 d-flex align-items-start gap-2.5" 
-                        style={{ backgroundColor: "#EEF2FF", borderRadius: "12px" }}
+                        style={{ borderRadius: "12px" }}
                     >
                         <IconInfoCircle size={20} className="text-primary flex-shrink-0 mt-0.5" />
                         <p className="m-0 text-secondary" style={{ fontSize: "12px", lineHeight: "1.5" }}>
@@ -369,7 +483,6 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
 
                 <div 
                     className="p-3 p-sm-4 bg-light bg-opacity-50 d-flex align-items-center justify-content-end gap-3 border-top" 
-                    style={{ borderColor: "#F1F5F9" }}
                 >
                     <Button 
                         type="button"

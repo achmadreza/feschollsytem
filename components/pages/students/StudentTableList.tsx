@@ -27,7 +27,6 @@ export interface StudentData {
   name: string;
   class: string;
   gender: string;
-  religion: string;
   status: string;
   address: string;
   birthPlace: string;
@@ -120,9 +119,9 @@ function TableRow({
                     onChange={(e) => onStatusChange(data, e.target.value)}
                     style={{ fontSize: "13px", width: "130px", cursor: "pointer", borderRadius: '8px' }}
                 >
-                    <option value="PROCESS">PROCESS</option>
-                    <option value="REJECTED">REJECTED</option>
-                    <option value="DONE">DONE</option>
+                    <option value="PROCESS">PROSES</option>
+                    <option value="REJECTED">TOLAK</option>
+                    <option value="DONE">SELESAI</option>
                 </select>
             </td>
             <td className="text-end px-3">

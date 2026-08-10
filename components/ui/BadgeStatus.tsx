@@ -19,6 +19,7 @@ export function BadgeStatus({
         switch (statusName) {
             case "Selesai":
             case "VERIFIED":
+            case "DONE":
             case "LUNAS":
                 return { backgroundColor: "#D1FAE5", color: "#065F46" };
             case "PROCESS":
