@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { 
     IconX, 
     IconReceipt, 
@@ -7,11 +8,13 @@ import {
     IconPhoto, 
     IconCheck,
     IconClock,
-    IconX as IconReject
+    IconX as IconReject,
+    IconLoader2
 } from "@tabler/icons-react";
+import { callApi } from "@/lib/api";
 
 export interface Transaction {
-    id: string;
+    id: string; 
     name: string;
     class: string;
     title: string;
@@ -26,21 +29,110 @@ export interface Transaction {
     recipient?: string;
 }
 
+interface PaymentItem {
+    paymentType: string;
+    amount: number;
+    _id: string;
+}
+
+interface BillingDetailResponse {
+    _id: string;
+    invoiceNumber: string;
+    studentId: string;
+    studentName: string;
+    studentClass: string;
+    schoolCode: string;
+    parentId: string;
+    parentEmail: string;
+    description: string;
+    paymentList: PaymentItem[];
+    dueDate: string;
+    status: string;
+    paidAt: string | null;
+    id: string; 
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
+
 interface DetailTransactionModalProps {
     transaction: Transaction;
     onClose: () => void;
     onApprove?: (id: string) => void;
     onReject?: (id: string) => void;
+    billingId?: string; 
 }
+
+const formatRupiah = (value: number) => {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0
+    }).format(value);
+};
+
+const formatDate = (dateString: string | null | undefined, fallback: string) => {
+    if (!dateString) return fallback;
+    try {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZoneName: "short"
+        }).format(date);
+    } catch (e) {
+        return fallback;
+    }
+};
 
 export function DetailTransactionModal({
     transaction,
     onClose,
     onApprove,
-    onReject
+    onReject,
+    billingId
 }: DetailTransactionModalProps) {
+    const [billingData, setBillingData] = useState<BillingDetailResponse | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
     const currentStatus = transaction.status.toLowerCase();
     const isSuccess = currentStatus === "lunas" || currentStatus === "disetujui";
+
+    const activeBillingId = billingId || "f4297f62-727d-427a-9134-cf52604955df";
+
+    useEffect(() => {
+        async function fetchBillingDetail() {
+            try {
+                setIsLoading(true);
+                setError(null);
+                
+                const response = await callApi<BillingDetailResponse | { data: BillingDetailResponse }>(`billings/${activeBillingId}`, { 
+                    method: "GET" 
+                });
+
+                const data = (response as any)?.data ? (response as any).data : response;
+                
+                if (data && data.paymentList) {
+                    setBillingData(data);
+                } else {
+                    setError("Detail rincian tagihan tidak ditemukan.");
+                }
+            } catch (err: any) {
+                console.error("Error fetching billing detail:", err);
+                setError("Gagal memuat detail tagihan resmi.");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        if (activeBillingId) {
+            fetchBillingDetail();
+        }
+    }, [activeBillingId]);
 
     const getStatusBadge = () => {
         if (isSuccess) {
@@ -109,45 +201,69 @@ export function DetailTransactionModal({
                                     fontSize: "22px"
                                 }}
                             >
-                                {transaction.name.charAt(0)}
+                                {(billingData?.studentName || transaction.name).charAt(0)}
                             </div>
                             <div>
                                 <h6 className="fw-bold text-dark m-0" style={{ fontSize: "17px" }}>
-                                    {transaction.name}
+                                    {billingData?.studentName || transaction.name}
                                 </h6>
-                                <span className="text-secondary font-medium" style={{ fontSize: "13px" }}>
-                                    {transaction.id} &bull; {transaction.class}
+                                <span className="text-secondary font-medium" style={{ fontSize: "12px" }}>
+                                    ID Tagihan: <span className="fw-semibold text-dark">{billingData?.id || activeBillingId}</span> 
+                                    <br />
+                                    INVOICE NUMBER : <span className="fw-semibold text-dark">{billingData?.invoiceNumber}</span> 
                                 </span>
                             </div>
                         </div>
 
-                        <div className="mb-4">
-                            <div className="d-flex align-items-center gap-2 mb-2 text-uppercase fw-bold" style={{ fontSize: "11px", color: "#1E3A8A", letterSpacing: "0.05em" }}>
-                                <IconReceipt size={16} />
-                                <span>Detail Tagihan</span>
+                        {isLoading ? (
+                            <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-2">
+                                <IconLoader2 className="animate-spin text-primary" size={32} style={{ animation: "spin 1s linear infinite" }} />
+                                <span className="text-secondary" style={{ fontSize: "14px" }}>Memuat rincian item tagihan...</span>
+                                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                             </div>
+                        ) : error ? (
+                            <div className="alert alert-danger rounded-4 py-3 text-center" style={{ fontSize: "14px" }}>
+                                {error}
+                            </div>
+                        ) : (
+                            <div className="mb-4">
+                                <div className="d-flex align-items-center gap-2 mb-2 text-uppercase fw-bold" style={{ fontSize: "11px", color: "#1E3A8A", letterSpacing: "0.05em" }}>
+                                    <IconReceipt size={16} />
+                                    <span>Detail Rincian Item Tagihan</span>
+                                </div>
 
-                            <div className="p-3 rounded-4" style={{ backgroundColor: "#F8FAFC" }}>
-                                <div className="d-flex align-items-center justify-content-between mb-2">
-                                    <span className="text-secondary" style={{ fontSize: "14px" }}>Jenis Tagihan</span>
-                                    <span className="fw-semibold text-dark" style={{ fontSize: "14px" }}>
-                                        {transaction.subtitle || transaction.title}
-                                    </span>
-                                </div>
-                                <div className="d-flex align-items-center justify-content-between pb-3 border-bottom" style={{ borderColor: "#E2E8F0" }}>
-                                    <span className="text-secondary" style={{ fontSize: "14px" }}>Periode</span>
-                                    <span className="fw-semibold text-dark" style={{ fontSize: "14px" }}>
-                                        {transaction.title}
-                                    </span>
-                                </div>
-                                <div className="d-flex align-items-center justify-content-between pt-3">
-                                    <span className="fw-bold text-dark" style={{ fontSize: "15px" }}>Total Tagihan</span>
-                                    <span className="fw-bold" style={{ fontSize: "18px", color: "#0F172A" }}>
-                                        {transaction.amount}
-                                    </span>
+                                <div className="p-3 rounded-4" style={{ backgroundColor: "#F8FAFC" }}>
+                                    {billingData?.paymentList && billingData.paymentList.length > 0 ? (
+                                        billingData.paymentList.map((item) => (
+                                            <div key={item._id} className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom border-light">
+                                                <span className="text-secondary" style={{ fontSize: "14px" }}>{item.paymentType}</span>
+                                                <span className="fw-semibold text-dark" style={{ fontSize: "14px" }}>
+                                                    {formatRupiah(item.amount)}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-muted py-2" style={{ fontSize: "13px" }}>
+                                            Tidak ada rincian item pembayaran.
+                                        </div>
+                                    )}
+
+                                    <div className="d-flex align-items-center justify-content-between pb-3">
+                                        <span className="text-secondary" style={{ fontSize: "14px" }}>Keterangan</span>
+                                        <span className="fw-semibold text-dark text-end" style={{ fontSize: "13px", maxWidth: "70%" }}>
+                                            {billingData?.description}
+                                        </span>
+                                    </div>
+
+                                    <div className="d-flex align-items-center justify-content-between pt-3 border-top" style={{ borderColor: "#E2E8F0" }}>
+                                        <span className="fw-bold text-dark" style={{ fontSize: "15px" }}>Total Tagihan</span>
+                                        <span className="fw-bold" style={{ fontSize: "18px", color: "#0F172A" }}>
+                                            {transaction.amount}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="mb-4">
                             <div className="d-flex align-items-center gap-2 mb-2 text-uppercase fw-bold" style={{ fontSize: "11px", color: "#1E3A8A", letterSpacing: "0.05em" }}>
@@ -165,7 +281,10 @@ export function DetailTransactionModal({
                                 <div className="d-flex align-items-center justify-content-between">
                                     <span className="text-secondary" style={{ fontSize: "14px" }}>Tanggal Bayar</span>
                                     <span className="fw-semibold text-dark" style={{ fontSize: "14px" }}>
-                                        {transaction.date}
+                                        {billingData 
+                                            ? formatDate(billingData.paidAt, "Belum Dibayar / Menunggu") 
+                                            : transaction.date
+                                        }
                                     </span>
                                 </div>
                             </div>
@@ -237,7 +356,8 @@ export function DetailTransactionModal({
                                     type="button"
                                     className="btn btn-outline-danger fw-semibold py-2.5 flex-fill"
                                     style={{ borderRadius: "14px" }}
-                                    onClick={() => onReject ? onReject(transaction.id) : onClose()}
+                                    onClick={() => onReject ? onReject(billingData?.id || activeBillingId) : onClose()}
+                                    disabled={isLoading}
                                 >
                                     Tolak Pembayaran
                                 </button>
@@ -245,7 +365,8 @@ export function DetailTransactionModal({
                                     type="button"
                                     className="btn fw-semibold py-2.5 flex-fill text-white"
                                     style={{ backgroundColor: "#10B981", borderRadius: "14px" }}
-                                    onClick={() => onApprove ? onApprove(transaction.id) : onClose()}
+                                    onClick={() => onApprove ? onApprove(billingData?.id || activeBillingId) : onClose()}
+                                    disabled={isLoading}
                                 >
                                     Terima Pembayaran
                                 </button>
