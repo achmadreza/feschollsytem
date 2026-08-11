@@ -8,8 +8,8 @@ import {
     IconLoader2,
     IconCheck,
     IconChevronDown,
-    IconSearch,
-    IconX
+    IconX,
+    IconPlus
 } from "@tabler/icons-react";
 import { Modal } from "../../ui/Modal";
 import { Input } from "../../ui/Input";
@@ -53,7 +53,8 @@ const PAYMENT_OPTIONS = [
     "Uang Buku / LKS",
     "Uang Gedung",
     "Ekskul",
-    "Seragam"
+    "Seragam",
+    "Lainnya"
 ];
 
 export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceModalProps) {
@@ -80,6 +81,8 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [isPaymentDropdownOpen, setIsPaymentDropdownOpen] = useState<boolean>(false);
+    const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
+    const [customPaymentInput, setCustomPaymentInput] = useState<string>("");
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const paymentDropdownRef = useRef<HTMLDivElement>(null);
@@ -91,6 +94,8 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
             setSearchQuery("");
             setIsDropdownOpen(false);
             setIsPaymentDropdownOpen(false);
+            setShowCustomInput(false);
+            setCustomPaymentInput("");
             setFormData({
                 studentId: "",
                 studentName: "",
@@ -115,6 +120,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
             }
             if (paymentDropdownRef.current && !paymentDropdownRef.current.contains(event.target as Node)) {
                 setIsPaymentDropdownOpen(false);
+                setShowCustomInput(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -153,6 +159,11 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
     };
 
     const togglePaymentType = (type: string, closeDropdown: boolean = false) => {
+        if (type === "Lainnya") {
+            setShowCustomInput(true);
+            return;
+        }
+
         let updatedTypes: string[];
         let updatedItems: PaymentItem[];
 
@@ -172,10 +183,33 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
             totalAmount: total
         });
 
-        // Tutup dropdown jika dipicu dari menu pilihan
         if (closeDropdown) {
             setIsPaymentDropdownOpen(false);
         }
+    };
+
+    const handleAddCustomPayment = () => {
+        const trimmedValue = customPaymentInput.trim();
+        if (!trimmedValue) return;
+        if (formData.paymentTypes.includes(trimmedValue)) {
+            alert("Jenis pembayaran ini sudah ditambahkan.");
+            return;
+        }
+
+        const updatedTypes = [...formData.paymentTypes, trimmedValue];
+        const updatedItems = [...formData.items, { type: trimmedValue, amount: "0" }];
+        const total = calculateTotal(updatedItems);
+
+        setFormData({
+            ...formData,
+            paymentTypes: updatedTypes,
+            items: updatedItems,
+            totalAmount: total
+        });
+
+        setCustomPaymentInput("");
+        setShowCustomInput(false);
+        setIsPaymentDropdownOpen(false);
     };
 
     const handleItemAmountChange = (type: string, value: string) => {
@@ -245,11 +279,6 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                             Pilih Siswa <span className="text-danger">*</span>
                         </Label>
                         <div className="position-relative">
-                            <IconSearch 
-                                size={18} 
-                                className="position-absolute top-50 translate-middle-y text-secondary" 
-                                style={{ left: "14px" }} 
-                            />
                             <Input 
                                 type="text" 
                                 className="form-control border-0 py-2.5 ps-5"
@@ -349,20 +378,62 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
 
                         {isPaymentDropdownOpen && (
                             <div className="position-absolute w-100 mt-1 bg-white border rounded-3 shadow-sm z-3 py-1">
-                                {PAYMENT_OPTIONS.map((option) => {
-                                    const isChecked = formData.paymentTypes.includes(option);
-                                    return (
-                                        <div 
-                                            key={option}
-                                            className="d-flex align-items-center justify-content-between px-3 py-2 cursor-pointer hover-bg-light"
-                                            style={{ fontSize: "13px", cursor: "pointer" }}
-                                            onClick={() => togglePaymentType(option, true)}
+                                {showCustomInput ? (
+                                    <div className="p-2 d-flex gap-2 align-items-center">
+                                        <Input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            placeholder="Ketik jenis pembayaran baru..."
+                                            value={customPaymentInput}
+                                            autoFocus
+                                            onChange={(e) => setCustomPaymentInput(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    handleAddCustomPayment();
+                                                }
+                                            }}
+                                        />
+                                        <Button 
+                                            type="button" 
+                                            size="sm" 
+                                            className="p-1.5 px-2.5 text-white"
+                                            style={{ backgroundColor: "#3B82F6" }}
+                                            onClick={handleAddCustomPayment}
                                         >
-                                            <span>{option}</span>
-                                            {isChecked && <IconCheck size={16} className="text-primary" />}
-                                        </div>
-                                    );
-                                })}
+                                            <IconPlus size={16} />
+                                        </Button>
+                                        <Button 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm"
+                                            className="p-1.5"
+                                            onClick={() => {
+                                                setShowCustomInput(false);
+                                                setCustomPaymentInput("");
+                                            }}
+                                        >
+                                            <IconX size={16} />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    PAYMENT_OPTIONS.map((option) => {
+                                        const isChecked = formData.paymentTypes.includes(option);
+                                        return (
+                                            <div 
+                                                key={option}
+                                                className="d-flex align-items-center justify-content-between px-3 py-2 cursor-pointer hover-bg-light"
+                                                style={{ fontSize: "13px", cursor: "pointer" }}
+                                                onClick={() => togglePaymentType(option, option !== "Lainnya")}
+                                            >
+                                                <span className={option === "Lainnya" ? "fw-medium text-primary" : ""}>
+                                                    {option === "Lainnya" ? "+ Tulis Lainnya..." : option}
+                                                </span>
+                                                {isChecked && <IconCheck size={16} className="text-primary" />}
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         )}
                     </div>
@@ -377,7 +448,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                     key={item.type} 
                                     className="p-3 d-flex align-items-center justify-content-between rounded-3"
                                 >
-                                    <span className="fw-semibold text-dark" style={{ fontSize: "13px" }}>
+                                    <span className="fw-semibold text-dark text-truncate pe-2" style={{ fontSize: "13px", maxWidth: "60%" }}>
                                         {item.type}
                                     </span>
                                     <div className="d-flex align-items-center bg-white rounded-2 px-3 py-1.5 border" style={{ width: "160px" }}>
@@ -396,7 +467,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                     )}
 
                     <div 
-                        className="p-3 px-4 d-flex align-items-center justify-content-between rounded-3 mt-1"
+                        className="p-3 px-4 d-flex align-items-center bg-white justify-content-between rounded-3 mt-1"
                     >
                         <span className="fw-bold text-dark" style={{ fontSize: "15px", color: "#1E1B4B" }}>
                             Total Pembayaran
