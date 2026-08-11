@@ -21,15 +21,24 @@ export function BadgeStatus({
             case "VERIFIED":
             case "DONE":
             case "LUNAS":
+            case "Disetujui":
                 return { backgroundColor: "#D1FAE5", color: "#065F46" };
+            
             case "PROCESS":
             case "PENDING":
             case "MENUNGGU":
-                return { backgroundColor: "#FEF3C7", color: "#d37438" };
+            case "Menunggu Jadwal":
+                return { backgroundColor: "#FEF3C7", color: "#B45309" };
+            case "Menunggu Persetujuan":
+                return { backgroundColor: "#DBEAFE", color: "#1E40AF" }; 
+            case "Reschedule":
+                return { backgroundColor: "#FFEDD5", color: "#C2410C" };
+            
             case "Ditolak/Bermasalah":
             case "REJECTED":
             case "DITOLAK":
                 return { backgroundColor: "#FEE2E2", color: "#991B1B" };
+            
             default:
                 return { backgroundColor: "#E2E8F0", color: "#475569" };
         }

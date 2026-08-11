@@ -15,6 +15,12 @@ export const mainMenu: MenuItem[] = [
     role: ["admin"],
   },
   {
+    label: "Trial Class",
+    icon: "users",
+    href: "/trial_class-admin",
+    role: ["admin"],
+  },
+  {
     label: "Payments",
     icon: "moneybag",
     href: "/payments-admin",
