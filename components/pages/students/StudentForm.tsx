@@ -190,7 +190,6 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
             setFormData(prev => ({ 
                 ...prev, 
                 [name]: numericValue,
-                // Pastikan phoneNumber dan parentWhatsapp sinkron
                 ...(name === "parentWhatsapp" ? { phoneNumber: numericValue } : {}),
                 ...(name === "phoneNumber" ? { parentWhatsapp: numericValue } : {})
             }));
@@ -292,8 +291,28 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
     const uploadedCount = documents.filter(doc => doc.isUploaded).length;
     const progressPercentage = Math.round((uploadedCount / documents.length) * 100);
 
+    const isFormValid = Boolean(
+        formData.studentName.trim() !== "" &&
+        formData.pob.trim() !== "" &&
+        formData.dob !== "" &&
+        formData.gender !== "" &&
+        formData.address.trim() !== "" &&
+        formData.emergencyContact.trim() !== "" &&
+        formData.grade.trim() !== "" &&
+        formData.schoolYear !== "" &&
+        (formData.isNewParent 
+            ? (formData.parentName.trim() !== "" && formData.email.trim() !== "" && (formData.parentWhatsapp.trim() !== "" || formData.phoneNumber.trim() !== ""))
+            : formData.parentId !== ""
+        )
+    );
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!isFormValid) {
+            toast.error("Harap lengkapi semua data yang wajib diisi!");
+            return;
+        }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (formData.email && !emailRegex.test(formData.email)) {
@@ -446,7 +465,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
                                         <div className="col-12">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA LENGKAP SISWA</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA LENGKAP SISWA <span className="text-danger">*</span></Label>
                                             <Input 
                                                 type="text" 
                                                 name="studentName"
@@ -460,7 +479,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TEMPAT LAHIR</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TEMPAT LAHIR <span className="text-danger">*</span></Label>
                                             <Input 
                                                 type="text" 
                                                 name="pob" 
@@ -469,11 +488,12 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 onChange={handleChange} 
                                                 className="form-control form-control-sm rounded-3 shadow-none" 
                                                 style={inputStyle}
+                                                required
                                             />
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TANGGAL LAHIR</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TANGGAL LAHIR <span className="text-danger">*</span></Label>
                                             <Input 
                                                 type="date" 
                                                 name="dob" 
@@ -481,17 +501,19 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 onChange={handleChange} 
                                                 className="form-control form-control-sm rounded-3 shadow-none" 
                                                 style={inputStyle}
+                                                required
                                             />
                                         </div>
 
                                         <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>JENIS KELAMIN</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>JENIS KELAMIN <span className="text-danger">*</span></Label>
                                             <select 
                                                 name="gender" 
                                                 value={formData.gender} 
                                                 onChange={handleChange} 
                                                 className="form-select form-select-sm rounded-3 shadow-none cursor-pointer" 
                                                 style={inputStyle}
+                                                required
                                             >
                                                 <option value="" disabled>Pilih Jenis Kelamin</option>
                                                 <option value="male">Laki-laki</option>
@@ -500,7 +522,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         </div>
 
                                         <div className="col-12">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>ALAMAT RUMAH</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>ALAMAT RUMAH <span className="text-danger">*</span></Label>
                                             <textarea 
                                                 name="address" 
                                                 rows={2}
@@ -509,6 +531,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 onChange={handleChange} 
                                                 className="form-control form-control-sm rounded-3 shadow-none" 
                                                 style={inputStyle}
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -524,7 +547,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
                                         <div className="col-12">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>PILIH ORANG TUA / WALI</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>PILIH ORANG TUA / WALI <span className="text-danger">*</span></Label>
                                             <select 
                                                 name="parentId" 
                                                 value={formData.isNewParent ? "new" : formData.parentId} 
@@ -532,6 +555,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 className="form-select form-select-sm rounded-3 shadow-none cursor-pointer" 
                                                 style={inputStyle}
                                                 disabled={isLoadingParents}
+                                                required={!formData.isNewParent}
                                             >
                                                 <option value="" disabled>
                                                     {isLoadingParents ? "Memuat data orang tua..." : "-- Pilih Orang Tua / Wali --"}
@@ -548,7 +572,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                         {formData.isNewParent && (
                                             <>
                                                 <div className="col-12">
-                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA ORANG TUA / WALI</Label>
+                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NAMA ORANG TUA / WALI <span className="text-danger">*</span></Label>
                                                     <Input 
                                                         type="text" 
                                                         name="parentName" 
@@ -562,7 +586,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 </div>
 
                                                 <div className="col-12 col-md-6">
-                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>EMAIL ORANG TUA</Label>
+                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>EMAIL ORANG TUA <span className="text-danger">*</span></Label>
                                                     <Input 
                                                         type="email" 
                                                         name="email" 
@@ -576,7 +600,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 </div>
 
                                                 <div className="col-12 col-md-6">
-                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NO. WHATSAPP ORANG TUA</Label>
+                                                    <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>NO. WHATSAPP ORANG TUA <span className="text-danger">*</span></Label>
                                                     <Input 
                                                         type="tel" 
                                                         name="parentWhatsapp" 
@@ -643,7 +667,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
                                         <div className="col-12">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>KONTAK DARURAT</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>KONTAK DARURAT <span className="text-danger">*</span></Label>
                                             <Input 
                                                 type="tel" 
                                                 name="emergencyContact" 
@@ -670,7 +694,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                 <div className="bg-white p-4 rounded-4 border" style={{ borderColor: "#F1F5F9", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                                     <div className="row g-3">
                                         <div className="col-12 col-md-6">
-                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>KELAS (CLASS)</Label>
+                                            <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>KELAS (CLASS) <span className="text-danger">*</span></Label>
                                             <Input 
                                                 type="text" 
                                                 name="grade" 
@@ -679,17 +703,19 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                                 onChange={handleChange} 
                                                 className="form-control form-control-sm rounded-3 shadow-none" 
                                                 style={inputStyle}
+                                                required
                                             />
                                         </div>
 
                                        <div className="col-12 col-md-6">
-                                        <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TAHUN AJARAN</Label>
+                                        <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>TAHUN AJARAN <span className="text-danger">*</span></Label>
                                         <select 
                                             name="schoolYear" 
                                             value={formData.schoolYear} 
                                             onChange={handleChange} 
                                             className="form-select form-select-sm rounded-3 shadow-none"
                                             style={inputStyle}
+                                            required
                                         >
                                             <option value="" disabled>Pilih Tahun Ajaran</option>
                                             {yearOptions.map((year) => (
@@ -812,7 +838,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                         </Button>
                         <Button 
                             type="submit" 
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !isFormValid}
                             variant="default"
                             size="lg"
                         >

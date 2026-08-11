@@ -19,7 +19,6 @@ function IconResolver(name?: string) {
 export function HeaderNav() {
   const pathname = usePathname();
   const { user } = useAuth();
-  console.log(user);
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 

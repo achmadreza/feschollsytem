@@ -17,6 +17,7 @@ import { Label } from "../../ui/Label";
 import { Form } from "../../ui/Form";
 import { Button } from "../../ui/Button";
 import { callApi } from "@/lib/api";
+import Swal from "sweetalert2";
 
 export interface Student {
     id: string | number;
@@ -45,39 +46,37 @@ export interface InvoiceFormData {
 interface CreateInvoiceModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit?: (data: InvoiceFormData) => void;
+    onSubmitSuccess?: () => void;
 }
 
 const PAYMENT_OPTIONS = [
-    "SPP Bulanan",
-    "Uang Buku / LKS",
-    "Uang Gedung",
-    "Ekskul",
-    "Seragam",
-    "Lainnya"
+    "SPP BULANAN",
+    "UANG BUKU / LKS",
+    "UANG GEDUNG",
+    "EKSKUL",
+    "SERAGAM",
+    "LAINNYA"
 ];
 
-export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceModalProps) {
+export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateInvoiceModalProps) {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 5 }, (_, i) => currentYear + i);
 
     const [formData, setFormData] = useState<InvoiceFormData>({
         studentId: "",
         studentName: "",
-        paymentTypes: ["Uang Gedung", "Ekskul"],
-        items: [
-            { type: "Uang Gedung", amount: "400000" },
-            { type: "Ekskul", amount: "0" }
-        ],
-        totalAmount: 400000,
+        paymentTypes: [],
+        items: [],
+        totalAmount: 0,
         month: "Januari",
         year: currentYear.toString(),
-        dueDate: `${currentYear}-10-05`,
+        dueDate: "",
         notes: ""
     });
 
     const [students, setStudents] = useState<Student[]>([]);
     const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(false);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [isPaymentDropdownOpen, setIsPaymentDropdownOpen] = useState<boolean>(false);
@@ -99,15 +98,12 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
             setFormData({
                 studentId: "",
                 studentName: "",
-                paymentTypes: ["Uang Gedung", "Ekskul"],
-                items: [
-                    { type: "Uang Gedung", amount: "400000" },
-                    { type: "Ekskul", amount: "0" }
-                ],
-                totalAmount: 400000,
+                paymentTypes: [],
+                items: [],
+                totalAmount: 0,
                 month: "Januari",
                 year: currentYear.toString(),
-                dueDate: `${currentYear}-10-05`,
+                dueDate: "",
                 notes: ""
             });
         }
@@ -159,7 +155,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
     };
 
     const togglePaymentType = (type: string, closeDropdown: boolean = false) => {
-        if (type === "Lainnya") {
+        if (type === "LAINNYA") {
             setShowCustomInput(true);
             return;
         }
@@ -189,10 +185,15 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
     };
 
     const handleAddCustomPayment = () => {
-        const trimmedValue = customPaymentInput.trim();
+        const trimmedValue = customPaymentInput.trim().toUpperCase();
         if (!trimmedValue) return;
         if (formData.paymentTypes.includes(trimmedValue)) {
-            alert("Jenis pembayaran ini sudah ditambahkan.");
+            Swal.fire({
+                icon: 'warning',
+                title: 'Item Sudah Ada',
+                text: 'Jenis pembayaran ini sudah ditambahkan.',
+                confirmButtonColor: '#3B82F6'
+            });
             return;
         }
 
@@ -237,18 +238,98 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
         return new Intl.NumberFormat("id-ID").format(Number(rawValue));
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
         if (!formData.studentId) {
-            alert("Silakan pilih siswa terlebih dahulu");
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Belum Lengkap',
+                text: 'Silakan pilih siswa terlebih dahulu',
+                confirmButtonColor: '#3B82F6'
+            });
             return;
         }
 
-        if (onSubmit) {
-            onSubmit(formData);
+        if (formData.items.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Belum Lengkap',
+                text: 'Silakan pilih minimal satu jenis pembayaran',
+                confirmButtonColor: '#3B82F6'
+            });
+            return;
         }
-        onClose();
+
+        if (!formData.dueDate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Belum Lengkap',
+                text: 'Silakan tentukan tanggal jatuh tempo',
+                confirmButtonColor: '#3B82F6'
+            });
+            return;
+        }
+
+        const confirmResult = await Swal.fire({
+            title: 'Konfirmasi Tagihan',
+            text: `Apakah Anda yakin ingin membuat tagihan untuk ${formData.studentName} sebesar Rp ${formatNumber(formData.totalAmount)}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3B82F6',
+            cancelButtonColor: '#6B7280',
+            confirmButtonText: 'Ya, Buat Tagihan',
+            cancelButtonText: 'Batal'
+        });
+
+        if (!confirmResult.isConfirmed) return;
+
+        try {
+            setIsSubmitting(true);
+
+            const finalDescription = formData.notes.trim() || `Tagihan pembayaran untuk periode ${formData.month} ${formData.year}`;
+            const formattedDueDate = new Date(`${formData.dueDate}T10:00:00.000Z`).toISOString();
+
+            const paymentListPayload = formData.items.map((item) => ({
+                paymentType: item.type,
+                amount: Number(item.amount) || 0
+            }));
+
+            const payload = {
+                studentId: formData.studentId.toString(),
+                description: finalDescription,
+                paymentList: paymentListPayload,
+                dueDate: formattedDueDate,
+                status: "WAITING"
+            };
+
+            await callApi("/billings", {
+                method: "POST",
+                body: payload
+            });
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Tagihan sukses dibuat!',
+                confirmButtonColor: '#3B82F6'
+            });
+            
+            if (onSubmitSuccess) {
+                onSubmitSuccess();
+            }
+            onClose();
+        } catch (error) {
+            console.error("Gagal membuat tagihan:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Terjadi kesalahan saat memproses tagihan. Silakan coba lagi.',
+                confirmButtonColor: '#EF4444'
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -293,6 +374,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                     }
                                 }}
                                 required
+                                disabled={isSubmitting}
                             />
                             {isLoadingStudents && (
                                 <IconLoader2 
@@ -346,12 +428,12 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
 
                     <div className="position-relative" ref={paymentDropdownRef}>
                         <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                            Jenis Pembayaran (Multi-select)
+                            Jenis Pembayaran (Multi-select) <span className="text-danger">*</span>
                         </Label>
                         <div 
                             className="form-control border-0 py-2 px-3 d-flex align-items-center flex-wrap gap-2 cursor-pointer"
                             style={{ minHeight: "44px" }}
-                            onClick={() => setIsPaymentDropdownOpen(!isPaymentDropdownOpen)}
+                            onClick={() => !isSubmitting && setIsPaymentDropdownOpen(!isPaymentDropdownOpen)}
                         >
                             {formData.paymentTypes.map((type) => (
                                 <span 
@@ -365,13 +447,13 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                         className="cursor-pointer" 
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            togglePaymentType(type, false);
+                                            if (!isSubmitting) togglePaymentType(type, false);
                                         }} 
                                     />
                                 </span>
                             ))}
                             <span className="text-secondary flex-grow-1" style={{ fontSize: "13px" }}>
-                                Pilih jenis lainnya...
+                                {formData.paymentTypes.length === 0 ? "Pilih jenis pembayaran..." : ""}
                             </span>
                             <IconChevronDown size={18} className="text-secondary ms-auto" />
                         </div>
@@ -382,11 +464,11 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                     <div className="p-2 d-flex gap-2 align-items-center">
                                         <Input
                                             type="text"
-                                            className="form-control form-control-sm"
-                                            placeholder="Ketik jenis pembayaran baru..."
+                                            className="form-control form-control-sm text-uppercase"
+                                            placeholder="KETIK JENIS PEMBAYARAN BARU..."
                                             value={customPaymentInput}
                                             autoFocus
-                                            onChange={(e) => setCustomPaymentInput(e.target.value)}
+                                            onChange={(e) => setCustomPaymentInput(e.target.value.toUpperCase())}
                                             onKeyDown={(e) => {
                                                 if (e.key === "Enter") {
                                                     e.preventDefault();
@@ -424,10 +506,10 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                                 key={option}
                                                 className="d-flex align-items-center justify-content-between px-3 py-2 cursor-pointer hover-bg-light"
                                                 style={{ fontSize: "13px", cursor: "pointer" }}
-                                                onClick={() => togglePaymentType(option, option !== "Lainnya")}
+                                                onClick={() => togglePaymentType(option, option !== "LAINNYA")}
                                             >
-                                                <span className={option === "Lainnya" ? "fw-medium text-primary" : ""}>
-                                                    {option === "Lainnya" ? "+ Tulis Lainnya..." : option}
+                                                <span className={option === "LAINNYA" ? "fw-medium text-primary" : ""}>
+                                                    {option === "LAINNYA" ? "+ Tulis Lainnya..." : option}
                                                 </span>
                                                 {isChecked && <IconCheck size={16} className="text-primary" />}
                                             </div>
@@ -446,9 +528,9 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                             {formData.items.map((item) => (
                                 <div 
                                     key={item.type} 
-                                    className="p-3 d-flex align-items-center justify-content-between rounded-3"
+                                    className="p-3 d-flex align-items-center justify-content-between rounded-3 bg-light bg-opacity-25 border"
                                 >
-                                    <span className="fw-semibold text-dark text-truncate pe-2" style={{ fontSize: "13px", maxWidth: "60%" }}>
+                                    <span className="fw-semibold text-dark text-truncate pe-2 text-uppercase" style={{ fontSize: "13px", maxWidth: "60%" }}>
                                         {item.type}
                                     </span>
                                     <div className="d-flex align-items-center bg-white rounded-2 px-3 py-1.5 border" style={{ width: "160px" }}>
@@ -459,6 +541,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                             style={{ outline: "none", fontSize: "13px" }}
                                             value={formatNumber(item.amount)}
                                             onChange={(e) => handleItemAmountChange(item.type, e.target.value)}
+                                            disabled={isSubmitting}
                                         />
                                     </div>
                                 </div>
@@ -467,7 +550,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                     )}
 
                     <div 
-                        className="p-3 px-4 d-flex align-items-center bg-white justify-content-between rounded-3 mt-1"
+                        className="p-3 px-4 d-flex align-items-center bg-white justify-content-between rounded-3 border mt-1"
                     >
                         <span className="fw-bold text-dark" style={{ fontSize: "15px", color: "#1E1B4B" }}>
                             Total Pembayaran
@@ -486,6 +569,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                 className="form-select border-0 py-2.5 px-3"
                                 value={formData.month}
                                 onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                                disabled={isSubmitting}
                             >
                                 <option value="Januari">Januari</option>
                                 <option value="Februari">Februari</option>
@@ -506,6 +590,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                 className="form-select border-0 py-2.5 px-3"
                                 value={formData.year}
                                 onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                                disabled={isSubmitting}
                             >
                                 {years.map((y) => (
                                     <option key={y} value={y.toString()}>{y}</option>
@@ -516,7 +601,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
 
                     <div>
                         <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                            Tanggal Jatuh Tempo
+                            Tanggal Jatuh Tempo <span className="text-danger">*</span>
                         </Label>
                         <div className="position-relative">
                             <input 
@@ -524,20 +609,23 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                                 className="form-control border-0 py-2.5 px-3"
                                 value={formData.dueDate}
                                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                                disabled={isSubmitting}
+                                required
                             />
                         </div>
                     </div>
 
                     <div>
                         <Label className="form-label fw-medium text-dark mb-2" style={{ fontSize: "13px" }}>
-                            Catatan Tambahan (Opsional)
+                            Catatan Tambahan / Deskripsi (Opsional)
                         </Label>
                         <textarea 
                             className="form-control border-0 p-3"
                             rows={3}
-                            placeholder="Contoh: Termasuk biaya seragam olahraga tambahan..."
+                            placeholder="Contoh: Registrasi semester baru..."
                             value={formData.notes}
                             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -560,6 +648,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                         onClick={onClose}
                         variant="outline"
                         size="lg"
+                        disabled={isSubmitting}
                     >
                         Batal
                     </Button>
@@ -568,9 +657,19 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmit }: CreateInvoiceM
                         className="btn fw-semibold text-white px-4 py-2 d-flex align-items-center gap-2" 
                         variant="default"
                         size="lg"
+                        disabled={isSubmitting}
                     >
-                        <IconFilePlus size={18} />
-                        <span>Buat Tagihan</span>
+                        {isSubmitting ? (
+                            <>
+                                <IconLoader2 size={18} className="animate-spin" />
+                                <span>Memproses...</span>
+                            </>
+                        ) : (
+                            <>
+                                <IconFilePlus size={18} />
+                                <span>Buat Tagihan</span>
+                            </>
+                        )}
                     </Button>
                 </div>
             </Form>
