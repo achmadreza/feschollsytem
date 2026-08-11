@@ -47,7 +47,7 @@ interface BillingApiResponse {
 export function PaymentAdmin() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [searchQuery, setSearchQuery] = useState<string>(" ");
+    const [searchQuery, setSearchQuery] = useState<string>(""); 
     const [statusFilter, setStatusFilter] = useState<string>("Semua Status");
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
@@ -90,7 +90,7 @@ export function PaymentAdmin() {
                     }) + `, ${dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
 
                     return {
-                        id: item.invoiceNumber,
+                        id: item.id, 
                         name: item.studentName,
                         class: `${item.studentClass}`,
                         title: item.description || "Tagihan Pembayaran Siswa",
@@ -324,6 +324,7 @@ export function PaymentAdmin() {
                                                     </div>
                                                     <div>
                                                         <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{tx.name}</div>
+                                                        {/* Bagian ini otomatis menampilkan UUID string (f4297f62-...) di bawah nama siswa */}
                                                         <div className="text-secondary" style={{ fontSize: "12px" }}>{tx.id}</div>
                                                     </div>
                                                 </div>

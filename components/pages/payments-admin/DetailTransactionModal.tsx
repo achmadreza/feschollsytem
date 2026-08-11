@@ -101,8 +101,7 @@ export function DetailTransactionModal({
 
     const currentStatus = transaction.status.toLowerCase();
     const isSuccess = currentStatus === "lunas" || currentStatus === "disetujui";
-
-    const activeBillingId = billingId || "f4297f62-727d-427a-9134-cf52604955df";
+    const activeBillingId = billingId || transaction.id;
 
     useEffect(() => {
         async function fetchBillingDetail() {
@@ -163,6 +162,7 @@ export function DetailTransactionModal({
     };
 
     const statusStyle = getStatusBadge();
+    const showActionButtons = billingData && billingData.paidAt === null && billingData.status === "WAITING";
 
     return (
         <div 
@@ -350,7 +350,7 @@ export function DetailTransactionModal({
                     </div>
 
                     <div className="modal-footer border-0 p-4 pt-2">
-                        {isSuccess ? (
+                        {showActionButtons ? (
                             <div className="d-flex align-items-center gap-3 w-100">
                                 <button
                                     type="button"
