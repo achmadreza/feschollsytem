@@ -92,7 +92,7 @@ export function PaymentAdmin() {
                     return {
                         id: item.invoiceNumber,
                         name: item.studentName,
-                        class: `Kelas ${item.studentClass}`,
+                        class: `${item.studentClass}`,
                         title: item.description || "Tagihan Pembayaran Siswa",
                         subtitle: paymentTypes,
                         amount: new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalAmount),
