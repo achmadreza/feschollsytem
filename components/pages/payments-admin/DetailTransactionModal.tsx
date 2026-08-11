@@ -162,7 +162,8 @@ export function DetailTransactionModal({
     };
 
     const statusStyle = getStatusBadge();
-    const showActionButtons = billingData && billingData.paidAt === null && billingData.status === "WAITING";
+    const isWaiting = currentStatus === "menunggu" || currentStatus === "waiting" || billingData?.status.toLowerCase() === "waiting";
+    const showActionButtons = billingData && isWaiting && billingData.paidAt !== null;
 
     return (
         <div 
