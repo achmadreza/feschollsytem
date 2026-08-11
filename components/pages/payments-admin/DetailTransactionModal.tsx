@@ -40,8 +40,10 @@ export function DetailTransactionModal({
     onReject
 }: DetailTransactionModalProps) {
     const currentStatus = transaction.status.toLowerCase();
+    const isSuccess = currentStatus === "lunas" || currentStatus === "disetujui";
+
     const getStatusBadge = () => {
-        if (currentStatus === "LUNAS" || currentStatus === "lunas" || currentStatus === "disetujui") {
+        if (isSuccess) {
             return {
                 label: "LUNAS",
                 bg: "#DCFCE7",
@@ -69,7 +71,6 @@ export function DetailTransactionModal({
     };
 
     const statusStyle = getStatusBadge();
-    const isPending = currentStatus === "pending" || currentStatus === "menunggu";
 
     return (
         <div 
@@ -230,11 +231,12 @@ export function DetailTransactionModal({
                     </div>
 
                     <div className="modal-footer border-0 p-4 pt-2">
-                        {isPending ? (
+                        {isSuccess ? (
                             <div className="d-flex align-items-center gap-3 w-100">
                                 <button
                                     type="button"
                                     className="btn btn-outline-danger fw-semibold py-2.5 flex-fill"
+                                    style={{ borderRadius: "14px" }}
                                     onClick={() => onReject ? onReject(transaction.id) : onClose()}
                                 >
                                     Tolak Pembayaran
@@ -242,7 +244,7 @@ export function DetailTransactionModal({
                                 <button
                                     type="button"
                                     className="btn fw-semibold py-2.5 flex-fill text-white"
-                                    style={{backgroundColor: "#10B981" }}
+                                    style={{ backgroundColor: "#10B981", borderRadius: "14px" }}
                                     onClick={() => onApprove ? onApprove(transaction.id) : onClose()}
                                 >
                                     Terima Pembayaran
