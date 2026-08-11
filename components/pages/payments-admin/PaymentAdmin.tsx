@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
     IconPlus,
     IconTrendingUp,
@@ -17,55 +17,102 @@ import { Button } from "../../../components/ui/Button";
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
 import { CreateInvoiceModal } from "./CreateInvoiceModal";
 import { DetailTransactionModal, Transaction } from "./DetailTransactionModal";
+import { callApi } from "@/lib/api";
 
-const INITIAL_TRANSACTIONS: Transaction[] = [
-    {
-        id: "S2024001",
-        name: "Rian Adi Putra",
-        class: "Kelas 5-B",
-        title: "SPP Oktober 2026",
-        subtitle: "SPP Bulanan",
-        amount: "Rp 500.000",
-        date: "12 Okt 2026, 09:42",
-        status: "MENUNGGU",
-        avatarBg: "#C7D2FE",
-        avatarColor: "#3730A3"
-    },
-    {
-        id: "S2024005",
-        name: "Maya Indah Sari",
-        class: "Kelas 5-A",
-        title: "SPP Oktober 2026",
-        subtitle: "SPP Bulanan",
-        amount: "Rp 500.000",
-        date: "11 Okt 2026, 14:20",
-        status: "LUNAS",
-        avatarBg: "#DDD6FE",
-        avatarColor: "#5B21B6"
-    },
-    {
-        id: "S2024012",
-        name: "Budi Cahyono",
-        class: "Kelas 5-B",
-        title: "Ekskul Basket",
-        subtitle: "EKSKUL",
-        amount: "Rp 150.000",
-        date: "10 Okt 2026, 10:15",
-        status: "DITOLAK",
-        avatarBg: "#FEE2E2",
-        avatarColor: "#991B1B"
-    }
-];
+interface PaymentItem {
+    paymentType: string;
+    amount: number;
+    _id: string;
+}
+
+interface BillingApiResponse {
+    _id: string;
+    invoiceNumber: string;
+    studentId: string;
+    studentName: string;
+    studentClass: string;
+    schoolCode: string;
+    parentId: string;
+    parentEmail: string;
+    description: string;
+    paymentList: PaymentItem[];
+    dueDate: string;
+    status: string;
+    paidAt: string | null;
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+}
 
 export function PaymentAdmin() {
-    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [searchQuery, setSearchQuery] = useState<string>(" ");
     const [statusFilter, setStatusFilter] = useState<string>("Semua Status");
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
 
-    const filteredTransactions = INITIAL_TRANSACTIONS.filter((tx) => {
+    useEffect(() => {
+        fetchBillings();
+    }, []);
+
+    const fetchBillings = async () => {
+        try {
+            setLoading(true);
+            const response = await callApi<BillingApiResponse[] | { data: BillingApiResponse[] }>("billings", { 
+                method: "GET" 
+            });
+
+            if (response && Array.isArray(response)) {
+                const mappedData: Transaction[] = response.map((item) => {
+                    const totalAmount = item.paymentList.reduce((acc, pay) => acc + pay.amount, 0);
+                    const paymentTypes = item.paymentList.map(p => p.paymentType).join(", ");
+                    let uiStatus = "MENUNGGU";
+                    if (item.status === "PAID") uiStatus = "LUNAS";
+                    if (item.status === "REJECTED") uiStatus = "DITOLAK";
+                    let avatarBg = "#C7D2FE";
+                    let avatarColor = "#3730A3";
+                    if (uiStatus === "LUNAS") {
+                        avatarBg = "#DDD6FE";
+                        avatarColor = "#5B21B6";
+                    } else if (uiStatus === "DITOLAK") {
+                        avatarBg = "#FEE2E2";
+                        avatarColor = "#991B1B";
+                    }
+
+                    const dateObj = new Date(item.createdAt);
+                    const formattedDate = dateObj.toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                    }) + `, ${dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}`;
+
+                    return {
+                        id: item.invoiceNumber,
+                        name: item.studentName,
+                        class: `Kelas ${item.studentClass}`,
+                        title: item.description || "Tagihan Pembayaran Siswa",
+                        subtitle: paymentTypes,
+                        amount: new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalAmount),
+                        date: formattedDate,
+                        status: uiStatus,
+                        avatarBg,
+                        avatarColor
+                    };
+                });
+
+                setTransactions(mappedData);
+            }
+        } catch (error) {
+            console.error("Gagal memuat data billings:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const filteredTransactions = transactions.filter((tx) => {
         const matchesSearch = tx.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               tx.id.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === "Semua Status" || tx.status === statusFilter;
@@ -80,11 +127,30 @@ export function PaymentAdmin() {
     const handleApprove = (id: string) => {
         console.log("Approve payment:", id);
         setIsDetailModalOpen(false);
+        fetchBillings();
     };
 
     const handleReject = (id: string) => {
         console.log("Reject payment:", id);
         setIsDetailModalOpen(false);
+        fetchBillings();
+    };
+
+    const totalMenunggu = transactions.filter(t => t.status === "MENUNGGU").length;
+    const totalLunasToday = transactions.filter(t => t.status === "LUNAS").length;
+    
+    const nominalLunas = transactions
+        .filter(t => t.status === "LUNAS")
+        .reduce((sum, t) => sum + parseInt(t.amount.replace(/[^0-9]/g, "")), 0);
+        
+    const nominalBelumBayar = transactions
+        .filter(t => t.status === "MENUNGGU")
+        .reduce((sum, t) => sum + parseInt(t.amount.replace(/[^0-9]/g, "")), 0);
+
+    const totalPemasukan = nominalLunas;
+
+    const formatRupiah = (num: number) => {
+        return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(num);
     };
 
     return (
@@ -113,7 +179,6 @@ export function PaymentAdmin() {
                 </div>
             </div>
 
-            {/* Metric Cards */}
             <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-4">
                 <div className="col">
                     <div className="card border-0 shadow-sm position-relative overflow-hidden h-100" style={{ borderRadius: "16px", minHeight: "170px" }}>
@@ -122,7 +187,7 @@ export function PaymentAdmin() {
                             <div>
                                 <span className="fw-bold text-uppercase" style={{ fontSize: "11px", color: "#F59E0B", letterSpacing: "0.05em" }}>MENUNGGU VERIFIKASI</span>
                                 <div className="d-flex align-items-baseline gap-2 mt-3">
-                                    <span className="fw-bold text-dark" style={{ fontSize: "32px", lineHeight: "1" }}>8</span>
+                                    <span className="fw-bold text-dark" style={{ fontSize: "32px", lineHeight: "1" }}>{totalMenunggu}</span>
                                     <span className="text-secondary font-medium" style={{ fontSize: "14px" }}>Transaksi</span>
                                 </div>
                             </div>
@@ -138,12 +203,12 @@ export function PaymentAdmin() {
                         <div className="position-absolute top-0 bottom-0 start-0" style={{ width: "6px", backgroundColor: "#10B981" }} />
                         <div className="card-body p-4 d-flex flex-column justify-content-between position-relative z-1">
                             <div>
-                                <span className="fw-bold text-uppercase" style={{ fontSize: "11px", color: "#10B981", letterSpacing: "0.05em" }}>LUNAS HARI INI</span>
+                                <span className="fw-bold text-uppercase" style={{ fontSize: "11px", color: "#10B981", letterSpacing: "0.05em" }}>LUNAS</span>
                                 <div className="d-flex align-items-baseline gap-2 mt-2">
-                                    <span className="fw-bold text-dark" style={{ fontSize: "28px", lineHeight: "1" }}>25</span>
+                                    <span className="fw-bold text-dark" style={{ fontSize: "28px", lineHeight: "1" }}>{totalLunasToday}</span>
                                     <span className="text-secondary font-medium" style={{ fontSize: "14px" }}>Siswa</span>
                                 </div>
-                                <div className="fw-bold text-dark mt-1" style={{ fontSize: "20px" }}>Rp 42.500.000</div>
+                                <div className="fw-bold text-dark mt-1" style={{ fontSize: "20px" }}>{formatRupiah(nominalLunas)}</div>
                             </div>
                         </div>
                         <div className="position-absolute text-secondary opacity-10 pointer-events-none" style={{ right: "-10px", bottom: "-15px", color: "#E2E8F0" }}>
@@ -159,10 +224,10 @@ export function PaymentAdmin() {
                             <div>
                                 <span className="fw-bold text-uppercase" style={{ fontSize: "11px", color: "#DC2626", letterSpacing: "0.05em" }}>BELUM DIBAYAR</span>
                                 <div className="d-flex align-items-baseline gap-2 mt-2">
-                                    <span className="fw-bold text-dark" style={{ fontSize: "28px", lineHeight: "1" }}>18</span>
+                                    <span className="fw-bold text-dark" style={{ fontSize: "28px", lineHeight: "1" }}>{totalMenunggu}</span>
                                     <span className="text-secondary font-medium" style={{ fontSize: "14px" }}>Siswa</span>
                                 </div>
-                                <div className="fw-bold text-dark mt-1" style={{ fontSize: "20px" }}>Rp 36.750.000</div>
+                                <div className="fw-bold text-dark mt-1" style={{ fontSize: "20px" }}>{formatRupiah(nominalBelumBayar)}</div>
                             </div>
                         </div>
                         <div className="position-absolute text-secondary opacity-10 pointer-events-none" style={{ right: "-10px", bottom: "-15px", color: "#E2E8F0" }}>
@@ -177,13 +242,12 @@ export function PaymentAdmin() {
                             <div>
                                 <span className="fw-bold text-uppercase" style={{ fontSize: "11px", color: "#94A3B8", letterSpacing: "0.05em" }}>TOTAL PEMASUKAN</span>
                                 <div className="mt-2">
-                                    <div className="fw-semibold" style={{ fontSize: "20px", lineHeight: "1.2" }}>Rp</div>
-                                    <div className="fw-bold" style={{ fontSize: "26px", letterSpacing: "-0.02em" }}>128.250.000</div>
+                                    <div className="fw-bold" style={{ fontSize: "24px", letterSpacing: "-0.02em" }}>{formatRupiah(totalPemasukan)}</div>
                                 </div>
                             </div>
                             <div className="d-flex align-items-center gap-1 mt-3" style={{ fontSize: "12px", color: "#CBD5E1" }}>
                                 <IconTrendingUp size={16} className="text-emerald-400" style={{ color: "#34D399" }} />
-                                <span><strong className="text-white">12%</strong> dari bulan lalu</span>
+                                <span>Realtime data API</span>
                             </div>
                         </div>
                         <div className="position-absolute pointer-events-none" style={{ right: "-10px", bottom: "-15px", color: "rgba(255, 255, 255, 0.08)" }}>
@@ -230,68 +294,74 @@ export function PaymentAdmin() {
                     </div>
 
                     <div className="table-responsive">
-                        <table className="table table-borderless align-middle mb-0">
-                            <thead>
-                                <tr className="border-bottom" style={{ borderColor: "#F1F5F9" }}>
-                                    <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>SISWA</th>
-                                    <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>KELAS</th>
-                                    <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>TAGIHAN</th>
-                                    <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>NOMINAL</th>
-                                    <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>TANGGAL UPLOAD</th>
-                                    <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>STATUS</th>
-                                    <th className="py-3 text-end" style={{ width: "80px" }}>AKSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredTransactions.map((tx) => (
-                                    <tr key={tx.id} className="border-bottom" style={{ borderColor: "#F8FAFC" }}>
-                                        <td className="py-3">
-                                            <div className="d-flex align-items-center gap-3">
-                                                <div 
-                                                    className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                                                    style={{ width: "42px", height: "42px", backgroundColor: tx.avatarBg, color: tx.avatarColor, fontSize: "16px" }}
-                                                >
-                                                    {tx.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{tx.name}</div>
-                                                    <div className="text-secondary" style={{ fontSize: "12px" }}>{tx.id}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-3"><span className="fw-medium text-dark" style={{ fontSize: "14px" }}>{tx.class}</span></td>
-                                        <td className="py-3">
-                                            <div>
-                                                <div className="fw-medium text-dark" style={{ fontSize: "14px" }}>{tx.title}</div>
-                                                {tx.subtitle && <div className="text-secondary fw-semibold" style={{ fontSize: "10px", letterSpacing: "0.02em" }}>{tx.subtitle}</div>}
-                                            </div>
-                                        </td>
-                                        <td className="py-3"><span className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{tx.amount}</span></td>
-                                        <td className="py-3"><span className="text-secondary" style={{ fontSize: "13px" }}>{tx.date}</span></td>
-                                        <td className="py-3"><BadgeStatus status={tx.status} /></td>
-                                        <td className="py-3 text-end">
-                                            <div className="dropdown">
-                                                <button className="btn btn-link text-secondary p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <IconDotsVertical size={18} />
-                                                </button>
-                                                <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0" style={{ borderRadius: "12px" }}>
-                                                    <li>
-                                                        <button 
-                                                            className="dropdown-item d-flex align-items-center gap-2 py-2"
-                                                            style={{ fontSize: "13px" }}
-                                                            onClick={() => handleOpenDetail(tx)}
-                                                        >
-                                                            <IconEye size={16} />
-                                                            <span>Lihat Detail</span>
-                                                        </button>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </td>
+                        {loading ? (
+                            <div className="text-center py-5 text-secondary">Memuat data dari API billing...</div>
+                        ) : filteredTransactions.length === 0 ? (
+                            <div className="text-center py-5 text-secondary">Tidak ada data transaksi ditemukan.</div>
+                        ) : (
+                            <table className="table table-borderless align-middle mb-0">
+                                <thead>
+                                    <tr className="border-bottom" style={{ borderColor: "#F1F5F9" }}>
+                                        <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>SISWA</th>
+                                        <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>KELAS</th>
+                                        <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>TAGIHAN</th>
+                                        <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>NOMINAL</th>
+                                        <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>TANGGAL UPLOAD</th>
+                                        <th className="text-uppercase fw-semibold py-3" style={{ fontSize: "12px", color: "#64748B", letterSpacing: "0.05em" }}>STATUS</th>
+                                        <th className="py-3 text-end" style={{ width: "80px" }}>AKSI</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {filteredTransactions.map((tx) => (
+                                        <tr key={tx.id} className="border-bottom" style={{ borderColor: "#F8FAFC" }}>
+                                            <td className="py-3">
+                                                <div className="d-flex align-items-center gap-3">
+                                                    <div 
+                                                        className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                                        style={{ width: "42px", height: "42px", backgroundColor: tx.avatarBg, color: tx.avatarColor, fontSize: "16px" }}
+                                                    >
+                                                        {tx.name ? tx.name.charAt(0) : "S"}
+                                                    </div>
+                                                    <div>
+                                                        <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{tx.name}</div>
+                                                        <div className="text-secondary" style={{ fontSize: "12px" }}>{tx.id}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3"><span className="fw-medium text-dark" style={{ fontSize: "14px" }}>{tx.class}</span></td>
+                                            <td className="py-3">
+                                                <div>
+                                                    <div className="fw-medium text-dark" style={{ fontSize: "14px" }}>{tx.title}</div>
+                                                    {tx.subtitle && <div className="text-secondary fw-semibold" style={{ fontSize: "10px", letterSpacing: "0.02em" }}>{tx.subtitle}</div>}
+                                                </div>
+                                            </td>
+                                            <td className="py-3"><span className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{tx.amount}</span></td>
+                                            <td className="py-3"><span className="text-secondary" style={{ fontSize: "13px" }}>{tx.date}</span></td>
+                                            <td className="py-3"><BadgeStatus status={tx.status} /></td>
+                                            <td className="py-3 text-end">
+                                                <div className="dropdown">
+                                                    <button className="btn btn-link text-secondary p-1 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <IconDotsVertical size={18} />
+                                                    </button>
+                                                    <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0" style={{ borderRadius: "12px" }}>
+                                                        <li>
+                                                            <button 
+                                                                className="dropdown-item d-flex align-items-center gap-2 py-2"
+                                                                style={{ fontSize: "13px" }}
+                                                                onClick={() => handleOpenDetail(tx)}
+                                                            >
+                                                                <IconEye size={16} />
+                                                                <span>Lihat Detail</span>
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </div>
             </div>

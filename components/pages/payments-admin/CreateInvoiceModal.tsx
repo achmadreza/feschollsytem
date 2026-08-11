@@ -279,7 +279,8 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
             confirmButtonColor: '#3B82F6',
             cancelButtonColor: '#6B7280',
             confirmButtonText: 'Ya, Buat Tagihan',
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Batal',
+            reverseButtons: true
         });
 
         if (!confirmResult.isConfirmed) return;
