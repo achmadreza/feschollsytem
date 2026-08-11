@@ -288,7 +288,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
         try {
             setIsSubmitting(true);
 
-            const finalDescription = formData.notes.trim() || `Tagihan pembayaran untuk periode ${formData.month} ${formData.year}`;
+            const finalDescription = formData.notes.trim() || `Tagihan Periode ${formData.month} ${formData.year}`;
             const formattedDueDate = new Date(`${formData.dueDate}T10:00:00.000Z`).toISOString();
 
             const paymentListPayload = formData.items.map((item) => ({

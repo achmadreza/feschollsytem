@@ -335,7 +335,7 @@ export function DetailTransactionModal({
                                 <div className="py-3 d-flex flex-column gap-2" style={{ fontSize: "13px" }}>
                                     <div className="d-flex justify-content-between">
                                         <span className="text-secondary">Transaction ID</span>
-                                        <span className="fw-medium text-dark">{transaction.bankTransactionId || "TRX-992834102"}</span>
+                                        <span className="fw-medium text-dark">{transaction.bankTransactionId || ""}</span>
                                     </div>
                                     <div className="d-flex justify-content-between">
                                         <span className="text-secondary">Amount</span>
