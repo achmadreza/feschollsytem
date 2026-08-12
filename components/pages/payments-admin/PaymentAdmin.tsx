@@ -324,7 +324,6 @@ export function PaymentAdmin() {
                                                     </div>
                                                     <div>
                                                         <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{tx.name}</div>
-                                                        {/* Bagian ini otomatis menampilkan UUID string (f4297f62-...) di bawah nama siswa */}
                                                         <div className="text-secondary" style={{ fontSize: "12px" }}>{tx.id}</div>
                                                     </div>
                                                 </div>
