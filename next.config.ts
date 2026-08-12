@@ -19,6 +19,15 @@ const nextConfig: NextConfig = {
     ],
   },
   reactCompiler: true,
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/login",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
