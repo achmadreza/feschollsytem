@@ -12,7 +12,10 @@ import {
     IconUpload,
     IconTrash,
     IconPhoneCall,
-    IconBrandWhatsapp
+    IconBrandWhatsapp,
+    IconSearch,
+    IconChevronDown,
+    IconX
 } from "@tabler/icons-react";
 import { Button } from "../../ui/Button"; 
 import { Modal } from "../../ui/Modal";
@@ -66,6 +69,9 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
     const isEditMode = Boolean(student);
     const [parentsList, setParentsList] = useState<ParentOption[]>([]);
     const [isLoadingParents, setIsLoadingParents] = useState<boolean>(false);
+    const [parentSearchTerm, setParentSearchTerm] = useState("");
+    const [isParentDropdownOpen, setIsParentDropdownOpen] = useState(false);
+    const parentDropdownRef = useRef<HTMLDivElement>(null);
 
     const initialFormState = {
         studentName: "",
@@ -99,6 +105,16 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
     const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (parentDropdownRef.current && !parentDropdownRef.current.contains(event.target as Node)) {
+                setIsParentDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const fetchParents = async () => {
@@ -178,6 +194,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
             } else {
                 setFormData(initialFormState);
                 setDocuments(initialDocuments);
+                setParentSearchTerm("");
             }
         }
     }, [isOpen, student, isEditMode]);
@@ -196,37 +213,45 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
             return;
         }
 
-        if (name === "parentId") {
-            if (value === "new") {
-                setFormData(prev => ({
-                    ...prev,
-                    parentId: "",
-                    isNewParent: true,
-                    parentName: "",
-                    email: "",
-                    parentWhatsapp: "",
-                    phoneNumber: "",
-                    schoolCode: ""
-                }));
-            } else {
-                const selectedParent = parentsList.find(p => p.id === value);
-                const parentPhone = selectedParent?.whatsapp || "";
-                setFormData(prev => ({
-                    ...prev,
-                    parentId: value,
-                    isNewParent: false,
-                    parentName: selectedParent?.parentName || "",
-                    email: selectedParent?.email || "",
-                    parentWhatsapp: parentPhone,
-                    phoneNumber: parentPhone,
-                    schoolCode: selectedParent?.schoolCode || prev.schoolCode
-                }));
-            }
-            return;
-        }
-
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    const handleSelectParent = (parent: ParentOption | "new") => {
+        if (parent === "new") {
+            setFormData(prev => ({
+                ...prev,
+                parentId: "",
+                isNewParent: true,
+                parentName: "",
+                email: "",
+                parentWhatsapp: "",
+                phoneNumber: "",
+                schoolCode: ""
+            }));
+        } else {
+            const parentPhone = parent.whatsapp || "";
+            setFormData(prev => ({
+                ...prev,
+                parentId: parent.id,
+                isNewParent: false,
+                parentName: parent.parentName || "",
+                email: parent.email || "",
+                parentWhatsapp: parentPhone,
+                phoneNumber: parentPhone,
+                schoolCode: parent.schoolCode || prev.schoolCode
+            }));
+        }
+        setIsParentDropdownOpen(false);
+    };
+
+    const filteredParents = parentsList.filter(parent => {
+        const term = parentSearchTerm.toLowerCase();
+        return (
+            parent.parentName.toLowerCase().includes(term) ||
+            (parent.whatsapp && parent.whatsapp.includes(term)) ||
+            (parent.email && parent.email.toLowerCase().includes(term))
+        );
+    });
 
     const handleBrowseClick = (docId: string) => {
         if (fileInputRefs.current[docId]) {
@@ -412,6 +437,8 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
         return `${startYear}/${endYear}`;
     });
 
+    const selectedParent = parentsList.find(p => p.id === formData.parentId);
+
     return (
         <>
             <Toaster position="top-right" reverseOrder={false} />
@@ -548,25 +575,83 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                                     <div className="row g-3">
                                         <div className="col-12">
                                             <Label className="text-uppercase text-muted fw-bold mb-1 d-block" style={{ fontSize: "10px", letterSpacing: "0.5px" }}>PILIH ORANG TUA / WALI <span className="text-danger">*</span></Label>
-                                            <select 
-                                                name="parentId" 
-                                                value={formData.isNewParent ? "new" : formData.parentId} 
-                                                onChange={handleChange} 
-                                                className="form-select form-select-sm rounded-3 shadow-none cursor-pointer" 
-                                                style={inputStyle}
-                                                disabled={isLoadingParents}
-                                                required={!formData.isNewParent}
-                                            >
-                                                <option value="" disabled>
-                                                    {isLoadingParents ? "Memuat data orang tua..." : "-- Pilih Orang Tua / Wali --"}
-                                                </option>
-                                                {parentsList.map((parent) => (
-                                                    <option key={parent.id} value={parent.id}>
-                                                        {parent.parentName} {parent.whatsapp ? `(${parent.whatsapp})` : ''}
-                                                    </option>
-                                                ))}
-                                                <option value="new" className="fw-bold text-primary">+ Tambah Orang Tua Baru Manual</option>
-                                            </select>
+                                            <div className="position-relative" ref={parentDropdownRef}>
+                                                <div 
+                                                    className="form-control form-control-sm rounded-3 d-flex align-items-center justify-content-between cursor-pointer" 
+                                                    style={{ ...inputStyle, minHeight: "34px" }}
+                                                    onClick={() => !isLoadingParents && setIsParentDropdownOpen(prev => !prev)}
+                                                >
+                                                    <span className={`text-truncate ${!formData.parentId && !formData.isNewParent ? "text-muted" : "text-dark"}`}>
+                                                        {formData.isNewParent 
+                                                            ? "+ Tambah Orang Tua Baru Manual" 
+                                                            : selectedParent 
+                                                                ? `${selectedParent.parentName} ${selectedParent.whatsapp ? `(${selectedParent.whatsapp})` : ''}`
+                                                                : (isLoadingParents ? "Memuat data..." : "-- Pilih Orang Tua / Wali --")
+                                                        }
+                                                    </span>
+                                                    <IconChevronDown size={16} className="text-muted flex-shrink-0 ms-2" />
+                                                </div>
+
+                                                {isParentDropdownOpen && (
+                                                    <div 
+                                                        className="position-absolute start-0 w-100 bg-white border rounded-3 shadow-lg z-3 mt-1 overflow-hidden" 
+                                                        style={{ maxHeight: "250px", borderColor: "#E2E8F0" }}
+                                                    >
+                                                        <div className="p-2 border-bottom bg-light d-flex align-items-center gap-2">
+                                                            <IconSearch size={16} className="text-muted flex-shrink-0" />
+                                                            <input 
+                                                                type="text" 
+                                                                className="form-control form-control-sm border-0 bg-transparent p-0 shadow-none" 
+                                                                style={{ fontSize: "12px" }}
+                                                                placeholder="Cari nama, WhatsApp, atau email..."
+                                                                value={parentSearchTerm}
+                                                                onChange={(e) => setParentSearchTerm(e.target.value)}
+                                                                autoFocus
+                                                            />
+                                                            {parentSearchTerm && (
+                                                                <button 
+                                                                    type="button" 
+                                                                    className="btn btn-link p-0 text-muted"
+                                                                    onClick={() => setParentSearchTerm("")}
+                                                                >
+                                                                    <IconX size={14} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="overflow-auto" style={{ maxHeight: "190px" }}>
+                                                            <div 
+                                                                className={`p-2 border-bottom cursor-pointer fw-semibold text-primary hover-bg-light ${formData.isNewParent ? "bg-primary-subtle" : ""}`}
+                                                                style={{ fontSize: "12px" }}
+                                                                onClick={() => handleSelectParent("new")}
+                                                            >
+                                                                + Tambah Orang Tua Baru Manual
+                                                            </div>
+
+                                                            {filteredParents.length > 0 ? (
+                                                                filteredParents.map((parent) => (
+                                                                    <div 
+                                                                        key={parent.id} 
+                                                                        className={`p-2 cursor-pointer border-bottom hover-bg-light ${formData.parentId === parent.id ? "bg-light fw-bold" : ""}`}
+                                                                        style={{ fontSize: "12px", color: "#1E293B" }}
+                                                                        onClick={() => handleSelectParent(parent)}
+                                                                    >
+                                                                        <div className="fw-medium">{parent.parentName}</div>
+                                                                        <div className="text-muted d-flex align-items-center gap-2" style={{ fontSize: "11px" }}>
+                                                                            {parent.whatsapp && <span>WA: {parent.whatsapp}</span>}
+                                                                            {parent.email && <span>Email: {parent.email}</span>}
+                                                                        </div>
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                <div className="p-3 text-center text-muted" style={{ fontSize: "12px" }}>
+                                                                    Orang tua tidak ditemukan.
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {formData.isNewParent && (

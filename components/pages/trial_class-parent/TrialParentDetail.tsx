@@ -80,7 +80,7 @@ export function TrialParentDetail({ onBack, onReschedule }: TrialParentDetailPro
                         </p>
 
                         <span className="badge rounded-pill mb-4 px-3 py-2" style={{ backgroundColor: "#F3E8FF", color: "#A855F7", fontWeight: "600" }}>
-                            ● Menunggu Persetujuan
+                            Menunggu Persetujuan
                         </span>
 
                         <div className="row g-4 mt-2">

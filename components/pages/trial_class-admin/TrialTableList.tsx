@@ -20,6 +20,7 @@ import { BadgeStatus } from "../../../components/ui/BadgeStatus";
 import Swal from 'sweetalert2';
 import { ScheduleModal } from "./ScheduleModal";
 import { ReviewRescheduleModal } from "./ReviewRescheduleModal";
+import { ViewScheduleModal } from "./ViewScheduleModal";
 
 export interface TrialData {
   _id: string;
@@ -151,6 +152,7 @@ export function TrialTableList() {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [selectedTrialData, setSelectedTrialData] = useState<TrialData | null>(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState<boolean>(false);
 
     const fetchTrialClasses = useCallback(async () => {
         setIsLoading(true);
@@ -180,6 +182,8 @@ export function TrialTableList() {
             setIsModalOpen(true);
         } else if (item.status === "Reschedule") {
             setIsReviewModalOpen(true);
+        } else if (item.status === "Menunggu Persetujuan" || item.status === "Disetujui") {
+            setIsViewModalOpen(true);
         }
     };
 
@@ -408,6 +412,15 @@ export function TrialTableList() {
                 data={selectedTrialData}
                 onApprove={handleApproveReschedule}
                 onReject={handleRejectReschedule}
+            />
+
+            <ViewScheduleModal 
+                isOpen={isViewModalOpen}
+                onClose={() => {
+                    setIsViewModalOpen(false);
+                    setSelectedTrialData(null);
+                }}
+                data={selectedTrialData}
             />
 
             <Toaster position="top-right" />

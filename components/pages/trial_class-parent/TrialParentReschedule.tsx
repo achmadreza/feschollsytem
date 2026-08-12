@@ -20,13 +20,21 @@ interface TrialParentRescheduleProps {
 export function TrialParentReschedule({ onBack, onNext }: TrialParentRescheduleProps) {
     const [reason, setReason] = useState("Acara keluarga mendadak di luar kota.");
     const maxLength = 200;
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    const monthName = today.toLocaleDateString("id-ID", { month: "long" });
+    const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    
+    const dates = Array.from({ length: totalDaysInMonth }, (_, index) => {
+        const dayNumber = index + 1;
+        return {
+            day: dayNumber,
+            current: true
+        };
+    });
 
-    const dates = [
-        { day: 28, current: false }, { day: 29, current: false }, { day: 30, current: false },
-        { day: 1, current: true }, { day: 2, current: true }, { day: 3, current: true }, { day: 4, current: true },
-        { day: 5, current: true }, { day: 6, current: true }, { day: 7, current: true }, 
-        { day: 8, current: true }, { day: 9, current: true, selected: true }, { day: 10, current: true }, { day: 11, current: true }
-    ];
+    const [selectedDay, setSelectedDay] = useState<number>(today.getDate());
 
     return (
         <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", paddingBottom: "2rem", fontFamily: "sans-serif" }}>
@@ -78,7 +86,8 @@ export function TrialParentReschedule({ onBack, onNext }: TrialParentRescheduleP
             <div className="card border-0 rounded-4 shadow-sm overflow-hidden bg-white">
                 <div className="row g-0">
                     <div className="col-lg-4 text-white p-4 p-md-5 d-flex flex-column justify-content-between" 
-                         style={{ background: "linear-gradient(180deg, #1E293B 0%, #0F172A 100%)", minHeight: "450px" }}>
+                        style={{ background: "linear-gradient(180deg, #1E293B 0%, #0F172A 100%)", minHeight: "450px" }}>
+                        
                         <div>
                             <div className="p-3 bg-white bg-opacity-10 rounded-3 d-inline-block mb-4">
                                 <IconCalendarMonth size={28} className="text-white" />
@@ -95,7 +104,8 @@ export function TrialParentReschedule({ onBack, onNext }: TrialParentRescheduleP
                             </div>
                         </div>
 
-                        <div className="p-3 rounded-3 bg-white bg-opacity-5 border border-white border-opacity-10">
+                        <div className="p-3 rounded-3 border border-white border-opacity-10" 
+                            style={{ backgroundColor: "rgba(255, 255, 255, 0.05)", backdropFilter: "blur(5px)" }}>
                             <div className="d-flex gap-2 align-items-start">
                                 <IconInfoCircle size={20} className="text-info flex-shrink-0 mt-0.5" />
                                 <div>
@@ -113,7 +123,9 @@ export function TrialParentReschedule({ onBack, onNext }: TrialParentRescheduleP
                             <div className="d-flex align-items-center justify-content-between mb-3">
                                 <label className="fw-bold text-dark" style={{ fontSize: "0.95rem" }}>Pilih Tanggal Baru</label>
                                 <div className="d-flex align-items-center gap-2">
-                                    <span className="fw-bold text-muted text-uppercase" style={{ fontSize: "0.8rem", letterSpacing: "0.5px" }}>Oktober 2024</span>
+                                    <span className="fw-bold text-muted text-uppercase" style={{ fontSize: "0.8rem", letterSpacing: "0.5px" }}>
+                                        {monthName} {currentYear}
+                                    </span>
                                     <button className="btn btn-sm btn-light p-1 border-0 rounded-circle"><IconChevronLeft size={16} /></button>
                                     <button className="btn btn-sm btn-light p-1 border-0 rounded-circle"><IconChevronRight size={16} /></button>
                                 </div>
@@ -129,25 +141,26 @@ export function TrialParentReschedule({ onBack, onNext }: TrialParentRescheduleP
                                 <div className="col" style={{ width: "14.28%" }}>S</div>
                             </div>
                             
-                            <div className="row g-2 text-center row-cols-7 align-items-center" style={{ fontSize: "0.9rem" }}>
-                                {dates.map((item, idx) => (
-                                    <div key={idx} className="col" style={{ width: "14.28%" }}>
-                                        <button 
-                                            className={`btn w-100 py-2 border-0 rounded-3 fw-bold ${
-                                                item.selected 
-                                                    ? "btn-primary shadow-sm" 
-                                                    : item.current 
-                                                        ? "btn-light text-dark" 
-                                                        : "btn-light text-muted opacity-40"
-                                            }`}
-                                            style={item.selected ? { backgroundColor: "#06245C" } : {}}
-                                            disabled={!item.current}
-                                            type="button"
-                                        >
-                                            {item.day}
-                                        </button>
-                                    </div>
-                                ))}
+                            <div className="d-flex flex-wrap text-center align-items-center gap-y-2" style={{ fontSize: "0.9rem" }}>
+                                {dates.map((item, idx) => {
+                                    const isSelected = item.day === selectedDay;
+                                    return (
+                                        <div key={idx} style={{ width: "14.28%", padding: "0.25rem" }}>
+                                            <button 
+                                                onClick={() => setSelectedDay(item.day)}
+                                                className={`btn w-100 py-2 border-0 rounded-3 fw-bold ${
+                                                    isSelected 
+                                                        ? "btn-primary shadow-sm text-white" 
+                                                        : "btn-light text-dark"
+                                                }`}
+                                                style={isSelected ? { backgroundColor: "#06245C" } : {}}
+                                                type="button"
+                                            >
+                                                {item.day}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 

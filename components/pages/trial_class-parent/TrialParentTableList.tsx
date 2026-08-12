@@ -70,10 +70,10 @@ export function TrialParentTableList() {
                 <div className="col-lg-4 p-4 text-white d-flex flex-column justify-content-between" style={{ backgroundColor: "#6366F1", background: "linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)" }}>
                     <div>
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <div className="p-2 rounded-3 bg-white bg-opacity-20 d-inline-flex align-items-center justify-content-center">
+                            <div className="p-2 rounded-3 bg-opacity-20 d-inline-flex align-items-center justify-content-center">
                                 <IconCalendarEvent size={24} />
                             </div>
-                            <span className="badge rounded-pill bg-white bg-opacity-20 px-3 py-2" style={{ fontSize: "0.75rem", fontWeight: "500" }}>
+                            <span className="badge rounded-pill bg-opacity-20 px-3 py-2" style={{ fontSize: "0.75rem", fontWeight: "500" }}>
                                 Sesi Terdekat
                             </span>
                         </div>
