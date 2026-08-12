@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
-    IconPlus,
     IconCalendarEvent,
     IconMapPin,
     IconArrowRight,
@@ -10,18 +9,38 @@ import {
     IconCircleX,
     IconSchool
 } from "@tabler/icons-react";
-import { Button } from "../../../components/ui/Button"; 
-import { BadgeStatus } from "../../../components/ui/BadgeStatus";
-import { callApi } from "@/lib/api";
+import { TrialParentDetail } from "./TrialParentDetail"; 
+import { TrialParentReschedule } from "./TrialParentReschedule"; 
 
 export function TrialParentTableList() {
     const [activeTab, setActiveTab] = useState("aktif");
+    const [viewMode, setViewMode] = useState<"list" | "detail" | "reschedule">("list");
+    if (viewMode === "reschedule") {
+        return (
+            <TrialParentReschedule 
+                onBack={() => setViewMode("detail")} 
+                onNext={() => {
+                    alert("Permintaan reschedule berhasil dikirim!");
+                    setViewMode("list");
+                }} 
+            />
+        );
+    }
+
+    if (viewMode === "detail") {
+        return (
+            <TrialParentDetail 
+                onBack={() => setViewMode("list")} 
+                onReschedule={() => setViewMode("reschedule")}
+            />
+        );
+    }
 
     return (
         <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", paddingBottom: "2rem", fontFamily: "sans-serif" }}>
             <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3 mb-4">
                 <div>
-                    <h1 className="fw-bold text-dark mb-2" style={{ fontSize: "2.5rem", maxWidth: "600px", lineHeight: "1.2" }}>
+                    <h1 className="fw-bold text-dark mb-2" style={{ fontSize: "2.0rem", maxWidth: "600px", lineHeight: "1.2" }}>
                         Mulai Perjalanan Belajar Si Kecil
                     </h1>
                     <p className="text-muted mb-0" style={{ maxWidth: "650px", fontSize: "0.95rem" }}>
@@ -75,7 +94,11 @@ export function TrialParentTableList() {
                         </div>
                     </div>
 
-                    <button className="btn btn-white w-100 py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 fw-semibold" style={{ backgroundColor: "#FFFFFF", color: "#4F46E5", border: "none" }}>
+                    <button 
+                        onClick={() => setViewMode("detail")}
+                        className="btn btn-white w-100 py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 fw-semibold" 
+                        style={{ backgroundColor: "#FFFFFF", color: "#4F46E5", border: "none" }}
+                    >
                         Lanjutkan ke Detail Jadwal <IconArrowRight size={18} />
                     </button>
                 </div>
