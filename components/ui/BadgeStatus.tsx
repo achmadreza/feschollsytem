@@ -27,6 +27,7 @@ export function BadgeStatus({
             case "PROCESS":
             case "PENDING":
             case "MENUNGGU":
+            case "WAITING":
             case "Menunggu Jadwal":
                 return { backgroundColor: "#FEF3C7", color: "#B45309" };
             case "Menunggu Persetujuan":
