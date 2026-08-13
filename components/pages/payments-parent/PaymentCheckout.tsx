@@ -100,6 +100,7 @@ export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
     if (view === "upload") {
         return (
             <UploadProof 
+                totalAmount={totalAmount}
                 onBack={() => setView("checkout")} 
                 onSubmitSuccess={() => setView("checkout")}
             />
@@ -163,7 +164,7 @@ export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
 
                         <div className="p-3 bg-light d-flex align-items-center justify-content-between">
                             <span className="text-secondary fw-semibold">Total</span>
-                            <span className="fw-bold fs-5" style={{ color: "#002060" }}>
+                            <span className="fw-bold" style={{ color: "#002060" }}>
                                 {formatRupiah(totalAmount)}
                             </span>
                         </div>

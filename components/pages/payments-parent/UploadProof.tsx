@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   IconCloudUpload, 
   IconUser, 
@@ -9,19 +9,33 @@ import {
   IconSend,
   IconArrowLeft,
 } from "@tabler/icons-react";
+import { getUser } from "@/lib/auth";
+import { callApi } from "@/lib/api";
 
 interface UploadProofProps {
+  totalAmount: number;
   onBack: () => void;
   onSubmitSuccess?: () => void;
 }
 
-export function UploadProof({ onBack, onSubmitSuccess }: UploadProofProps) {
-  const [senderName, setSenderName] = useState("Budi Santoso");
-  const [transferDate, setTransferDate] = useState("2023-10-28");
-  const [amount, setAmount] = useState("2.200.000");
+export function UploadProof({ totalAmount, onBack, onSubmitSuccess }: UploadProofProps) {
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const [senderName, setSenderName] = useState("");
+  const [transferDate, setTransferDate] = useState(todayStr);
+  const [amount, setAmount] = useState(totalAmount.toString());
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    const user = getUser();
+    if (user && user.fullName) {
+      setSenderName(user.fullName);
+    } else {
+      setSenderName("Guest User");
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -76,88 +90,77 @@ export function UploadProof({ onBack, onSubmitSuccess }: UploadProofProps) {
                         cursor: "pointer"
                     }}
                     >
-                    <input 
-                        type="file" 
-                        accept="image/jpeg,image/png,application/pdf"
-                        onChange={handleFileChange}
-                        className="position-absolute w-100 h-100 top-0 start-0 opacity-0" 
-                        style={{ cursor: "pointer" }}
-                    />
+                        <input 
+                            type="file" 
+                            accept="image/jpeg,image/png,application/pdf"
+                            onChange={handleFileChange}
+                            className="position-absolute w-100 h-100 top-0 start-0 opacity-0" 
+                            style={{ cursor: "pointer" }}
+                        />
                     
-                    <div 
-                        className="rounded-circle d-flex align-items-center justify-content-center mb-3 text-white"
-                        style={{ width: "56px", height: "56px", backgroundColor: "#002060" }}
-                    >
-                        <IconCloudUpload size={28} />
-                    </div>
-                    
-                    <h6 className="fw-bold text-dark mb-1">
-                        {file ? file.name : "Click or drag file here"}
-                    </h6>
-                    <span className="small text-muted d-block">Support: JPG, PNG, PDF (Max 5MB)</span>
-                    <span className="small text-muted d-block">Ensure all details are legible</span>
+                        <div 
+                            className="rounded-circle d-flex align-items-center justify-content-center mb-3 text-white"
+                            style={{ width: "56px", height: "56px", backgroundColor: "#002060" }}
+                        >
+                            <IconCloudUpload size={28} />
+                        </div>
+                        
+                        <h6 className="fw-bold text-dark mb-1">
+                            {file ? file.name : "Click or drag file here"}
+                        </h6>
+                        <span className="small text-muted d-block">Support: JPG, PNG, PDF (Max 5MB)</span>
+                        <span className="small text-muted d-block">Ensure all details are legible</span>
                     </div>
 
                     <div className="row g-3 mb-3">
-                    <div className="col-12 col-md-6">
-                        <label className="form-label small fw-semibold text-secondary">Nama Pengirim</label>
-                        <div className="input-group">
-                        <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
-                            <IconUser size={18} />
-                        </span>
-                        <input 
-                            type="text" 
-                            className="form-control border-start-0 ps-0 rounded-end-3 py-2" 
-                            value={senderName}
-                            onChange={(e) => setSenderName(e.target.value)}
-                            required
-                        />
+                        <div className="col-12 col-md-6">
+                            <label className="form-label small fw-semibold text-secondary">Nama Pengirim</label>
+                            <div className="input-group">
+                            <span className="input-group-text bg-light border-end-0 text-muted rounded-start-3">
+                                <IconUser size={18} />
+                            </span>
+                            <input 
+                                type="text" 
+                                className="form-control border-start-0 ps-0 rounded-end-3 py-2 bg-light" 
+                                value={senderName}
+                                disabled
+                                required
+                            />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="col-12 col-md-6">
-                        <label className="form-label small fw-semibold text-secondary">Tanggal Transfer</label>
-                        <div className="input-group">
-                        <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
-                            <IconCalendar size={18} />
-                        </span>
-                        <input 
-                            type="date" 
-                            className="form-control border-start-0 ps-0 rounded-end-3 py-2" 
-                            value={transferDate}
-                            onChange={(e) => setTransferDate(e.target.value)}
-                            required
-                        />
+                        <div className="col-12 col-md-6">
+                            <label className="form-label small fw-semibold text-secondary">Tanggal Transfer</label>
+                            <div className="input-group">
+                            <span className="input-group-text bg-light border-end-0 text-muted rounded-start-3">
+                                <IconCalendar size={18} />
+                            </span>
+                            <input 
+                                type="date" 
+                                className="form-control border-start-0 ps-0 rounded-end-3 py-2 bg-light" 
+                                value={transferDate}
+                                disabled
+                                required
+                            />
+                            </div>
                         </div>
-                    </div>
                     </div>
 
                     <div className="mb-3">
-                    <label className="form-label small fw-semibold text-secondary">Jumlah Transfer</label>
-                    <div className="input-group">
-                        <span className="input-group-text border-end-0 text-secondary fw-semibold rounded-start-3" style={{ backgroundColor: "#F1F4F9" }}>
-                        Rp
-                        </span>
-                        <input 
-                        type="text" 
-                        className="form-control border-start-0 ps-2 rounded-end-3 py-2 fw-semibold" 
-                        style={{ backgroundColor: "#F1F4F9" }}
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        required
-                        />
-                    </div>
-                    </div>
-
-                    <div className="mb-2">
-                    <label className="form-label small fw-semibold text-secondary">Catatan (Opsional)</label>
-                    <textarea 
-                        className="form-control rounded-3 py-2" 
-                        rows={3}
-                        placeholder="Contoh: Pembayaran SPP Bulan Oktober"
-                        value={note}
-                        onChange={(e) => setNote(e.target.value)}
-                    />
+                        <label className="form-label small fw-semibold text-secondary">Jumlah Transfer</label>
+                        <div className="input-group">
+                            <span className="input-group-text border-end-0 text-secondary fw-semibold rounded-start-3" style={{ backgroundColor: "#F1F4F9" }}>
+                            Rp
+                            </span>
+                            <input 
+                            type="text" 
+                            className="form-control border-start-0 ps-2 rounded-end-3 py-2 fw-semibold" 
+                            style={{ backgroundColor: "#F1F4F9" }}
+                            value={new Intl.NumberFormat("id-ID").format(Number(amount))}
+                            disabled
+                            required
+                            />
+                        </div>
                     </div>
                 </div>
 

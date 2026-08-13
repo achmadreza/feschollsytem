@@ -252,9 +252,6 @@ export function PaymentParent() {
                             >
                                 <IconWallet size={20} /> Bayar Sekarang
                             </Button>
-                            <button className="btn btn-outline-secondary rounded-3 px-3 d-flex align-items-center justify-content-center">
-                                <IconDownload size={20} />
-                            </button>
                         </div>
                     </div>
                 ) : (
@@ -265,7 +262,7 @@ export function PaymentParent() {
 
                 <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="fw-bold mb-0 text-dark">Riwayat Pembayaran</h5>
+                        <h4 className="fw-bold mb-0 text-dark">Riwayat Pembayaran</h4>
                     </div>
 
                     <div className="table-responsive">
