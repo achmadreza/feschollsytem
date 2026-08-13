@@ -6,7 +6,6 @@ import {
     IconWallet, 
     IconInfoCircle, 
     IconHeadset,
-    IconChevronRight,
     IconUser
 } from "@tabler/icons-react";
 import { Button } from "../../../components/ui/Button"; 
@@ -134,8 +133,13 @@ export function PaymentParent() {
         ? activeBilling.paymentList.reduce((acc: number, curr: any) => acc + curr.amount, 0) 
         : 0;
 
-    if (isCheckoutView) {
-        return <PaymentCheckout onBack={() => setIsCheckoutView(false)} />;
+    if (isCheckoutView && activeBilling) {
+        return (
+            <PaymentCheckout 
+                billingData={activeBilling} 
+                onBack={() => setIsCheckoutView(false)} 
+            />
+        );
     }
 
     return (

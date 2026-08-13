@@ -41,7 +41,7 @@ export function UploadProof({ onBack, onSubmitSuccess }: UploadProofProps) {
             onClick={onBack}
             className="btn btn-link text-decoration-none p-0 mb-4 d-flex align-items-center gap-2 text-secondary fw-semibold"
         >
-            <IconArrowLeft size={20} /> Kembali ke Instruksi
+            <IconArrowLeft size={20} /> Kembali
         </button>
 
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">

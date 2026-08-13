@@ -1,4 +1,3 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import "@tabler/core/dist/css/tabler.min.css";
 import "@tabler/core/dist/css/tabler-flags.min.css";
@@ -17,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html>
+    <html lang="id" suppressHydrationWarning>
       <body className="d-flex flex-column">
         <AppProviders>{children}</AppProviders>
       </body>
