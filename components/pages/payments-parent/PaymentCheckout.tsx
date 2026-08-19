@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { 
     IconCopy, 
+    IconCheck,
     IconUpload, 
     IconArrowLeft, 
     IconSchool, 
@@ -10,8 +11,7 @@ import {
     IconUsers,
     IconChartBar,
     IconReceipt,
-    IconInfoCircle,
-    IconArrowRight
+    IconInfoCircle
 } from "@tabler/icons-react";
 import { UploadProof } from "./UploadProof";
 
@@ -22,7 +22,6 @@ interface PaymentItem {
 }
 
 interface BillingData {
-    _id: string;
     id: string;
     invoiceNumber: string;
     studentId: string;
@@ -87,10 +86,12 @@ const getIconBgClass = (type: string) => {
 
 export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
     const [view, setView] = useState<"checkout" | "upload">("checkout");
+    const [copied, setCopied] = useState(false);
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
-        alert("Nomor rekening berhasil disalin!");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     const totalAmount = billingData.paymentList
@@ -100,6 +101,7 @@ export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
     if (view === "upload") {
         return (
             <UploadProof 
+                billingId={billingData.id}
                 totalAmount={totalAmount}
                 onBack={() => setView("checkout")} 
                 onSubmitSuccess={() => setView("checkout")}
@@ -186,12 +188,25 @@ export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
                                 >
                                     BCA
                                 </span>
+                                
                                 <button 
                                     onClick={() => handleCopy("12345678910")}
-                                    className="btn btn-light btn-sm rounded-circle p-2 text-secondary" 
+                                    className={`btn btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1 transition-all ${
+                                        copied ? "btn-success text-white" : "btn-light text-secondary"
+                                    }`}
                                     title="Salin No Rekening"
                                 >
-                                    <IconCopy size={18} />
+                                    {copied ? (
+                                        <>
+                                            <IconCheck size={16} />
+                                            <span className="small fw-semibold">Tersalin</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <IconCopy size={16} />
+                                            <span className="small fw-semibold">Salin</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
 
