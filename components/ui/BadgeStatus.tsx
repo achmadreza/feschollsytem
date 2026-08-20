@@ -21,6 +21,7 @@ export function BadgeStatus({
             case "VERIFIED":
             case "DONE":
             case "LUNAS":
+            case "PAID":
             case "Disetujui":
                 return { backgroundColor: "#D1FAE5", color: "#065F46" };
             

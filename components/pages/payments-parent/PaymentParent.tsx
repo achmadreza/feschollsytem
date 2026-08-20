@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { 
-    IconDownload, 
     IconWallet, 
     IconInfoCircle, 
     IconHeadset,
@@ -47,6 +46,7 @@ interface BillingData {
     updatedAt: string;
     __v?: number;
 }
+
 const formatRupiah = (number: number) => {
     return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -210,9 +210,16 @@ export function PaymentParent() {
                 {activeBilling ? (
                     <div className="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
                         <div className="d-flex justify-content-between align-items-start mb-2">
-                            <span className="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill fw-semibold text-uppercase" style={{ fontSize: "0.75rem" }}>
-                                Belum Dibayar
-                            </span>
+                            {activeBilling.paidAt !== null || activeBilling.status === "PAID" ? (
+                                <span className="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold text-uppercase" style={{ fontSize: "0.75rem" }}>
+                                    Sudah Dibayar
+                                </span>
+                            ) : (
+                                <span className="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill fw-semibold text-uppercase" style={{ fontSize: "0.75rem" }}>
+                                    {activeBilling.status === "WAITING" ? "Belum Dibayar" : activeBilling.status}
+                                </span>
+                            )}
+
                             <div className="text-end">
                                 <span className="text-muted d-block small fw-semibold">ID TAGIHAN</span>
                                 <span className="fw-bold text-dark">#{activeBilling.invoiceNumber}</span>
@@ -247,10 +254,16 @@ export function PaymentParent() {
                         <div className="d-flex gap-3">
                             <Button
                                 onClick={() => setIsCheckoutView(true)}
+                                disabled={activeBilling.paidAt !== null}
                                 className="btn btn-primary flex-grow-1 py-2 rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-2"
-                                style={{ backgroundColor: "#002B82", borderColor: "#002B82" }}
+                                style={{ 
+                                    backgroundColor: activeBilling.paidAt !== null ? "#6c757d" : "#002B82", 
+                                    borderColor: activeBilling.paidAt !== null ? "#6c757d" : "#002B82",
+                                    cursor: activeBilling.paidAt !== null ? "not-allowed" : "pointer"
+                                }}
                             >
-                                <IconWallet size={20} /> Bayar Sekarang
+                                <IconWallet size={20} />
+                                {activeBilling.paidAt !== null ? "Sudah Dibayar" : "Bayar Sekarang"}
                             </Button>
                         </div>
                     </div>
@@ -283,7 +296,6 @@ export function PaymentParent() {
                                         return (
                                             <tr key={item.id || item._id} className="border-bottom-subtle">
                                                 <td className="py-3 text-muted small">
-                                                    {/* Jika paidAt tidak ada, nilainya otomatis dikosongkan ("-") oleh helper formatDate */}
                                                     {formatDate(item.paidAt)}
                                                 </td>
                                                 <td className="py-3 fw-bold text-dark">{formatMonthYear(item.dueDate)}</td>

@@ -10,7 +10,8 @@ import {
     IconCheck,
     IconSearch,
     IconAdjustmentsHorizontal,
-    IconDownload
+    IconDownload,
+    IconPlus
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
 import { StatCard } from "../../../components/ui/StatCard";
@@ -21,6 +22,7 @@ import Swal from 'sweetalert2';
 import { ScheduleModal } from "./ScheduleModal";
 import { ReviewRescheduleModal } from "./ReviewRescheduleModal";
 import { ViewScheduleModal } from "./ViewScheduleModal";
+import { AddTrialScheduleModal } from "./AddTrialScheduleModal";
 
 export interface TrialData {
   _id: string;
@@ -34,6 +36,37 @@ export interface TrialData {
   avatarUrl?: string;
   initials?: string;
 }
+
+const mapStatusToUI = (status: string): string => {
+  switch (status) {
+    case "WAITING_SCHEDULE":
+      return "Menunggu Jadwal";
+    case "WAITING_APPROVAL":
+      return "Menunggu Persetujuan";
+    case "APPROVED":
+      return "Disetujui";
+    case "RESCHEDULE":
+      return "Reschedule";
+    case "COMPLETED":
+      return "Selesai";
+    default:
+      return status;
+  }
+};
+
+const formatDate = (dateString?: string): string => {
+  if (!dateString) return "-";
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  } catch {
+    return dateString;
+  }
+};
 
 function IconHourglass(props: any) {
     return (
@@ -153,17 +186,29 @@ export function TrialTableList() {
     const [selectedTrialData, setSelectedTrialData] = useState<TrialData | null>(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState<boolean>(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
 
     const fetchTrialClasses = useCallback(async () => {
         setIsLoading(true);
         try {
-            const mockData: TrialData[] = [
-                { id: "1", _id: "1", studentName: "Budi Santoso", parentName: "Andi Santoso", phoneNumber: "0812-3456-7890", programClass: "TK A", registrationDate: "24 Juli 2026", status: "Menunggu Jadwal" },
-                { id: "2", _id: "2", studentName: "Aisyah Putri", parentName: "Rina Putri", phoneNumber: "0813-9876-5432", programClass: "SD 1", registrationDate: "23 Juli 2026", status: "Menunggu Persetujuan", avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop" },
-                { id: "3", _id: "3", studentName: "Kevin Wijaya", parentName: "Lina Wijaya", phoneNumber: "0857-1234-5678", programClass: "TK B", registrationDate: "22 Juli 2026", status: "Disetujui" },
-                { id: "4", _id: "4", studentName: "Sarah Aulia", parentName: "Hadi Aulia", phoneNumber: "0821-4433-2211", programClass: "SD 2", registrationDate: "21 Juli 2026", status: "Reschedule", avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop" },
-            ];
-            setItems(mockData);
+            const response = await callApi("trial-classes", { method: "GET" });
+            const rawData = response.data || response;
+
+            if (Array.isArray(rawData)) {
+                const mappedData: TrialData[] = rawData.map((item: any) => ({
+                    _id: item._id,
+                    id: item.id,
+                    studentName: item.student?.name || "Nama Tidak Ada",
+                    parentName: item.student?.parentName || "-",
+                    phoneNumber: item.student?.phoneNumber || "-",
+                    programClass: item.student?.class || "-",
+                    registrationDate: formatDate(item.registeredAt || item.createdAt),
+                    status: mapStatusToUI(item.status),
+                    avatarUrl: item.student?.photo && item.student?.photo !== "test.jpg" ? item.student.photo : undefined
+                }));
+
+                setItems(mappedData);
+            }
         } catch (error) {
             console.error("Error fetching trial data:", error);
             toast.error("Gagal mengambil data Trial Class.");
@@ -187,12 +232,27 @@ export function TrialTableList() {
         }
     };
 
+    const handleCreateNewSchedule = () => {
+        setIsAddModalOpen(true);
+    };
+
     const handleDelete = async (item: TrialData) => {
     };
 
     const handleSaveSchedule = (formData: any) => {
         console.log("Data Jadwal Baru dikirim:", formData);
-        toast.success(`Jadwal untuk ${selectedTrialData?.studentName} sukses disimpan!`);
+        const name = selectedTrialData?.studentName || "Siswa Baru";
+        toast.success(`Jadwal untuk ${name} sukses disimpan!`);
+        setIsModalOpen(false);
+        setSelectedTrialData(null);
+        fetchTrialClasses();
+    };
+
+    const handleAddTrialSubmit = async (formData: any) => {
+        console.log("Data Tambah Jadwal Trial Baru:", formData);
+        toast.success(`Jadwal Trial Class untuk ${formData.studentName} berhasil ditambahkan!`);
+        setIsAddModalOpen(false);
+        fetchTrialClasses();
     };
 
     const handleApproveReschedule = (formData: any) => {
@@ -200,6 +260,7 @@ export function TrialTableList() {
         toast.success(`Jadwal baru untuk ${formData.data.studentName} sukses diperbarui!`);
         setIsReviewModalOpen(false);
         setSelectedTrialData(null);
+        fetchTrialClasses();
     };
 
     const handleRejectReschedule = (data: TrialData) => {
@@ -217,9 +278,18 @@ export function TrialTableList() {
                 toast.error(`Permintaan reschedule ${data.studentName} telah ditolak.`);
                 setIsReviewModalOpen(false);
                 setSelectedTrialData(null);
+                fetchTrialClasses();
             }
         });
     };
+
+    const filteredItems = items.filter((item) => {
+        const matchesSearch = 
+            item.studentName.toLowerCase().includes(search.toLowerCase()) ||
+            item.parentName.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = statusFilter ? item.status === statusFilter : true;
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <>
@@ -234,6 +304,14 @@ export function TrialTableList() {
                             <IconDownload size={18} className="text-muted" />
                             Export Data
                         </button>
+                        <button 
+                            className="btn fw-bold text-white py-2 px-3 d-flex align-items-center gap-2 shadow-sm" 
+                            style={{ backgroundColor: "#0F2C59", borderRadius: "12px", fontSize: "14px" }}
+                            onClick={handleCreateNewSchedule}
+                        >
+                            <IconPlus size={18} />
+                            Tambah Jadwal Trial Class
+                        </button>
                     </div>
                 </div>
 
@@ -241,7 +319,7 @@ export function TrialTableList() {
                     <div className="col">
                         <StatCard 
                             title="Menunggu Jadwal" 
-                            value="12" 
+                            value={items.filter(i => i.status === "Menunggu Jadwal").length.toString()} 
                             badgeText="Jadwal" 
                             badgeColor="bg-purple-lt text-purple" 
                             icon={IconClock} 
@@ -254,7 +332,7 @@ export function TrialTableList() {
                     <div className="col">
                         <StatCard 
                             title="Menunggu Persetujuan" 
-                            value="8" 
+                            value={items.filter(i => i.status === "Menunggu Persetujuan").length.toString()} 
                             badgeText="Persetujuan" 
                             badgeColor="bg-blue-lt text-blue" 
                             icon={IconHourglass} 
@@ -267,7 +345,7 @@ export function TrialTableList() {
                     <div className="col">
                         <StatCard 
                             title="Disetujui" 
-                            value="15" 
+                            value={items.filter(i => i.status === "Disetujui").length.toString()} 
                             badgeText="Disetujui" 
                             badgeColor="bg-success-lt text-success" 
                             icon={IconCircleCheck} 
@@ -280,7 +358,7 @@ export function TrialTableList() {
                     <div className="col">
                         <StatCard 
                             title="Reschedule" 
-                            value="3" 
+                            value={items.filter(i => i.status === "Reschedule").length.toString()} 
                             badgeText="Reschedule" 
                             badgeColor="bg-warning-lt text-warning" 
                             icon={IconRefresh} 
@@ -293,7 +371,7 @@ export function TrialTableList() {
                     <div className="col-12 col-sm-6 col-lg-auto flex-lg-grow-1">
                         <StatCard 
                             title="Selesai" 
-                            value="20" 
+                            value={items.filter(i => i.status === "Selesai").length.toString()} 
                             badgeText="Selesai" 
                             badgeColor="bg-info-lt text-info" 
                             icon={IconCheck} 
@@ -356,8 +434,8 @@ export function TrialTableList() {
                             <tbody className="divide-y divide-light">
                                 {isLoading ? (
                                     <tr><td colSpan={5} className="text-center p-5 text-muted fw-medium">Memuat data pendaftaran...</td></tr>
-                                ) : items.length > 0 ? (
-                                    items.map((item) => (
+                                ) : filteredItems.length > 0 ? (
+                                    filteredItems.map((item) => (
                                         <TableRow 
                                             key={item._id || item.id} 
                                             data={item} 
@@ -374,7 +452,7 @@ export function TrialTableList() {
                     
                     <div className="card-footer bg-white d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 px-4 py-3 border-top-0">
                         <p className="m-0 text-secondary fw-medium" style={{ fontSize: "14px" }}>
-                            Menampilkan 1-{items.length} dari 38 data
+                            Menampilkan 1-{filteredItems.length} dari {filteredItems.length} data
                         </p>
                         <div className="d-flex gap-1 align-items-center">
                             <button className="btn btn-icon btn-sm btn-white border border-light-subtle rounded-3 p-2 d-flex align-items-center justify-content-center" disabled={true}>
@@ -392,6 +470,11 @@ export function TrialTableList() {
                     </div>
                 </div>
             </div>
+
+            <AddTrialScheduleModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+            />
 
             <ScheduleModal 
                 isOpen={isModalOpen}

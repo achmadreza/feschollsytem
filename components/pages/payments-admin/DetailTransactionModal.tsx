@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-    IconX, 
+import {
     IconReceipt, 
     IconInfoCircle, 
     IconPhoto, 
-    IconCheck,
-    IconClock,
-    IconX as IconReject,
     IconLoader2
 } from "@tabler/icons-react";
 import { callApi } from "@/lib/api";
+import { BadgeStatus } from "../../../components/ui/BadgeStatus";
 
 export interface Transaction {
     id: string; 
@@ -75,7 +72,7 @@ const formatDate = (dateString: string | null | undefined, fallback: string) => 
     if (!dateString) return fallback;
     try {
         const date = new Date(dateString);
-        return new Intl.DateTimeFormat("id-ID", {
+        const formattedDate = new Intl.DateTimeFormat("id-ID", {
             day: "numeric",
             month: "long",
             year: "numeric",
@@ -83,6 +80,7 @@ const formatDate = (dateString: string | null | undefined, fallback: string) => 
             minute: "2-digit",
             timeZoneName: "short"
         }).format(date);
+        return formattedDate.replace(/pukul\s?/gi, "");
     } catch (e) {
         return fallback;
     }
@@ -97,10 +95,11 @@ export function DetailTransactionModal({
 }: DetailTransactionModalProps) {
     const [billingData, setBillingData] = useState<BillingDetailResponse | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isUpdating, setIsUpdating] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     const currentStatus = transaction.status.toLowerCase();
-    const isSuccess = currentStatus === "lunas" || currentStatus === "disetujui";
+    const isSuccess = currentStatus === "lunas" || currentStatus === "disetujui" || billingData?.status.toUpperCase() === "PAID";
     const activeBillingId = billingId || transaction.id;
 
     useEffect(() => {
@@ -133,35 +132,42 @@ export function DetailTransactionModal({
         }
     }, [activeBillingId]);
 
-    const getStatusBadge = () => {
-        if (isSuccess) {
-            return {
-                label: "LUNAS",
-                bg: "#DCFCE7",
-                color: "#15803D",
-                border: "#86EFAC",
-                icon: <IconCheck size={14} className="me-1" />
-            };
+    const handleUpdateStatus = async (status: "PAID" | "REJECTED") => {
+        try {
+            setIsUpdating(true);
+            setError(null);
+
+            await callApi(`billings/${activeBillingId}/status`, {
+                method: "PATCH",
+                body: { status }
+            });
+
+            if (status === "PAID" && onApprove) {
+                onApprove(activeBillingId);
+            } else if (status === "REJECTED" && onReject) {
+                onReject(activeBillingId);
+            }
+
+            onClose();
+        } catch (err: any) {
+            console.error(`Error updating status to ${status}:`, err);
+            setError(err?.response?.data?.message || `Gagal mengubah status menjadi ${status}.`);
+        } finally {
+            setIsUpdating(false);
         }
-        if (currentStatus === "rejected" || currentStatus === "ditolak") {
-            return {
-                label: "DITOLAK",
-                bg: "#FEE2E2",
-                color: "#B91C1C",
-                border: "#FCA5A5",
-                icon: <IconReject size={14} className="me-1" />
-            };
-        }
-        return {
-            label: "MENUNGGU",
-            bg: "#FEF3C7",
-            color: "#B45309",
-            border: "#FDE68A",
-            icon: <IconClock size={14} className="me-1" />
-        };
     };
 
-    const statusStyle = getStatusBadge();
+    const getStatusBadge = () => {
+        if (isSuccess) {
+            return "PAID";
+        }
+        if (currentStatus === "rejected" || currentStatus === "ditolak" || billingData?.status.toUpperCase() === "REJECTED") {
+            return "REJECTED";
+        }
+        return "WAITING";
+    };
+
+    const statusBadge = getStatusBadge();
     const isWaiting = currentStatus === "menunggu" || currentStatus === "waiting" || billingData?.status.toLowerCase() === "waiting";
     const showActionButtons = billingData && isWaiting && billingData.paidAt !== null;
 
@@ -185,6 +191,7 @@ export function DetailTransactionModal({
                             type="button" 
                             className="btn-close shadow-none" 
                             onClick={onClose}
+                            disabled={isUpdating}
                         />
                     </div>
 
@@ -302,7 +309,7 @@ export function DetailTransactionModal({
                                 style={{ 
                                     backgroundColor: "#FFFFFF", 
                                     borderRadius: "16px",
-                                    border: `1.5px solid ${statusStyle.border}`
+                                    border: "1.5px solid #CBD5E1"
                                 }}
                             >
                                 <div className="d-flex align-items-center justify-content-between pb-3 border-bottom border-dashed" style={{ borderColor: "#CBD5E1" }}>
@@ -319,17 +326,8 @@ export function DetailTransactionModal({
                                         </div>
                                     </div>
                                     
-                                    <span 
-                                        className="badge rounded-pill fw-semibold px-2 py-1 d-flex align-items-center" 
-                                        style={{ 
-                                            backgroundColor: statusStyle.bg, 
-                                            color: statusStyle.color, 
-                                            fontSize: "11px" 
-                                        }}
-                                    >
-                                        {statusStyle.icon}
-                                        {statusStyle.label}
-                                    </span>
+                                    {/* Menggunakan komponen BadgeStatus */}
+                                    <BadgeStatus status={statusBadge} />
                                 </div>
 
                                 <div className="py-3 d-flex flex-column gap-2" style={{ fontSize: "13px" }}>
@@ -355,20 +353,22 @@ export function DetailTransactionModal({
                             <div className="d-flex align-items-center gap-3 w-100">
                                 <button
                                     type="button"
-                                    className="btn btn-outline-danger fw-semibold py-2.5 flex-fill"
+                                    className="btn btn-outline-danger fw-semibold py-2.5 flex-fill d-flex align-items-center justify-content-center gap-2"
                                     style={{ borderRadius: "14px" }}
-                                    onClick={() => onReject ? onReject(billingData?.id || activeBillingId) : onClose()}
-                                    disabled={isLoading}
+                                    onClick={() => handleUpdateStatus("REJECTED")}
+                                    disabled={isLoading || isUpdating}
                                 >
+                                    {isUpdating && <IconLoader2 className="animate-spin" size={18} style={{ animation: "spin 1s linear infinite" }} />}
                                     Tolak Pembayaran
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn fw-semibold py-2.5 flex-fill text-white"
+                                    className="btn fw-semibold py-2.5 flex-fill text-white d-flex align-items-center justify-content-center gap-2"
                                     style={{ backgroundColor: "#10B981", borderRadius: "14px" }}
-                                    onClick={() => onApprove ? onApprove(billingData?.id || activeBillingId) : onClose()}
-                                    disabled={isLoading}
+                                    onClick={() => handleUpdateStatus("PAID")}
+                                    disabled={isLoading || isUpdating}
                                 >
+                                    {isUpdating && <IconLoader2 className="animate-spin" size={18} style={{ animation: "spin 1s linear infinite" }} />}
                                     Terima Pembayaran
                                 </button>
                             </div>
@@ -378,6 +378,7 @@ export function DetailTransactionModal({
                                 className="btn btn-secondary fw-semibold py-2.5 w-100"
                                 style={{ borderRadius: "14px" }}
                                 onClick={onClose}
+                                disabled={isUpdating}
                             >
                                 Tutup
                             </button>
