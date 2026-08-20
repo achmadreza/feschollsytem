@@ -287,13 +287,6 @@ export function TrialTableList() {
         fetchTrialClasses();
     };
 
-    const handleAddTrialSubmit = async (formData: any) => {
-        console.log("Data Tambah Jadwal Trial Baru:", formData);
-        toast.success(`Jadwal Trial Class untuk ${formData.studentName} berhasil ditambahkan!`);
-        setIsAddModalOpen(false);
-        fetchTrialClasses();
-    };
-
     const handleApproveReschedule = (formData: any) => {
         console.log("Reschedule Disetujui:", formData);
         toast.success(`Jadwal baru untuk ${formData.data.studentName} sukses diperbarui!`);

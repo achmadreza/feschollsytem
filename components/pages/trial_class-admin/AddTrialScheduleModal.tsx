@@ -90,8 +90,16 @@ export function AddTrialScheduleModal({
             setSelectedTeacherId("");
             setSelectedParentId("");
             setParentName("");
-            const today = new Date().toISOString().split("T")[0];
-            setRegistrationDate(today);
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, "0");
+            const day = String(now.getDate()).padStart(2, "0");
+            const hours = String(now.getHours()).padStart(2, "0");
+            const minutes = String(now.getMinutes()).padStart(2, "0");
+            
+            const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            setRegistrationDate(currentDateTime);
         }
     }, [isOpen]);
 
@@ -128,7 +136,9 @@ export function AddTrialScheduleModal({
         setIsSubmitting(true);
 
         try {
-            const registeredAtIso = new Date(registrationDate).toISOString();
+            const dateObj = new Date(registrationDate);
+            const timezoneOffset = dateObj.getTimezoneOffset() * 60000;
+            const registeredAtIso = new Date(dateObj.getTime() - timezoneOffset).toISOString();
 
             const payload = {
                 parentId: selectedParentId,
@@ -274,7 +284,7 @@ export function AddTrialScheduleModal({
                                             <IconCalendar size={18} />
                                         </span>
                                         <Input
-                                            type="date"
+                                            type="datetime-local"
                                             className="form-control py-2 text-dark"
                                             value={registrationDate}
                                             onChange={(e) => setRegistrationDate(e.target.value)}
