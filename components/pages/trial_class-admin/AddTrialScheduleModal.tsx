@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { IconUsers, IconCalendar, IconLoader2 } from "@tabler/icons-react";
 import { callApi } from "@/lib/api";
 import { Toaster, toast } from "react-hot-toast";
+import { Label } from "../../ui/Label";
+import { Input } from "../../ui/Input";
+import { Form } from "../../ui/Form";
 
 export interface Student {
   _id: string;
@@ -196,14 +199,14 @@ export function AddTrialScheduleModal({
                                 />
                             </div>
 
-                            <form onSubmit={handleSubmit}>
+                            <Form onSubmit={handleSubmit}>
                                 <div className="modal-body p-4">
                                     <div className="mb-3">
-                                        <label className="form-label fw-semibold text-dark small mb-1">
+                                        <Label className="form-label fw-semibold text-dark small mb-1">
                                         Nama Siswa <span className="text-danger">*</span>
-                                        </label>
+                                        </Label>
                                         <select
-                                            className="form-select bg-light-subtle border-light-subtle py-2 px-3 text-dark"
+                                            className="form-select border-light-subtle py-2 px-3 text-dark"
                                             value={selectedStudentId}
                                             onChange={handleStudentChange}
                                             disabled={isLoadingStudents || isSubmitting}
@@ -222,18 +225,18 @@ export function AddTrialScheduleModal({
                                     </div>
 
                                     <div className="mb-3">
-                                        <label className="form-label fw-semibold text-dark small mb-1">
+                                        <Label className="form-label fw-semibold text-dark small mb-1">
                                             Pilih Guru
-                                        </label>
+                                        </Label>
                                         <select
-                                            className="form-select bg-light-subtle border-light-subtle py-2 px-3 text-dark"
+                                            className="form-select border-light-subtle py-2 px-3 text-dark"
                                             value={selectedTeacherId}
                                             onChange={(e) => setSelectedTeacherId(e.target.value)}
                                             disabled={isLoadingTeachers || isSubmitting}
                                             style={{ borderRadius: "10px", fontSize: "14px" }}
                                             >
                                             <option value="" disabled>
-                                                {isLoadingTeachers ? "Memuat data guru..." : "-- Pilih Guru (Opsional) --"}
+                                                {isLoadingTeachers ? "Memuat data guru..." : "-- Pilih Guru --"}
                                             </option>
                                             {teachers.map((teacher) => (
                                                 <option key={teacher.id || teacher._id} value={teacher.id || teacher._id}>
@@ -244,16 +247,16 @@ export function AddTrialScheduleModal({
                                     </div>
 
                                     <div className="mb-3">
-                                        <label className="form-label fw-semibold text-dark small mb-1">
+                                        <Label className="form-label fw-semibold text-dark small mb-1">
                                         Nama Orangtua
-                                        </label>
+                                        </Label>
                                         <div className="input-group">
                                         <span className="input-group-text bg-light border-light-subtle text-muted">
                                             <IconUsers size={18} />
                                         </span>
-                                        <input
+                                        <Input
                                             type="text"
-                                            className="form-control bg-light border-light-subtle py-2 text-dark fw-medium"
+                                            className="form-control py-2 text-dark fw-medium"
                                             value={parentName}
                                             readOnly
                                             placeholder="Nama orang tua akan otomatis terisi"
@@ -263,16 +266,16 @@ export function AddTrialScheduleModal({
                                     </div>
 
                                     <div className="mb-3">
-                                        <label className="form-label fw-semibold text-dark small mb-1">
+                                        <Label className="form-label fw-semibold text-dark small mb-1">
                                         Tanggal Registered <span className="text-danger">*</span>
-                                        </label>
+                                        </Label>
                                         <div className="input-group">
                                         <span className="input-group-text bg-light-subtle border-light-subtle text-muted">
                                             <IconCalendar size={18} />
                                         </span>
-                                        <input
+                                        <Input
                                             type="date"
-                                            className="form-control bg-light-subtle border-light-subtle py-2 text-dark"
+                                            className="form-control py-2 text-dark"
                                             value={registrationDate}
                                             onChange={(e) => setRegistrationDate(e.target.value)}
                                             disabled={isSubmitting}
@@ -304,7 +307,7 @@ export function AddTrialScheduleModal({
                                         Simpan Jadwal
                                     </button>
                                 </div>
-                            </form>
+                            </Form>
 
                         </div>
                     </div>

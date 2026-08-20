@@ -29,9 +29,11 @@ export function BadgeStatus({
             case "PENDING":
             case "MENUNGGU":
             case "WAITING":
+            case "WAITING_SCHEDULE":
             case "Menunggu Jadwal":
                 return { backgroundColor: "#FEF3C7", color: "#B45309" };
             case "Menunggu Persetujuan":
+            case "WAITING_APPROVAL":
                 return { backgroundColor: "#DBEAFE", color: "#1E40AF" }; 
             case "Reschedule":
                 return { backgroundColor: "#FFEDD5", color: "#C2410C" };

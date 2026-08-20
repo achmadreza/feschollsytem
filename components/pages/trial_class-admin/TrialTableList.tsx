@@ -280,7 +280,6 @@ export function TrialTableList() {
     };
 
     const handleSaveSchedule = (formData: any) => {
-        console.log("Data Jadwal Baru dikirim:", formData);
         const name = selectedTrialData?.studentName || "Siswa Baru";
         toast.success(`Jadwal untuk ${name} sukses disimpan!`);
         setIsModalOpen(false);
