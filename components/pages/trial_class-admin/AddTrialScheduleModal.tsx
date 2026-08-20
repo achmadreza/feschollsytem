@@ -133,9 +133,6 @@ export function AddTrialScheduleModal({
                 teacherId: selectedTeacherId,
                 registeredAt: registeredAtIso,
                 status: "WAITING_SCHEDULE",
-                scheduledAt: "",
-                location: "",
-                notes: "",
             };
 
             await callApi("trial-classes", {
@@ -144,14 +141,17 @@ export function AddTrialScheduleModal({
             });
 
             toast.success("Jadwal trial class berhasil disimpan!", {
-                duration: 3000,
+                duration: 1500,
             });
             
             if (onSuccess) {
                 onSuccess();
             }
 
-            onClose();
+            setTimeout(() => {
+                onClose();
+            }, 1000);
+
         } catch (error: any) {
             const apiErrors = error?.response?.data?.message || error?.message;
             if (Array.isArray(apiErrors)) {
@@ -174,7 +174,9 @@ export function AddTrialScheduleModal({
 
     return (
         <>
-            <Toaster position="top-right" reverseOrder={false} />
+            <Toaster position="top-right" reverseOrder={false} toastOptions={{
+                duration: 2000,
+            }} />
             <div
                 className="modal fade show d-block"
                 tabIndex={-1}

@@ -11,7 +11,8 @@ import {
     IconSearch,
     IconAdjustmentsHorizontal,
     IconDownload,
-    IconPlus
+    IconPlus,
+    IconTrash
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
 import { StatCard } from "../../../components/ui/StatCard";
@@ -124,6 +125,14 @@ function TableRow({
             </td>
             <td className="text-end px-4">
                 <div className="d-flex align-items-center justify-content-end gap-2">
+                    <button
+                        type="button"
+                        className="btn btn-outline-danger p-2 border-0 shadow-none rounded-2"
+                        title="Hapus Trial Class"
+                        onClick={() => onDelete(data)}
+                    >
+                        <IconTrash size={18} />
+                    </button>
                     {data.status === "Menunggu Jadwal" && (
                         <Button 
                             type="button" 
@@ -154,23 +163,23 @@ function TableRow({
                             <span>Lihat Jadwal</span>
                         </Button>
                     )}
-                   {data.status === "Reschedule" && (
-                    <Button 
-                        type="button" 
-                        className="btn fw-bold border-0 shadow-none text-dark"
-                        style={{ 
-                            backgroundColor: '#E2E8F0', 
-                            color: '#1E293B', 
-                            borderRadius: "10px", 
-                            fontSize: "12px", 
-                            padding: "8px 14px", 
-                            lineHeight: "1.2" 
-                        }}
-                        onClick={() => onAction(data)}
-                    >
-                        Review Permintaan
-                    </Button>
-                )}
+                    {data.status === "Reschedule" && (
+                        <Button 
+                            type="button" 
+                            className="btn fw-bold border-0 shadow-none text-dark"
+                            style={{ 
+                                backgroundColor: '#E2E8F0', 
+                                color: '#1E293B', 
+                                borderRadius: "10px", 
+                                fontSize: "12px", 
+                                padding: "8px 14px", 
+                                lineHeight: "1.2" 
+                            }}
+                            onClick={() => onAction(data)}
+                        >
+                            Review Permintaan
+                        </Button>
+                    )}
                 </div>
             </td>
         </tr>
@@ -237,6 +246,37 @@ export function TrialTableList() {
     };
 
     const handleDelete = async (item: TrialData) => {
+        const targetId = item.id;
+
+        const result = await Swal.fire({
+            title: 'Hapus Trial Class?',
+            text: `Apakah Anda yakin ingin menghapus jadwal trial class untuk ${item.studentName}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6e7881',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await callApi(`trial-classes/${targetId}`, {
+                    method: "DELETE"
+                });
+                toast.success(`Trial Class ${item.studentName} berhasil dihapus.`, {
+                    duration: 1500,
+                });
+                fetchTrialClasses();
+
+            } catch (error: any) {
+                console.error("Error deleting trial class:", error);
+                const errorMessage = error?.response?.data?.message || error?.message || "Gagal menghapus Trial Class.";
+                toast.error(errorMessage, {
+                    duration: 2000,
+                });
+            }
+        }
     };
 
     const handleSaveSchedule = (formData: any) => {
@@ -300,10 +340,6 @@ export function TrialTableList() {
                     </div>
 
                     <div className="d-flex align-items-center gap-2">
-                        <button className="btn btn-white bg-white border border-light-subtle text-secondary font-medium py-2 px-3 d-flex align-items-center gap-2" style={{ borderRadius: "12px", fontSize: "14px" }}>
-                            <IconDownload size={18} className="text-muted" />
-                            Export Data
-                        </button>
                         <button 
                             className="btn fw-bold text-white py-2 px-3 d-flex align-items-center gap-2 shadow-sm" 
                             style={{ backgroundColor: "#0F2C59", borderRadius: "12px", fontSize: "14px" }}
@@ -474,6 +510,9 @@ export function TrialTableList() {
             <AddTrialScheduleModal
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
+                onSuccess={() => {
+                    fetchTrialClasses();
+                }}
             />
 
             <ScheduleModal 
