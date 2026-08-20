@@ -369,6 +369,7 @@ export function PaymentAdmin() {
             <CreateInvoiceModal 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                onSubmitSuccess={fetchBillings}
             />
 
             {isDetailModalOpen && selectedTransaction && (

@@ -133,6 +133,9 @@ export function AddTrialScheduleModal({
                 teacherId: selectedTeacherId,
                 registeredAt: registeredAtIso,
                 status: "WAITING_SCHEDULE",
+                scheduledAt: "",
+                location: "",
+                notes: "",
             };
 
             await callApi("trial-classes", {
@@ -149,9 +152,19 @@ export function AddTrialScheduleModal({
             }
 
             onClose();
-        } catch (error) {
-            console.error("Error submitting form:", error);
-            toast.error("Gagal menyimpan jadwal trial.");
+        } catch (error: any) {
+            const apiErrors = error?.response?.data?.message || error?.message;
+            if (Array.isArray(apiErrors)) {
+                apiErrors.forEach((msg: string) => {
+                    toast.error(msg);
+                });
+            } 
+            else if (typeof apiErrors === "string") {
+                toast.error(apiErrors);
+            }
+            else {
+                toast.error("Gagal menyimpan jadwal trial.");
+            }
         } finally {
             setIsSubmitting(false);
         }
