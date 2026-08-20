@@ -138,6 +138,8 @@ export function PaymentParent() {
             <PaymentCheckout 
                 billingData={activeBilling} 
                 onBack={() => setIsCheckoutView(false)} 
+                onGoToHistory={() => setIsCheckoutView(false)}
+                onGoToHome={() => setIsCheckoutView(false)}
             />
         );
     }

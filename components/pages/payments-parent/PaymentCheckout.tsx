@@ -42,6 +42,8 @@ interface BillingData {
 interface PaymentCheckoutProps {
     billingData: BillingData;
     onBack: () => void;
+    onGoToHistory?: () => void;
+    onGoToHome?: () => void;
 }
 
 const formatRupiah = (number: number) => {
