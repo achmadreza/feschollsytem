@@ -44,4 +44,16 @@ export const mainMenu: MenuItem[] = [
     href: "/users",
     role: ["admin"],
   },
+  {
+    label: "Kegiatan & Foto",
+    icon: "users",
+    href: "/activities",
+    role: ["teacher"],
+  },
+  {
+    label: "Pengumuman",
+    icon: "users",
+    href: "/announcement",
+    role: ["teacher"],
+  },
 ];
