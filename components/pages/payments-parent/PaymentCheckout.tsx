@@ -89,6 +89,7 @@ const getIconBgClass = (type: string) => {
 export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
     const [view, setView] = useState<"checkout" | "upload">("checkout");
     const [copied, setCopied] = useState(false);
+    const isPaid = billingData.paidAt !== null;
 
     const handleCopy = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -126,8 +127,8 @@ export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
             >
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
                     <div>
-                        <span className="badge bg-danger-subtle text-danger px-3 py-2 rounded-2 fw-bold text-uppercase mb-2">
-                            {billingData.status === "WAITING" ? "UNPAID" : billingData.status}
+                        <span className="badge bg-warning-subtle text-warning px-3 py-2 rounded-2 fw-bold text-uppercase mb-2">
+                            {billingData.status}
                         </span>
                         <h4 className="fw-bold mb-1 text-dark">{billingData.description}</h4>
                         <p className="text-muted mb-0 small">Due Date: {formatDate(billingData.dueDate)}</p>
@@ -230,17 +231,24 @@ export function PaymentCheckout({ billingData, onBack }: PaymentCheckoutProps) {
                         <div className="p-3 rounded-3 mb-3 d-flex gap-2" style={{ backgroundColor: "#E2E8F0" }}>
                             <IconInfoCircle size={20} className="text-dark flex-shrink-0 mt-1" />
                             <p className="small text-secondary mb-0">
-                                Setelah melakukan transfer, mohon <strong>upload bukti pembayaran</strong> melalui tombol di bawah ini agar dapat segera diverifikasi oleh admin sekolah.
+                                {isPaid ? (
+                                    <>Pembayaran telah dibayar pada <strong>{formatDate(billingData.paidAt!)}</strong>.</>
+                                ) : (
+                                    <>Setelah melakukan transfer, mohon <strong>upload bukti pembayaran</strong> melalui tombol di bawah ini agar dapat segera diverifikasi oleh admin sekolah.</>
+                                )}
                             </p>
                         </div>
 
                         <button 
                             onClick={() => setView("upload")}
-                            className="btn w-100 py-3 rounded-3 text-white fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm"
-                            style={{ backgroundColor: "#001B48" }}
+                            disabled={isPaid}
+                            className={`btn w-100 py-3 rounded-3 text-white fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm ${
+                                isPaid ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
+                            style={{ backgroundColor: isPaid ? "#6c757d" : "#001B48" }}
                         >
                             <IconUpload size={20} />
-                            Upload Bukti Pembayaran
+                            {isPaid ? "Sudah Dibayar" : "Upload Bukti Pembayaran"}
                         </button>
                     </div>
                 </div>

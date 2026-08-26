@@ -10,7 +10,11 @@ import {
   IconArrowLeft,
   IconLoader2,
   IconCheck,
-  IconReceipt
+  IconReceipt,
+  IconTrash,
+  IconEye,
+  IconFileText,
+  IconX
 } from "@tabler/icons-react";
 import { getUser } from "@/lib/auth";
 import { callApi } from "@/lib/api";
@@ -39,9 +43,11 @@ export function UploadProof({
     const [transferDate, setTransferDate] = useState(todayStr);
     const [amount, setAmount] = useState(totalAmount.toString());
     const [file, setFile] = useState<File | null>(null);
+    const [filePreview, setFilePreview] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [submittedAt, setSubmittedAt] = useState<string>("");
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     useEffect(() => {
         const user = getUser();
@@ -51,6 +57,14 @@ export function UploadProof({
             setSenderName("Guest User");
         }
     }, []);
+
+    useEffect(() => {
+        return () => {
+            if (filePreview && filePreview.startsWith("blob:")) {
+                URL.revokeObjectURL(filePreview);
+            }
+        };
+    }, [filePreview]);
 
     const compressAndToBase64 = (file: File, maxWidth = 800, quality = 0.6): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -96,9 +110,23 @@ export function UploadProof({
                 toast.error("Ukuran file maksimal 5MB");
                 return;
             }
+
+            if (filePreview && filePreview.startsWith("blob:")) {
+                URL.revokeObjectURL(filePreview);
+            }
             
             setFile(selectedFile);
+            setFilePreview(URL.createObjectURL(selectedFile));
         }
+    };
+
+    const handleRemoveFile = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (filePreview && filePreview.startsWith("blob:")) {
+            URL.revokeObjectURL(filePreview);
+        }
+        setFile(null);
+        setFilePreview(null);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -216,12 +244,25 @@ export function UploadProof({
                             </div>
                         </div>
 
-                        <div className="d-flex justify-content-between align-items-center pt-3">
+                        <div className="d-flex justify-content-between align-items-center py-3 border-bottom">
                             <span className="text-muted fw-semibold small text-uppercase tracking-wider">ID TRANSAKSI</span>
                             <span className="fw-bold text-dark fs-6">
                                 #{typeof billingId === "string" && billingId.startsWith("PAY-") ? billingId : `PAY-${billingId}`}
                             </span>
                         </div>
+
+                        {filePreview && (
+                            <div className="d-flex justify-content-between align-items-center pt-3">
+                                <span className="text-muted fw-semibold small text-uppercase tracking-wider">BERKAS TERKIRIM</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPreviewModal(true)}
+                                    className="btn btn-sm btn-outline-primary rounded-pill d-flex align-items-center gap-1"
+                                >
+                                    <IconEye size={16} /> Lihat File
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="d-flex flex-column flex-sm-row gap-3 w-100 justify-content-center" style={{ maxWidth: 580 }}>
@@ -250,6 +291,45 @@ export function UploadProof({
                         </button>
                     </div>
 
+                    {showPreviewModal && filePreview && (
+                        <div 
+                            className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center p-3"
+                            style={{ backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1050 }}
+                            onClick={() => setShowPreviewModal(false)}
+                        >
+                            <div 
+                                className="bg-white rounded-4 overflow-hidden shadow-lg position-relative d-flex flex-column"
+                                style={{ maxWidth: 700, width: "100%", maxHeight: "85vh" }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 className="mb-0 fw-bold">Bukti Transfer</h6>
+                                    <button 
+                                        className="btn btn-sm btn-light rounded-circle p-1"
+                                        onClick={() => setShowPreviewModal(false)}
+                                    >
+                                        <IconX size={20} />
+                                    </button>
+                                </div>
+                                <div className="p-3 overflow-auto d-flex justify-content-center align-items-center bg-light" style={{ minHeight: 300 }}>
+                                    {file?.type === "application/pdf" ? (
+                                        <iframe 
+                                            src={filePreview} 
+                                            title="PDF Preview" 
+                                            style={{ width: "100%", height: "500px", border: "none" }} 
+                                        />
+                                    ) : (
+                                        <img 
+                                            src={filePreview} 
+                                            alt="Pratinjau Bukti Transfer" 
+                                            style={{ maxWidth: "100%", maxHeight: "65vh", objectFit: "contain" }} 
+                                            className="rounded"
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </>
         );
@@ -294,36 +374,74 @@ export function UploadProof({
                 <div className="card border-1 shadow-sm rounded-4 overflow-hidden w-100" style={{ borderColor: "#E2E8F0" }}>
                     <form onSubmit={handleSubmit}>
                         <div className="p-4 p-md-5">
-                            <div 
-                                className="position-relative p-5 rounded-4 text-center mb-4 d-flex flex-column align-items-center justify-content-center"
-                                style={{ 
-                                    border: "2px dashed #C0CBDC", 
-                                    backgroundColor: "#F4F6FB",
-                                    cursor: "pointer"
-                                }}
-                            >
-                                <input 
-                                    type="file" 
-                                    accept="image/jpeg,image/png,application/pdf"
-                                    onChange={handleFileChange}
-                                    disabled={isLoading}
-                                    className="position-absolute w-100 h-100 top-0 start-0 opacity-0" 
-                                    style={{ cursor: isLoading ? "not-allowed" : "pointer" }}
-                                />
-                            
+                            {!file ? (
                                 <div 
-                                    className="rounded-circle d-flex align-items-center justify-content-center mb-3 text-white"
-                                    style={{ width: "56px", height: "56px", backgroundColor: "#002060" }}
+                                    className="position-relative p-5 rounded-4 text-center mb-4 d-flex flex-column align-items-center justify-content-center"
+                                    style={{ 
+                                        border: "2px dashed #C0CBDC", 
+                                        backgroundColor: "#F4F6FB",
+                                        cursor: "pointer"
+                                    }}
                                 >
-                                    <IconCloudUpload size={28} />
-                                </div>
+                                    <input 
+                                        type="file" 
+                                        accept="image/jpeg,image/png,application/pdf"
+                                        onChange={handleFileChange}
+                                        disabled={isLoading}
+                                        className="position-absolute w-100 h-100 top-0 start-0 opacity-0" 
+                                        style={{ cursor: isLoading ? "not-allowed" : "pointer" }}
+                                    />
                                 
-                                <h6 className="fw-bold text-dark mb-1">
-                                    {file ? file.name : "Click or drag file here"}
-                                </h6>
-                                <span className="small text-muted d-block">Support: JPG, PNG, PDF (Max 5MB)</span>
-                                <span className="small text-muted d-block">Ensure all details are legible</span>
-                            </div>
+                                    <div 
+                                        className="rounded-circle d-flex align-items-center justify-content-center mb-3 text-white"
+                                        style={{ width: "56px", height: "56px", backgroundColor: "#002060" }}
+                                    >
+                                        <IconCloudUpload size={28} />
+                                    </div>
+                                    
+                                    <h6 className="fw-bold text-dark mb-1">
+                                        Click or drag file here
+                                    </h6>
+                                    <span className="small text-muted d-block">Support: JPG, PNG, PDF (Max 5MB)</span>
+                                    <span className="small text-muted d-block">Ensure all details are legible</span>
+                                </div>
+                            ) : (
+                                <div className="p-3 rounded-4 mb-4 border" style={{ backgroundColor: "#F8FAFC", borderColor: "#E2E8F0" }}>
+                                    <div className="d-flex align-items-center justify-content-between mb-3">
+                                        <div className="d-flex align-items-center gap-2 overflow-hidden">
+                                            <IconFileText size={20} className="text-primary flex-shrink-0" />
+                                            <span className="fw-semibold text-truncate small">{file.name}</span>
+                                            <span className="badge bg-secondary small ms-1">
+                                                {(file.size / (1024 * 1024)).toFixed(2)} MB
+                                            </span>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={handleRemoveFile}
+                                            disabled={isLoading}
+                                            className="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 rounded-3"
+                                        >
+                                            <IconTrash size={16} /> Hapus / Ganti
+                                        </button>
+                                    </div>
+                                    <div className="d-flex justify-content-center align-items-center rounded-3 bg-white p-2 border overflow-hidden" style={{ minHeight: "200px", maxHeight: "350px" }}>
+                                        {file.type === "application/pdf" ? (
+                                            <iframe 
+                                                src={filePreview || ""} 
+                                                title="PDF Preview" 
+                                                style={{ width: "100%", height: "300px", border: "none" }}
+                                            />
+                                        ) : (
+                                            <img 
+                                                src={filePreview || ""} 
+                                                alt="Pratinjau Bukti Upload" 
+                                                style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "contain" }}
+                                                className="rounded"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="row g-3 mb-3">
                                 <div className="col-12 col-md-6">

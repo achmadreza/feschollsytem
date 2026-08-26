@@ -69,9 +69,14 @@ export function PaymentAdmin() {
                 const mappedData: Transaction[] = response.map((item) => {
                     const totalAmount = item.paymentList.reduce((acc, pay) => acc + pay.amount, 0);
                     const paymentTypes = item.paymentList.map(p => p.paymentType).join(", ");
-                    let uiStatus = "MENUNGGU";
-                    if (item.status === "PAID") uiStatus = "LUNAS";
-                    if (item.status === "REJECTED") uiStatus = "DITOLAK";
+                    let uiStatus = item.status;
+                    if (item.status === "WAITING") {
+                        uiStatus = item.paidAt === null ? "WAITING_PAYMENT" : "WAITING_VERIFICATION";
+                    } else if (item.status === "PAID") {
+                        uiStatus = "LUNAS";
+                    } else if (item.status === "REJECTED") {
+                        uiStatus = "DITOLAK";
+                    }
                     let avatarBg = "#C7D2FE";
                     let avatarColor = "#3730A3";
                     if (uiStatus === "LUNAS") {
@@ -80,6 +85,9 @@ export function PaymentAdmin() {
                     } else if (uiStatus === "DITOLAK") {
                         avatarBg = "#FEE2E2";
                         avatarColor = "#991B1B";
+                    } else if (uiStatus === "WAITING_VERIFICATION") {
+                        avatarBg = "#FEF3C7";
+                        avatarColor = "#92400E";
                     }
 
                     const dateObj = new Date(item.createdAt);
@@ -135,8 +143,8 @@ export function PaymentAdmin() {
         setIsDetailModalOpen(false);
         fetchBillings();
     };
-
-    const totalMenunggu = transactions.filter(t => t.status === "MENUNGGU").length;
+    const totalMenungguVerifikasi = transactions.filter(t => t.status === "WAITING_VERIFICATION").length;
+    const totalBelumBayarCount = transactions.filter(t => t.status === "WAITING_PAYMENT").length;
     const totalLunasToday = transactions.filter(t => t.status === "LUNAS").length;
     
     const nominalLunas = transactions
@@ -144,7 +152,7 @@ export function PaymentAdmin() {
         .reduce((sum, t) => sum + parseInt(t.amount.replace(/[^0-9]/g, "")), 0);
         
     const nominalBelumBayar = transactions
-        .filter(t => t.status === "MENUNGGU")
+        .filter(t => t.status === "WAITING_PAYMENT")
         .reduce((sum, t) => sum + parseInt(t.amount.replace(/[^0-9]/g, "")), 0);
 
     const totalPemasukan = nominalLunas;
@@ -187,7 +195,7 @@ export function PaymentAdmin() {
                             <div>
                                 <span className="fw-bold text-uppercase" style={{ fontSize: "11px", color: "#F59E0B", letterSpacing: "0.05em" }}>MENUNGGU VERIFIKASI</span>
                                 <div className="d-flex align-items-baseline gap-2 mt-3">
-                                    <span className="fw-bold text-dark" style={{ fontSize: "32px", lineHeight: "1" }}>{totalMenunggu}</span>
+                                    <span className="fw-bold text-dark" style={{ fontSize: "32px", lineHeight: "1" }}>{totalMenungguVerifikasi}</span>
                                     <span className="text-secondary font-medium" style={{ fontSize: "14px" }}>Transaksi</span>
                                 </div>
                             </div>
@@ -224,7 +232,7 @@ export function PaymentAdmin() {
                             <div>
                                 <span className="fw-bold text-uppercase" style={{ fontSize: "11px", color: "#DC2626", letterSpacing: "0.05em" }}>BELUM DIBAYAR</span>
                                 <div className="d-flex align-items-baseline gap-2 mt-2">
-                                    <span className="fw-bold text-dark" style={{ fontSize: "28px", lineHeight: "1" }}>{totalMenunggu}</span>
+                                    <span className="fw-bold text-dark" style={{ fontSize: "28px", lineHeight: "1" }}>{totalBelumBayarCount}</span>
                                     <span className="text-secondary font-medium" style={{ fontSize: "14px" }}>Siswa</span>
                                 </div>
                                 <div className="fw-bold text-dark mt-1" style={{ fontSize: "20px" }}>{formatRupiah(nominalBelumBayar)}</div>
@@ -285,7 +293,8 @@ export function PaymentAdmin() {
                                 </button>
                                 <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0" style={{ borderRadius: "12px" }}>
                                     <li><button className="dropdown-item" onClick={() => setStatusFilter("Semua Status")}>Semua Status</button></li>
-                                    <li><button className="dropdown-item" onClick={() => setStatusFilter("MENUNGGU")}>MENUNGGU</button></li>
+                                    <li><button className="dropdown-item" onClick={() => setStatusFilter("WAITING_PAYMENT")}>WAITING_PAYMENT</button></li>
+                                    <li><button className="dropdown-item" onClick={() => setStatusFilter("WAITING_VERIFICATION")}>WAITING_VERIFICATION</button></li>
                                     <li><button className="dropdown-item" onClick={() => setStatusFilter("LUNAS")}>LUNAS</button></li>
                                     <li><button className="dropdown-item" onClick={() => setStatusFilter("DITOLAK")}>DITOLAK</button></li>
                                 </ul>
