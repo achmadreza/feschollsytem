@@ -289,16 +289,28 @@ export function TrialTableList() {
 
     const handleApproveReschedule = (formData: any) => {
         console.log("Reschedule Disetujui:", formData);
-        toast.success(`Jadwal baru untuk ${formData.data.studentName} sukses diperbarui!`);
+        const name = 
+            formData?.student?.name || 
+            formData?.studentName || 
+            selectedTrialData?.studentName || 
+            "Siswa";
+
+        toast.success(`Jadwal baru untuk ${name} sukses diperbarui!`);
         setIsReviewModalOpen(false);
         setSelectedTrialData(null);
         fetchTrialClasses();
     };
 
-    const handleRejectReschedule = (data: TrialData) => {
+    const handleRejectReschedule = (data: any) => {
+        const studentName = 
+            data?.studentName || 
+            data?.student?.name || 
+            selectedTrialData?.studentName || 
+            "Siswa";
+
         Swal.fire({
             title: 'Tolak Permintaan?',
-            text: `Apakah Anda yakin ingin menolak permohonan reschedule ${data.studentName}?`,
+            text: `Apakah Anda yakin ingin menolak permohonan reschedule ${studentName}?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
@@ -307,7 +319,7 @@ export function TrialTableList() {
             cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
-                toast.error(`Permintaan reschedule ${data.studentName} telah ditolak.`);
+                toast.error(`Permintaan reschedule ${studentName} telah ditolak.`);
                 setIsReviewModalOpen(false);
                 setSelectedTrialData(null);
                 fetchTrialClasses();

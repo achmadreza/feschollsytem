@@ -133,7 +133,7 @@ export function ScheduleModal({ isOpen, onClose, data, onSave }: ScheduleModalPr
 
     if (!isOpen || !data) return null;
 
-    const studentName = detailData?.student?.name || data.studentName || "Siswa";
+    const studentName = detailData?.student?.name|| "Siswa";
     const parentName = detailData?.student?.parentName || data.parentName || "-";
     const phoneNumber = detailData?.student?.phoneNumber || data.phoneNumber || "-";
     const programClass = detailData?.student?.class || data.programClass || "-";

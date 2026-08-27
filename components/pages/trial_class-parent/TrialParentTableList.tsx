@@ -230,7 +230,7 @@ export function TrialParentTableList({ studentId }: { studentId?: string }) {
                                 </span>
                                 <div className="d-flex align-items-center gap-2 text-warning fw-bold" style={{ fontSize: "0.85rem", letterSpacing: "0.5px" }}>
                                     <span className="rounded-circle bg-warning" style={{ width: "8px", height: "8px" }}></span>
-                                    {nearestSession.status === "WAITING_APPROVAL" ? "MENUNGGU PERSETUJUAN" : nearestSession.status}
+                                    {nearestSession.status}
                                 </div>
                             </div>
                         </div>
@@ -297,7 +297,7 @@ export function TrialParentTableList({ studentId }: { studentId?: string }) {
                                     </div>
                                 </div>
 
-                                <div>
+                                {/* <div>
                                     <button 
                                         onClick={() => handleCancelSession(nearestSession.id)}
                                         className="btn btn-link text-danger p-0 text-decoration-none d-flex align-items-center gap-1.5 fw-semibold mb-1" 
@@ -308,7 +308,7 @@ export function TrialParentTableList({ studentId }: { studentId?: string }) {
                                     <p className="text-muted mb-0" style={{ fontSize: "0.75rem", lineHeight: "1.4" }}>
                                         *Pembatalan dapat dilakukan maksimal 24 jam sebelum sesi dimulai.
                                     </p>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>

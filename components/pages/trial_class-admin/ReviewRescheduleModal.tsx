@@ -76,23 +76,29 @@ export function ReviewRescheduleModal({ isOpen, onClose, data, onApprove, onReje
         
         setIsSubmitting(true);
         try {
-            const response = await callApi(`/trial-classes/${data.id}/status`, {
-                method: "PATCH", 
-                body: { status }
-            });
-
-            const actionMessage = status === "APPROVED" ? "disetujui" : "ditolak";
-            toast.success(`Reschedule berhasil ${actionMessage}`);
-
-            if (status === "APPROVED") {
-                onApprove({ ...detailData, response });
+            let response;
+            
+            if (status === "REJECTED") {
+                response = await callApi(`/trial-classes/${data.id}`, {
+                    method: "DELETE",
+                });
+                toast.success("Reschedule berhasil ditolak (Data dihapus)", { duration: 3000 });
+                onReject({ ...(detailData || {}), response });
             } else {
-                onReject({ ...detailData, response });
+                response = await callApi(`/trial-classes/${data.id}/status`, {
+                    method: "PATCH", 
+                    body: { status }
+                });
+                toast.success("Reschedule berhasil disetujui", { duration: 3000 });
+                onApprove({ ...(detailData || {}), response });
             }
 
             onClose();
         } catch (error: any) {
-            toast.error(error.message || `Gagal memproses status ${status}`);
+            toast.error(
+                error.message || `Gagal memproses ${status === "REJECTED" ? "penolakan" : "persetujuan"}`, 
+                { duration: 3000 }
+            );
         } finally {
             setIsSubmitting(false);
         }
