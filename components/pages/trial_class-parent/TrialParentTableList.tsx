@@ -235,13 +235,26 @@ export function TrialParentTableList({ studentId }: { studentId?: string }) {
                             </div>
                         </div>
 
-                        <button 
-                            onClick={() => setViewMode("detail")}
-                            className="btn btn-white w-100 py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 fw-semibold" 
-                            style={{ backgroundColor: "#FFFFFF", color: "#4F46E5", border: "none" }}
-                        >
-                            Lanjutkan ke Detail Jadwal <IconArrowRight size={18} />
-                        </button>
+                        {(() => {
+                            const isApproved = nearestSession.status?.toUpperCase() === "APPROVED";
+                            
+                            return (
+                                <button 
+                                    onClick={() => setViewMode("detail")}
+                                    disabled={isApproved}
+                                    className="btn btn-white w-100 py-2.5 rounded-3 d-flex align-items-center justify-content-center gap-2 fw-semibold" 
+                                    style={{ 
+                                        backgroundColor: isApproved ? "#E2E8F0" : "#FFFFFF", 
+                                        color: isApproved ? "#94A3B8" : "#4F46E5", 
+                                        border: "none",
+                                        cursor: isApproved ? "not-allowed" : "pointer",
+                                        opacity: isApproved ? 0.7 : 1
+                                    }}
+                                >
+                                    Lanjutkan ke Detail Jadwal <IconArrowRight size={18} />
+                                </button>
+                            );
+                        })()}
                     </div>
 
                     <div className="col-lg-8 p-4 p-md-5 bg-white">
