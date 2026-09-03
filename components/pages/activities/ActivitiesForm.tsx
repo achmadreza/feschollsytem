@@ -10,6 +10,7 @@ import {
 import { Toaster, toast } from 'react-hot-toast';
 import { Button } from "../../../components/ui/Button"; 
 import { callApi } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface ActivitiesFormProps {
     onBack?: () => void;
@@ -25,8 +26,8 @@ export function ActivitiesForm({ onBack, onNext }: ActivitiesFormProps) {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const router = useRouter();
 
-    // Fungsi helper untuk mereset seluruh isi form
     const resetForm = () => {
         setTitle("");
         setDescription("");
@@ -105,6 +106,7 @@ export function ActivitiesForm({ onBack, onNext }: ActivitiesFormProps) {
             resetForm();
 
             if (onNext) onNext();
+            router.push("/dashboard");
         } catch (error: any) {
             toast.error(error?.message || "Gagal mengirim data ke API");
         } finally {

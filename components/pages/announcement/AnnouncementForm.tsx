@@ -15,6 +15,7 @@ import {
 import { Toaster, toast } from 'react-hot-toast';
 import { Button } from "../../../components/ui/Button";
 import { callApi } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface AnnouncementFormProps {
     onBack?: () => void;
@@ -43,6 +44,7 @@ export function AnnouncementForm({ onBack, onSaveDraft, onPublish }: Announcemen
     const imageInputRef = useRef<HTMLInputElement>(null);
 
     const maxLength = 500;
+    const router = useRouter();
 
     const fileToBase64Truncated = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -185,6 +187,7 @@ export function AnnouncementForm({ onBack, onSaveDraft, onPublish }: Announcemen
 
             if (status === "DRAFT" && onSaveDraft) onSaveDraft();
             if (status === "PUBLISHED" && onPublish) onPublish();
+            router.push("/dashboard");
         } catch (error: any) {
             toast.error(error?.message || "Gagal mengirim data. Silakan coba lagi.");
         } finally {

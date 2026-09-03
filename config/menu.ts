@@ -45,6 +45,12 @@ export const mainMenu: MenuItem[] = [
     role: ["admin"],
   },
   {
+    label: "Dashboard",
+    icon: "users",
+    href: "/dashboard",
+    role: ["teacher"],
+  },
+  {
     label: "Kegiatan & Foto",
     icon: "users",
     href: "/activities",
