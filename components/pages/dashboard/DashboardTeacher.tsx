@@ -176,66 +176,11 @@ export function DashboardTeacher() {
                     </div>
                 </div>
 
-                <div className="row g-3 mb-4">
-                    <div className="col-6 col-md-3">
-                        <div className="card border-0 shadow-sm rounded-3 p-3">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span className="text-muted small fw-semibold d-block mb-1">HADIR</span>
-                                    <h3 className="fw-bold mb-0 text-dark">28</h3>
-                                </div>
-                                <div className="p-2 rounded-3" style={{ backgroundColor: "#ECFDF5", color: "#10B981" }}>
-                                    <IconUserCheck size={28} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                        <div className="card border-0 shadow-sm rounded-3 p-3">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span className="text-muted small fw-semibold d-block mb-1">TIDAK HADIR</span>
-                                    <h3 className="fw-bold mb-0 text-dark">2</h3>
-                                </div>
-                                <div className="p-2 rounded-3" style={{ backgroundColor: "#FFE4E6", color: "#F43F5E" }}>
-                                    <IconUserX size={28} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                        <div className="card border-0 shadow-sm rounded-3 p-3">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span className="text-muted small fw-semibold d-block mb-1">IZIN</span>
-                                    <h3 className="fw-bold mb-0 text-dark">1</h3>
-                                </div>
-                                <div className="p-2 rounded-3" style={{ backgroundColor: "#F3E8FF", color: "#A855F7" }}>
-                                    <IconUserExclamation size={28} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-6 col-md-3">
-                        <div className="card border-0 shadow-sm rounded-3 p-3">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <span className="text-muted small fw-semibold d-block mb-1">SAKIT</span>
-                                    <h3 className="fw-bold mb-0 text-dark">0</h3>
-                                </div>
-                                <div className="p-2 rounded-3 text-secondary" style={{ backgroundColor: "#F1F5F9" }}>
-                                    <IconBuildingHospital size={28} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div className="row g-4">
                     <div className="col-12 col-lg-8">
                         <div className="card border-0 shadow-sm rounded-3 mb-4">
                             <div className="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-                                <h6 className="fw-bold mb-0 text-dark">Pengumuman Terbaru</h6>
+                                <h4 className="fw-bold mb-0 text-dark">Pengumuman Terbaru</h4>
                                 <a href="#" className="text-primary text-decoration-none small fw-semibold">Lihat Semua &gt;</a>
                             </div>
                             <div className="card-body p-0">
@@ -276,7 +221,7 @@ export function DashboardTeacher() {
 
                         <div className="mb-4">
                             <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h6 className="fw-bold mb-0 text-dark">Kegiatan Terbaru</h6>
+                                <h4 className="fw-bold mb-0 text-dark">Kegiatan Terbaru</h4>
                                 <button className="btn btn-light btn-sm p-1 rounded-2">
                                     <IconLayoutGrid size={18} className="text-muted" />
                                 </button>
@@ -354,14 +299,8 @@ export function DashboardTeacher() {
 
                     <div className="col-12 col-lg-4">
                         <div className="card border-0 shadow-sm rounded-3 p-3 mb-4">
-                            <h6 className="fw-bold mb-3 text-dark">Aksi Cepat</h6>
+                            <h4 className="fw-bold mb-3 text-dark">Aksi Cepat</h4>
                             <div className="d-flex flex-column gap-2">
-                                <button className="btn text-start p-2.5 rounded-3 border-0 d-flex align-items-center gap-3 text-white fw-medium" style={{ backgroundColor: "#0B192C" }}>
-                                    <div className="p-1.5 bg-white bg-opacity-10 rounded-2">
-                                        <IconUserPlus size={18} />
-                                    </div>
-                                    Input Absensi Harian
-                                </button>
                                 <button className="btn text-start p-2.5 rounded-3 border-0 d-flex align-items-center gap-3 fw-medium text-dark" style={{ backgroundColor: "#F1F5F9" }}>
                                     <div className="p-1.5 bg-primary bg-opacity-10 text-primary rounded-2">
                                         <IconUpload size={18} />
@@ -374,71 +313,6 @@ export function DashboardTeacher() {
                                     </div>
                                     Buat Pengumuman Baru
                                 </button>
-                                <button className="btn text-start p-2.5 rounded-3 border-0 d-flex align-items-center gap-3 fw-medium text-dark" style={{ backgroundColor: "#F1F5F9" }}>
-                                    <div className="p-1.5 bg-opacity-10 rounded-2" style={{ backgroundColor: "#F3E8FF", color: "#A855F7" }}>
-                                        <IconCalendarEvent size={18} />
-                                    </div>
-                                    Jadwal Pelajaran
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="card border-0 shadow-sm rounded-3 p-3">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h6 className="fw-bold mb-0 text-dark">Progres Nilai</h6>
-                                <button className="btn btn-link text-muted p-0">
-                                    <IconDotsVertical size={18} />
-                                </button>
-                            </div>
-
-                            <div className="d-flex flex-column align-items-center justify-content-center my-3">
-                                <div 
-                                    className="rounded-circle d-flex align-items-center justify-content-center position-relative mb-3"
-                                    style={{
-                                        width: "120px",
-                                        height: "120px",
-                                        background: "conic-gradient(#0F172A 0% 50%, #E2E8F0 50% 100%)",
-                                        borderRadius: "50%"
-                                    }}
-                                >
-                                    <div 
-                                        className="bg-white rounded-circle d-flex align-items-center justify-content-center"
-                                        style={{ width: "90px", height: "90px" }}
-                                    >
-                                        <span className="fw-bold fs-4 text-dark">50%</span>
-                                    </div>
-                                </div>
-                                <h6 className="fw-bold mb-1 text-dark">12/24 Siswa</h6>
-                                <p className="text-muted small text-center mb-0">Siswa telah dinilai minggu ini</p>
-                            </div>
-
-                            <div className="border-top pt-3 mt-2">
-                                <span className="text-muted fw-semibold small d-block mb-2" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
-                                    DETAIL MINGGU INI
-                                </span>
-                                <div className="d-flex flex-column gap-2">
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <span className="small d-flex align-items-center gap-2">
-                                            <span className="rounded-circle bg-dark d-inline-block" style={{ width: "8px", height: "8px" }}></span>
-                                            Kognitif
-                                        </span>
-                                        <span className="fw-semibold small">10/24</span>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <span className="small d-flex align-items-center gap-2">
-                                            <span className="rounded-circle d-inline-block" style={{ width: "8px", height: "8px", backgroundColor: "#A855F7" }}></span>
-                                            Motorik
-                                        </span>
-                                        <span className="fw-semibold small">15/24</span>
-                                    </div>
-                                    <div className="d-flex justify-content-between align-items-center">
-                                        <span className="small d-flex align-items-center gap-2">
-                                            <span className="rounded-circle bg-success d-inline-block" style={{ width: "8px", height: "8px" }}></span>
-                                            Sosial Emosional
-                                        </span>
-                                        <span className="fw-semibold small">11/24</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
