@@ -57,6 +57,12 @@ export const mainMenu: MenuItem[] = [
     role: ["teacher"],
   },
   {
+    label: "Catatan Anak",
+    icon: "users",
+    href: "/catatan-anak",
+    role: ["teacher"],
+  },
+  {
     label: "Pengumuman",
     icon: "users",
     href: "/announcement",
