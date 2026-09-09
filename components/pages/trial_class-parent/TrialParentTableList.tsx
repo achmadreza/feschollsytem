@@ -309,19 +309,6 @@ export function TrialParentTableList({ studentId }: { studentId?: string }) {
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* <div>
-                                    <button 
-                                        onClick={() => handleCancelSession(nearestSession.id)}
-                                        className="btn btn-link text-danger p-0 text-decoration-none d-flex align-items-center gap-1.5 fw-semibold mb-1" 
-                                        style={{ fontSize: "0.9rem" }}
-                                    >
-                                        <IconCircleX size={18} /> Batalkan Sesi
-                                    </button>
-                                    <p className="text-muted mb-0" style={{ fontSize: "0.75rem", lineHeight: "1.4" }}>
-                                        *Pembatalan dapat dilakukan maksimal 24 jam sebelum sesi dimulai.
-                                    </p>
-                                </div> */}
                             </div>
                         </div>
                     </div>

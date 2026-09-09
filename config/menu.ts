@@ -68,4 +68,10 @@ export const mainMenu: MenuItem[] = [
     href: "/announcement",
     role: ["teacher"],
   },
+  {
+    label: "Catatan Anak",
+    icon: "users",
+    href: "/catatan-anak-parent",
+    role: ["parent"],
+  },
 ];
