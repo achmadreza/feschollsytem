@@ -21,6 +21,18 @@ export const mainMenu: MenuItem[] = [
     role: ["admin"],
   },
   {
+    label: "Dashboard",
+    icon: "users",
+    href: "/dashboard-parent",
+    role: ["parent"],
+  },
+  {
+    label: "Catatan Anak",
+    icon: "users",
+    href: "/catatan-anak-parent",
+    role: ["parent"],
+  },
+  {
     label: "Trial Class",
     icon: "users",
     href: "/trial_class-parent",
@@ -67,11 +79,5 @@ export const mainMenu: MenuItem[] = [
     icon: "users",
     href: "/announcement",
     role: ["teacher"],
-  },
-  {
-    label: "Catatan Anak",
-    icon: "users",
-    href: "/catatan-anak-parent",
-    role: ["parent"],
   },
 ];
