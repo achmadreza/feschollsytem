@@ -91,11 +91,11 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
 
     // Pemetaan Kategori dari UI ke Enum API
     const categoryMap: Record<string, string> = {
-        "Perkembangan": "PROGRESS",
-        "Sikap & Karakter": "ATTITUDE",
-        "Sosial & Emosional": "SOCIAL",
-        "Kesehatan": "HEALTH",
-        "Informasi": "INFORMATION"
+        "Perkembangan": "Perkembangan",
+        "Sikap & Karakter": "Sikap & Karakter",
+        "Sosial & Emosional": "Sosial & Emosional",
+        "Kesehatan": "Kesehatan",
+        "Informasi": "Informasi"
     };
 
     const categories = [
