@@ -66,8 +66,6 @@ export function CatatanDashboard() {
     };
 
     const currentWeekNumber = getWeekNumber(today);
-
-    // Fetch Data dari API
     const fetchStudentNotes = async () => {
         setLoading(true);
         try {
@@ -91,7 +89,6 @@ export function CatatanDashboard() {
         fetchStudentNotes();
     }, []);
 
-    // Format Badge Kategori persis seperti contoh di screenshot (dengan bullet dot)
     const renderCategoryBadge = (category: string) => {
         let styleClass = "bg-purple-50 text-purple-600 border-purple-100";
         let dotColor = "bg-purple-600";
@@ -113,7 +110,6 @@ export function CatatanDashboard() {
         );
     };
 
-    // Format Tanggal dan Waktu (misal: 20 Mei 2025 \n 10:30 WIB)
     const formatDate = (dateString: string) => {
         if (!dateString) return { date: "-", time: "-" };
         const dateObj = new Date(dateString);
@@ -145,13 +141,9 @@ export function CatatanDashboard() {
                     </div>
                 ) : (
                     <>
-                        {/* Header Section */}
                         <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
                             <div>
                                 <h2 className="fw-bold text-dark m-0" style={{ fontSize: "28px" }}>Dashboard</h2>
-                                <p className="text-muted m-0 mt-1" style={{ fontSize: "14px" }}>
-                                    Ringkasan aktivitas dan perkembangan kelas TK B
-                                </p>
                             </div>
                             <div className="d-flex align-items-center gap-2">
                                 <Button 
@@ -164,7 +156,6 @@ export function CatatanDashboard() {
                             </div>
                         </div>
 
-                        {/* Cards Section */}
                         <div className="row g-3 mb-4">
                             <div className="col-12 col-sm-6 col-lg-3">
                                 <div className="bg-white p-3 rounded-4 border border-gray-100 shadow-sm h-100 d-flex flex-column justify-content-between">
@@ -231,7 +222,6 @@ export function CatatanDashboard() {
                             </div>
                         </div>
 
-                        {/* Calendar Bar */}
                         <div className="bg-white p-3 rounded-4 border border-gray-100 shadow-sm mb-4">
                             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                                 <div className="d-flex align-items-center gap-2">
@@ -260,7 +250,6 @@ export function CatatanDashboard() {
                             </div>
                         </div>
 
-                        {/* Table Section */}
                         <div className="bg-white rounded-4 border border-gray-100 shadow-sm overflow-hidden">
                             <div className="p-4 d-flex justify-content-between align-items-center border-bottom border-gray-100">
                                 <div>
@@ -301,7 +290,6 @@ export function CatatanDashboard() {
 
                                                 return (
                                                     <tr key={item.id} className="border-bottom border-gray-100">
-                                                        {/* SISWA Column (Avatar + Nama + ID) */}
                                                         <td className="py-3 px-4">
                                                             <div className="d-flex align-items-center gap-3">
                                                                 <div>
@@ -315,17 +303,14 @@ export function CatatanDashboard() {
                                                             </div>
                                                         </td>
 
-                                                        {/* JUDUL CATATAN Column */}
                                                         <td className="py-3 px-4 text-dark fw-medium" style={{ fontSize: "14px" }}>
                                                             {item.title}
                                                         </td>
 
-                                                        {/* KATEGORI Column */}
                                                         <td className="py-3 px-4">
                                                             {renderCategoryBadge(item.category)}
                                                         </td>
 
-                                                        {/* WAKTU Column */}
                                                         <td className="py-3 px-4">
                                                             <div className="text-dark fw-medium" style={{ fontSize: "13px" }}>{formatted.date}</div>
                                                             <div className="text-muted" style={{ fontSize: "11px" }}>{formatted.time}</div>

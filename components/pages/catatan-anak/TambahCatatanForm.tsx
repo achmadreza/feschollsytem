@@ -41,7 +41,7 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
     const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(true);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [selectedCategory, setSelectedCategory] = useState("Perkembangan");
-    const [rating, setRating] = useState<number>(4);
+    const [rating, setRating] = useState<number>(1);
     const [title, setTitle] = useState("");
     const [noteDate, setNoteDate] = useState<string>(
         new Date().toISOString().split("T")[0]
@@ -222,7 +222,7 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                                 ) : (
                                     students.map((student) => (
                                         <option key={student.id} value={student.id}>
-                                            {student.name} {student.class ? `(${student.class})` : ""}
+                                            {student.name} {student.class ? `(${student.id})` : ""}
                                         </option>
                                     ))
                                 )}

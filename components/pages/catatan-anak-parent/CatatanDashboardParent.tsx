@@ -74,7 +74,7 @@ export function CatatanDashboard() {
 
             setNotes(data);
             if (data.length > 0) {
-                setOpenNoteId(data[0].id); // Default buka item pertama di accordion
+                setOpenNoteId(data[0].id);
             }
         } catch (error: any) {
             console.error("Fetch error:", error);
@@ -94,7 +94,6 @@ export function CatatanDashboard() {
         setOpenNoteId(prev => (prev === id ? null : id));
     };
 
-    // Stat Calculations
     const totalCatatan = notes.length;
     const perkembanganPositif = notes.filter(n => n.indicator >= 4).length;
     const perluPerhatian = notes.filter(n => n.indicator < 4).length;
@@ -126,8 +125,6 @@ export function CatatanDashboard() {
     return (
         <>
             <div className="container-xl py-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", fontFamily: "sans-serif" }}>
-                
-                {/* Header Greeting */}
                 <div className="mb-4">
                     <h2 className="fw-bold text-dark m-0 d-flex align-items-center gap-2" style={{ fontSize: "1.75rem" }}>
                         Halo, {userData?.fullName || userData?.name || ""}
@@ -137,7 +134,6 @@ export function CatatanDashboard() {
                     </p>
                 </div>
 
-                {/* Top Summary Cards */}
                 <div className="row g-3 mb-4">
                     <div className="col-12 col-sm-6 col-lg-3">
                         <div className="card border-0 shadow-sm p-3 h-100 rounded-3 bg-white">
@@ -216,9 +212,7 @@ export function CatatanDashboard() {
                     </div>
                 </div>
 
-                {/* Main Content Area */}
                 <div className="row g-4">
-                    {/* KOLOM KIRI: Accordion Daftar Semua Catatan Siswa */}
                     <div className="col-12 col-lg-8">
                         {loading ? (
                             <div className="card border-0 shadow-sm p-4 rounded-4 bg-white text-center">
@@ -234,7 +228,6 @@ export function CatatanDashboard() {
                                     const isOpen = openNoteId === note.id;
                                     return (
                                         <div key={note.id} className="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-                                            {/* Accordion Header */}
                                             <div 
                                                 className="p-4 d-flex justify-content-between align-items-center cursor-pointer"
                                                 onClick={() => toggleAccordion(note.id)}
@@ -243,7 +236,7 @@ export function CatatanDashboard() {
                                                 <div>
                                                     <div className="d-flex align-items-center gap-2 mb-2">
                                                         <span className="badge rounded-pill px-3 py-1.5" style={{ backgroundColor: "#FFF7ED", color: "#EA580C", fontWeight: 500, fontSize: "0.75rem" }}>
-                                                            ⭐ {note.category}
+                                                            {note.category}
                                                         </span>
                                                         <span className="text-muted" style={{ fontSize: "0.8rem" }}>
                                                             {formatDate(note.notedAt)}
@@ -259,10 +252,8 @@ export function CatatanDashboard() {
                                                 </div>
                                             </div>
 
-                                            {/* Accordion Body Detail */}
                                             {isOpen && (
                                                 <div className="px-4 pb-4 border-top pt-3">
-                                                    {/* Rating Stars & Status */}
                                                     <div className="d-flex align-items-center gap-3 mb-3">
                                                         <div className="d-flex gap-1">
                                                             {renderStars(note.indicator)}
@@ -272,12 +263,10 @@ export function CatatanDashboard() {
                                                         </span>
                                                     </div>
 
-                                                    {/* Description */}
                                                     <p className="text-secondary lh-base mb-4" style={{ fontSize: "0.9rem" }}>
                                                         {note.description}
                                                     </p>
 
-                                                    {/* Photo */}
                                                     {note.photo && (
                                                         <div className="row g-2 mb-4">
                                                             <div className="col-12 col-md-6">
@@ -291,7 +280,6 @@ export function CatatanDashboard() {
                                                         </div>
                                                     )}
 
-                                                    {/* Suggestion */}
                                                     {note.suggestion && (
                                                         <div className="mb-3 d-flex gap-2 align-items-start">
                                                             <IconHome className="text-primary flex-shrink-0 mt-1" size={18} />
@@ -306,7 +294,6 @@ export function CatatanDashboard() {
                                                         </div>
                                                     )}
 
-                                                    {/* Attention */}
                                                     {note.attention && (
                                                         <div className="d-flex gap-2 align-items-start">
                                                             <IconExclamationCircle className="text-warning flex-shrink-0 mt-1" size={18} />
@@ -329,7 +316,6 @@ export function CatatanDashboard() {
                         )}
                     </div>
 
-                    {/* KOLOM KANAN: Riwayat Catatan Asli (Simple List) */}
                     <div className="col-12 col-lg-4">
                         <div className="card border-0 shadow-sm p-4 rounded-4 bg-white">
                             <h5 className="fw-bold text-dark mb-3" style={{ fontSize: "1rem" }}>

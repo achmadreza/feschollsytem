@@ -1,21 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { 
-    IconPlus, 
     IconExclamationMark, 
     IconWallet, 
     IconListDetails, 
     IconSpeakerphone, 
     IconStarFilled,
     IconCalendar,
-    IconX,
     IconInfoCircle,
     IconUser,
-    IconUsers
+    IconUsers,
+    IconCheck
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
-import { Button } from "../../../components/ui/Button";
 import { callApi } from "@/lib/api";
 import { getUser } from "@/lib/auth";
 
@@ -26,6 +25,58 @@ interface UserData {
     email?: string;
     role?: string;
     schoolCode?: string;
+}
+
+interface StudentData {
+    id: string;
+    schoolCode: string;
+    name: string;
+    class: string;
+    gender: string;
+    religion: string;
+    status: string;
+    address: string;
+    birthPlace: string;
+    birthdate: string;
+    parentId: string;
+    parentEmail: string;
+    parentName: string;
+    phoneNumber: string;
+    emergencyContact: string;
+    schoolYear: string;
+    kk?: string;
+    birthCertificate?: string;
+    photo?: string;
+    createdAt: string;
+    updatedAt: string;
+    __v?: number;
+}
+
+interface PaymentItem {
+    _id: string;
+    paymentType: string;
+    amount: number;
+}
+
+interface Billing {
+    _id: string;
+    id: string;
+    invoiceNumber: string;
+    studentId: string;
+    studentName: string;
+    studentClass: string;
+    schoolCode: string;
+    parentId: string;
+    parentEmail: string;
+    description: string;
+    paymentList: PaymentItem[];
+    dueDate: string;
+    status: string;
+    paidAt: string | null;
+    payment: any | null;
+    createdAt: string;
+    updatedAt: string;
+    __v?: number;
 }
 
 interface StudentNote {
@@ -61,12 +112,14 @@ interface Journal {
 
 export function ParentDashboard() {
     const [userData, setUserData] = useState<UserData | null>(null);
+    const [student, setStudent] = useState<StudentData | null>(null);
+    const [urgentBilling, setUrgentBilling] = useState<Billing | null>(null);
+    const [loadingBilling, setLoadingBilling] = useState<boolean>(true);
+
     const [studentNotes, setStudentNotes] = useState<StudentNote[]>([]);
     const [loadingNotes, setLoadingNotes] = useState<boolean>(true);
     const [journals, setJournals] = useState<Journal[]>([]);
     const [loadingJournals, setLoadingJournals] = useState<boolean>(true);
-
-    // State untuk Modal Detail
     const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
     const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
@@ -79,6 +132,43 @@ export function ParentDashboard() {
                 setUserData(user); 
             } catch (error) {
                 console.error("Gagal mengambil data user:", error);
+            }
+        }
+
+        async function fetchStudentAndBilling() {
+            try {
+                setLoadingBilling(true);
+                const studentRes = await callApi<StudentData[] | { data: StudentData[] }>("/students", {
+                    method: "GET"
+                });
+                
+                const studentData = Array.isArray(studentRes) ? studentRes : (studentRes?.data || []);
+                
+                if (!studentData || studentData.length === 0) {
+                    setUrgentBilling(null);
+                    return;
+                }
+                
+                const currentStudent = studentData[0];
+                setStudent(currentStudent);
+                if (currentStudent && currentStudent.id) {
+                    const billingRes = await callApi<Billing[] | { data: Billing[] }>(
+                        `/billings?studentId=${currentStudent.id}`, 
+                        { method: "GET" }
+                    );
+                    
+                    const billings = Array.isArray(billingRes) ? billingRes : (billingRes?.data || []);
+                    
+                    if (Array.isArray(billings)) {
+                        const unpaid = billings.find((b) => b.paidAt === null);
+                        setUrgentBilling(unpaid || null);
+                    }
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data siswa / tagihan:", error);
+                toast.error("Gagal memuat data tagihan");
+            } finally {
+                setLoadingBilling(false);
             }
         }
 
@@ -101,8 +191,6 @@ export function ParentDashboard() {
                 setLoadingJournals(true);
                 const response = await callApi("/journals", { method: "GET" });
                 const rawData: Journal[] = Array.isArray(response) ? response : (response?.data || []);
-                
-                // Opsional: Filter hanya yang berstatus PUBLISHED
                 const publishedData = rawData.filter((item) => item.status === "PUBLISHED" || !item.status);
                 
                 setJournals(publishedData.length > 0 ? publishedData : rawData);
@@ -115,11 +203,11 @@ export function ParentDashboard() {
         }
 
         fetchUser();
+        fetchStudentAndBilling();
         fetchStudentNotes();
         fetchJournals();
     }, []);
 
-    // Function untuk fetch detail journals/pengumuman berdasarkan ID
     const handleOpenJournalDetail = async (id: string) => {
         try {
             setLoadingDetail(true);
@@ -139,6 +227,18 @@ export function ParentDashboard() {
     const handleCloseModal = () => {
         setShowModal(false);
         setSelectedJournal(null);
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            maximumFractionDigits: 0
+        }).format(amount);
+    };
+
+    const calculateTotalBilling = (paymentList: PaymentItem[] = []) => {
+        return paymentList.reduce((acc, item) => acc + (item.amount || 0), 0);
     };
 
     const formatDayDate = (dateString: string) => {
@@ -184,8 +284,6 @@ export function ParentDashboard() {
     return (
         <>
             <div className="container-xl p-3 p-md-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", fontFamily: "sans-serif" }}>
-                
-                {/* 1. HERO HEADER BANNER */}
                 <div 
                     className="card border-0 text-white mb-4 p-4 rounded-4 shadow-sm" 
                     style={{ background: "linear-gradient(135deg, #3B4CCA 0%, #6157F6 100%)" }}
@@ -200,42 +298,68 @@ export function ParentDashboard() {
                     </div>
                 </div>
 
-                {/* 2. TAGIHAN MENDESAK ALERT BAR */}
-                <div className="card border-danger border-opacity-10 bg-white p-3 p-md-4 rounded-4 mb-4 shadow-sm">
-                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-                        <div className="d-flex gap-3 align-items-start">
-                            <div className="bg-danger bg-opacity-10 text-danger rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 40, height: 40 }}>
-                                <IconExclamationMark size={24} />
-                            </div>
-                            <div>
-                                <div className="d-flex align-items-center gap-2 mb-1">
-                                    <span className="badge bg-danger bg-opacity-10 text-danger text-uppercase fw-semibold px-2 py-1 rounded-1" style={{ fontSize: "0.7rem" }}>
-                                        Tagihan Mendesak
-                                    </span>
-                                    <small className="text-muted">Batas Waktu: 20 Okt 2023</small>
+                {loadingBilling ? (
+                    <div className="card border-0 bg-white p-4 rounded-4 mb-4 shadow-sm text-center text-muted small">
+                        <div className="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        Memuat data tagihan...
+                    </div>
+                ) : urgentBilling ? (
+                    <div className="card border-danger border-opacity-10 bg-white p-3 p-md-4 rounded-4 mb-4 shadow-sm">
+                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                            <div className="d-flex gap-3 align-items-start">
+                                <div className="bg-danger bg-opacity-10 text-danger rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 40, height: 40 }}>
+                                    <IconExclamationMark size={24} />
                                 </div>
-                                <h5 className="fw-bold text-dark mb-1">SPP Semester Gasal (Bulan Oktober)</h5>
-                                <p className="text-secondary small mb-0">
-                                    Pembayaran telah lewat jatuh tempo 3 hari. Harap segera melakukan penyelesaian untuk kelancaran administrasi.
-                                </p>
+                                <div>
+                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                        <span className="badge bg-danger bg-opacity-10 text-danger text-uppercase fw-semibold px-2 py-1 rounded-1" style={{ fontSize: "0.7rem" }}>
+                                            Tagihan Mendesak
+                                        </span>
+                                        <small className="text-muted">
+                                            Batas Waktu: {formatDateDisplay(urgentBilling.dueDate)}
+                                        </small>
+                                    </div>
+                                    <h5 className="fw-bold text-dark mb-1">
+                                        {urgentBilling.paymentList?.[0]?.paymentType || urgentBilling.description}
+                                    </h5>
+                                    <p className="text-secondary small mb-0">
+                                        {urgentBilling.description}. Harap segera melakukan penyelesaian untuk kelancaran administrasi.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="d-flex align-items-center gap-3 ms-auto ms-md-0 flex-shrink-0">
-                            <div className="text-end">
-                                <small className="text-muted d-block">Total Tagihan</small>
-                                <span className="fs-4 fw-bold text-danger">Rp 4.250.000</span>
+                            <div className="d-flex align-items-center gap-3 ms-auto ms-md-0 flex-shrink-0">
+                                <div className="text-end">
+                                    <small className="text-muted d-block">Total Tagihan</small>
+                                    <span className="fs-4 fw-bold text-danger">
+                                        {formatCurrency(calculateTotalBilling(urgentBilling.paymentList))}
+                                    </span>
+                                </div>
+                                <Link 
+                                    href="/payments-parent" 
+                                    className="btn btn-dark d-flex align-items-center gap-2 px-3 py-2 rounded-3 text-decoration-none" 
+                                    style={{ backgroundColor: "#0F172A" }}
+                                >
+                                    <IconWallet size={18} />
+                                    <span>Bayar Sekarang</span>
+                                </Link>
                             </div>
-                            <Button className="btn-dark d-flex align-items-center gap-2 px-3 py-2 rounded-3" style={{ backgroundColor: "#0F172A" }}>
-                                <IconWallet size={18} />
-                                <span>Bayar Sekarang</span>
-                            </Button>
                         </div>
                     </div>
-                </div>
+                ) : (
+                    <div className="card border-success border-opacity-10 bg-white p-3 p-md-4 rounded-4 mb-4 shadow-sm">
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0" style={{ width: 40, height: 40 }}>
+                                <IconCheck size={24} />
+                            </div>
+                            <div>
+                                <h6 className="fw-bold text-dark mb-0">Tidak Ada Tagihan Mendesak</h6>
+                                <small className="text-muted">Semua pembayaran administrasi siswa saat ini sudah lunas.</small>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-                {/* 3. TWO COLUMN CONTENT SECTION */}
                 <div className="row g-4">
-                    {/* LEFT COLUMN: CATATAN HARIAN */}
                     <div className="col-lg-7">
                         <div className="card border-0 bg-white p-4 rounded-4 shadow-sm h-100">
                             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -295,7 +419,6 @@ export function ParentDashboard() {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: INFORMASI PENGUMUMAN */}
                     <div className="col-lg-5">
                         <div className="card border-0 bg-white p-4 rounded-4 shadow-sm h-100">
                             <div className="d-flex justify-content-between align-items-center mb-4">
@@ -356,12 +479,10 @@ export function ParentDashboard() {
 
             </div>
 
-            {/* MODAL DETAIL PENGUMUMAN */}
             {showModal && (
                 <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)" }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg">
                         <div className="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
-                            {/* Modal Header */}
                             <div className="modal-header border-0 p-4 pb-0 d-flex justify-content-between align-items-start" style={{ background: "linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)" }}>
                                 <div className="d-flex align-items-center gap-3">
                                     <div className="bg-primary bg-opacity-10 text-primary p-3 rounded-circle d-flex align-items-center justify-content-center">
@@ -387,7 +508,6 @@ export function ParentDashboard() {
                                 ></button>
                             </div>
 
-                            {/* Modal Body */}
                             <div className="modal-body p-4">
                                 {loadingDetail ? (
                                     <div className="py-5 text-center text-muted">
@@ -396,12 +516,10 @@ export function ParentDashboard() {
                                     </div>
                                 ) : selectedJournal ? (
                                     <div className="d-flex flex-column gap-3">
-                                        {/* Title */}
                                         <h3 className="fw-bold text-dark mb-1" style={{ fontSize: "1.5rem" }}>
                                             {selectedJournal.title}
                                         </h3>
 
-                                        {/* Meta Information */}
                                         <div className="d-flex flex-wrap gap-3 text-muted small border-bottom pb-3" style={{ fontSize: "0.85rem" }}>
                                             <span className="d-flex align-items-center gap-1">
                                                 <IconCalendar size={16} /> Diterbitkan: {formatFullDateTime(selectedJournal.createdAt)}
@@ -414,14 +532,12 @@ export function ParentDashboard() {
                                             </span>
                                         </div>
 
-                                        {/* Message Content Box */}
                                         <div className="p-3 rounded-3 bg-light bg-opacity-75 border border-light-subtle">
                                             <p className="text-dark mb-0 style-normal" style={{ whiteSpace: "pre-line", lineHeight: "1.6" }}>
                                                 {selectedJournal.message}
                                             </p>
                                         </div>
 
-                                        {/* Notice Box */}
                                         <div className="p-3 rounded-3 bg-warning bg-opacity-10 border border-warning border-opacity-20 d-flex gap-2 align-items-start mt-2">
                                             <IconInfoCircle className="text-warning flex-shrink-0 mt-1" size={18} />
                                             <p className="small text-dark mb-0">

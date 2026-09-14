@@ -11,7 +11,9 @@ import {
     IconSearch,
     IconChevronDown,
     IconDotsVertical,
-    IconEye
+    IconEye,
+    IconChevronLeft,
+    IconChevronRight
 } from "@tabler/icons-react";
 import { Button } from "../../../components/ui/Button"; 
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
@@ -53,10 +55,16 @@ export function PaymentAdmin() {
 
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [itemsPerPage, setItemsPerPage] = useState<number>(5);
 
     useEffect(() => {
         fetchBillings();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter, itemsPerPage]);
 
     const fetchBillings = async () => {
         try {
@@ -127,6 +135,18 @@ export function PaymentAdmin() {
         return matchesSearch && matchesStatus;
     });
 
+    const totalItems = filteredTransactions.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + itemsPerPage);
+
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
     const handleOpenDetail = (tx: Transaction) => {
         setSelectedTransaction(tx);
         setIsDetailModalOpen(true);
@@ -143,6 +163,7 @@ export function PaymentAdmin() {
         setIsDetailModalOpen(false);
         fetchBillings();
     };
+
     const totalMenungguVerifikasi = transactions.filter(t => t.status === "WAITING_VERIFICATION").length;
     const totalBelumBayarCount = transactions.filter(t => t.status === "WAITING_PAYMENT").length;
     const totalLunasToday = transactions.filter(t => t.status === "LUNAS").length;
@@ -321,7 +342,7 @@ export function PaymentAdmin() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredTransactions.map((tx) => (
+                                    {paginatedTransactions.map((tx) => (
                                         <tr key={tx.id} className="border-bottom" style={{ borderColor: "#F8FAFC" }}>
                                             <td className="py-3">
                                                 <div className="d-flex align-items-center gap-3">
@@ -372,6 +393,65 @@ export function PaymentAdmin() {
                             </table>
                         )}
                     </div>
+
+                    {/* --- KONTROL PAGINATION --- */}
+                    {!loading && totalItems > 0 && (
+                        <div className="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 pt-4 border-top" style={{ borderColor: "#F1F5F9" }}>
+                            <div className="d-flex align-items-center gap-2 text-secondary" style={{ fontSize: "13px" }}>
+                                <span>Menampilkan</span>
+                                <select 
+                                    className="form-select form-select-sm border-secondary-subtle"
+                                    style={{ width: "auto", borderRadius: "8px", fontSize: "13px" }}
+                                    value={itemsPerPage}
+                                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                </select>
+                                <span>dari <strong>{totalItems}</strong> data</span>
+                            </div>
+
+                            <div className="d-flex align-items-center gap-1">
+                                <button
+                                    className="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-2"
+                                    style={{ borderRadius: "8px", minWidth: "32px", height: "32px" }}
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                >
+                                    <IconChevronLeft size={16} />
+                                </button>
+
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                    <button
+                                        key={page}
+                                        className={`btn btn-sm ${currentPage === page ? "btn-primary fw-bold" : "btn-light text-secondary"}`}
+                                        style={{ 
+                                            borderRadius: "8px", 
+                                            minWidth: "32px", 
+                                            height: "32px", 
+                                            fontSize: "13px",
+                                            backgroundColor: currentPage === page ? "#0A194F" : undefined,
+                                            borderColor: currentPage === page ? "#0A194F" : undefined
+                                        }}
+                                        onClick={() => handlePageChange(page)}
+                                    >
+                                        {page}
+                                    </button>
+                                ))}
+
+                                <button
+                                    className="btn btn-sm btn-outline-secondary d-flex align-items-center justify-content-center p-2"
+                                    style={{ borderRadius: "8px", minWidth: "32px", height: "32px" }}
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    <IconChevronRight size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
