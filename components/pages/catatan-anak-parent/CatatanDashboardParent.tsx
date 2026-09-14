@@ -1,22 +1,136 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
     IconNotes,
     IconTrendingUp,
     IconAlertCircle,
     IconStar,
     IconHome,
-    IconExclamationCircle,
-    IconUserCheck,
-    IconHeartHandshake
+    IconExclamationCircle
 } from "@tabler/icons-react";
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast } from 'react-hot-toast';
+import { callApi } from "@/lib/api";
+
+// Interface data catatan
+interface StudentNote {
+    id: string;
+    studentId: string;
+    parentId: string;
+    category: string;
+    notedAt: string;
+    indicator: number;
+    title: string;
+    description: string;
+    photo?: string;
+    suggestion?: string;
+    attention?: string;
+    followUp?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+// Dummy data sebagai fallback jika API Inquiry Disabled (Error 400)
+const FALLBACK_NOTES: StudentNote[] = [
+    {
+        id: "e99bd83c-d14e-4d1d-8562-54f5f97d9b15",
+        studentId: "e356ec65-4fdb-4af1-8572-7e738ac8d19b",
+        parentId: "1",
+        category: "HEALTH",
+        notedAt: "2026-09-06T09:00:00.000Z",
+        indicator: 4,
+        title: "Learning progress",
+        description: "Shows strong participation during reading activities.",
+        photo: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=600",
+        suggestion: "Practice reading for 15 minutes each day.",
+        attention: "Needs additional support with sentence construction.",
+        followUp: "Review progress with the parent next week."
+    },
+    {
+        id: "942b76c9-a208-49e3-b2f4-d9c81c005743",
+        studentId: "e356ec65-4fdb-4af1-8572-7e738ac8d19b",
+        parentId: "1",
+        category: "PROGRESS",
+        notedAt: "2026-09-14T00:00:00.000Z",
+        indicator: 3,
+        title: "TEST",
+        description: "test deskripsi",
+        photo: "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&q=80&w=600",
+        suggestion: "test",
+        attention: "test",
+        followUp: "test"
+    }
+];
 
 export function CatatanDashboard() {
+    const [notes, setNotes] = useState<StudentNote[]>([]);
+    const [selectedNote, setSelectedNote] = useState<StudentNote | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+
+    useEffect(() => {
+        fetchStudentNotes();
+    }, []);
+
+    const fetchStudentNotes = async () => {
+        setLoading(true);
+        try {
+            // Pemanggilan endpoint API
+            const response = await callApi("/student-notes", { method: "GET" });
+            
+            if (Array.isArray(response)) {
+                setNotes(response);
+                setSelectedNote(response[0] || null);
+            } else if (response?.kode === 400 || response?.pesan) {
+                // Menangani response error backend: {"kode":400,"pesan":"Inquiry function is disabled"}
+                toast.error(`API Error: ${response.pesan || "Inquiry function disabled"}. Memuat data fallback.`);
+                setNotes(FALLBACK_NOTES);
+                setSelectedNote(FALLBACK_NOTES[0]);
+            } else {
+                setNotes(FALLBACK_NOTES);
+                setSelectedNote(FALLBACK_NOTES[0]);
+            }
+        } catch (error: any) {
+            console.error("Fetch error:", error);
+            toast.error("Gagal mengambil data dari server. Memproses data cadangan.");
+            setNotes(FALLBACK_NOTES);
+            setSelectedNote(FALLBACK_NOTES[0]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Kalkulasi Statistik Dinamis dari Array Data
+    const totalCatatan = notes.length;
+    const perkembanganPositif = notes.filter(n => n.indicator >= 4).length;
+    const perluPerhatian = notes.filter(n => n.indicator < 4).length;
+    const avgRating = totalCatatan > 0 
+        ? (notes.reduce((acc, curr) => acc + curr.indicator, 0) / totalCatatan).toFixed(1)
+        : "0.0";
+
+    const renderStars = (rating: number) => {
+        return Array.from({ length: 5 }, (_, i) => (
+            <IconStar 
+                key={i} 
+                fill={i < rating ? "#F59E0B" : "#E2E8F0"} 
+                size={18} 
+                stroke={0} 
+            />
+        ));
+    };
+
+    const formatDate = (dateString: string) => {
+        if (!dateString) return "-";
+        const date = new Date(dateString);
+        return date.toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+    };
+
     return (
         <>
-            <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", fontFamily: "sans-serif" }}>
+            <div className="container-xl py-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", fontFamily: "sans-serif" }}>
                 
                 {/* Header Greeting */}
                 <div className="mb-4">
@@ -24,7 +138,7 @@ export function CatatanDashboard() {
                         Halo, Bapak Reza 👋
                     </h2>
                     <p className="text-muted m-0 mt-1" style={{ fontSize: "0.9rem" }}>
-                        Berikut perkembangan dan aktivitas Daffa hari ini.
+                        Berikut perkembangan dan aktivitas siswa hari ini.
                     </p>
                 </div>
 
@@ -42,7 +156,7 @@ export function CatatanDashboard() {
                                         CATATAN DITERIMA
                                     </span>
                                     <div className="d-flex align-items-baseline gap-2">
-                                        <span className="fw-bold text-dark fs-3">7</span>
+                                        <span className="fw-bold text-dark fs-3">{loading ? "-" : totalCatatan}</span>
                                         <span className="text-muted" style={{ fontSize: "0.85rem" }}>catatan</span>
                                     </div>
                                 </div>
@@ -62,7 +176,7 @@ export function CatatanDashboard() {
                                         PERKEMBANGAN POSITIF
                                     </span>
                                     <div className="d-flex align-items-baseline gap-2">
-                                        <span className="fw-bold text-dark fs-3">5</span>
+                                        <span className="fw-bold text-dark fs-3">{loading ? "-" : perkembanganPositif}</span>
                                         <span className="text-muted" style={{ fontSize: "0.85rem" }}>catatan</span>
                                     </div>
                                 </div>
@@ -82,7 +196,7 @@ export function CatatanDashboard() {
                                         PERLU PERHATIAN
                                     </span>
                                     <div className="d-flex align-items-baseline gap-2">
-                                        <span className="fw-bold text-dark fs-3">1</span>
+                                        <span className="fw-bold text-dark fs-3">{loading ? "-" : perluPerhatian}</span>
                                         <span className="text-muted" style={{ fontSize: "0.85rem" }}>catatan</span>
                                     </div>
                                 </div>
@@ -102,7 +216,7 @@ export function CatatanDashboard() {
                                         RATA-RATA PERKEMBANGAN
                                     </span>
                                     <div className="d-flex align-items-baseline gap-1">
-                                        <span className="fw-bold text-dark fs-3">4.6</span>
+                                        <span className="fw-bold text-dark fs-3">{loading ? "-" : avgRating}</span>
                                         <span className="text-muted" style={{ fontSize: "0.85rem" }}>/5</span>
                                     </div>
                                 </div>
@@ -115,159 +229,106 @@ export function CatatanDashboard() {
                 <div className="row g-4">
                     {/* Left Column - Detail Catatan Utama */}
                     <div className="col-12 col-lg-8">
-                        <div className="card border-0 shadow-sm p-4 rounded-4 bg-white">
-                            {/* Card Top Meta */}
-                            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                                <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: "#FFF7ED", color: "#EA580C", fontWeight: 500, fontSize: "0.8rem" }}>
-                                    ⭐ Perkembangan
-                                </span>
-                                <span className="text-muted" style={{ fontSize: "0.8rem" }}>
-                                    20 Mei 2025 • 10:30 WIB
-                                </span>
-                            </div>
-
-                            {/* Rating Stars & Status */}
-                            <div className="d-flex align-items-center gap-3 mb-3">
-                                <div className="d-flex text-warning">
-                                    <IconStar fill="#F59E0B" size={18} stroke={0} />
-                                    <IconStar fill="#F59E0B" size={18} stroke={0} />
-                                    <IconStar fill="#F59E0B" size={18} stroke={0} />
-                                    <IconStar fill="#F59E0B" size={18} stroke={0} />
-                                    <IconStar fill="#E2E8F0" size={18} stroke={0} />
+                        {selectedNote ? (
+                            <div className="card border-0 shadow-sm p-4 rounded-4 bg-white">
+                                {/* Card Top Meta */}
+                                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                                    <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: "#FFF7ED", color: "#EA580C", fontWeight: 500, fontSize: "0.8rem" }}>
+                                        ⭐ {selectedNote.category}
+                                    </span>
+                                    <span className="text-muted" style={{ fontSize: "0.8rem" }}>
+                                        {formatDate(selectedNote.notedAt)}
+                                    </span>
                                 </div>
-                                <span className="fw-medium" style={{ color: "#7C3AED", fontSize: "0.85rem" }}>
-                                    • 4 Stars - BSB
-                                </span>
-                            </div>
 
-                            {/* Title & Description */}
-                            <h4 className="fw-bold text-dark mb-2" style={{ fontSize: "1.2rem" }}>
-                                Daffa mampu mengenal huruf A–D
-                            </h4>
-                            <p className="text-secondary lh-base mb-4" style={{ fontSize: "0.9rem" }}>
-                                Hari ini Daffa menunjukkan perkembangan yang luar biasa pada kemampuan motorik halus dan kognitifnya. Daffa dapat mencocokkan huruf balok A sampai D ke dalam papan puzzle dengan mandiri, dan ia juga bisa menyebutkan bunyinya dengan tepat. Ia terlihat sangat antusias selama sesi belajar sambil bermain ini.
-                            </p>
+                                {/* Rating Stars & Status */}
+                                <div className="d-flex align-items-center gap-3 mb-3">
+                                    <div className="d-flex gap-1">
+                                        {renderStars(selectedNote.indicator)}
+                                    </div>
+                                    <span className="fw-medium" style={{ color: "#7C3AED", fontSize: "0.85rem" }}>
+                                        • Indikator {selectedNote.indicator} Stars
+                                    </span>
+                                </div>
 
-                            {/* Attached Images */}
-                            <div className="row g-2 mb-4">
-                                <div className="col-6">
+                                {/* Title & Description */}
+                                <h4 className="fw-bold text-dark mb-2" style={{ fontSize: "1.2rem" }}>
+                                    {selectedNote.title}
+                                </h4>
+                                <p className="text-secondary lh-base mb-4" style={{ fontSize: "0.9rem" }}>
+                                    {selectedNote.description}
+                                </p>
+
+                                {/* Attached Images (Base64 atau URL) */}
+                                {selectedNote.photo && (
+                                    <div className="row g-2 mb-4">
+                                        <div className="col-12 col-md-6">
+                                            <img 
+                                                src={selectedNote.photo.startsWith("data:") || selectedNote.photo.startsWith("http") ? selectedNote.photo : "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=600"} 
+                                                alt="Aktivitas Siswa" 
+                                                className="img-fluid rounded-3 object-fit-cover w-100"
+                                                style={{ height: "180px" }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Saran / Hal yang bisa dilakukan di rumah */}
+                                {selectedNote.suggestion && (
+                                    <div className="mb-3 d-flex gap-2 align-items-start">
+                                        <IconHome className="text-primary flex-shrink-0 mt-1" size={18} />
+                                        <div>
+                                            <span className="fw-semibold text-dark d-block" style={{ fontSize: "0.85rem" }}>
+                                                Hal yang bisa dilakukan di rumah
+                                            </span>
+                                            <span className="text-muted" style={{ fontSize: "0.85rem" }}>
+                                                {selectedNote.suggestion}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Perlu Perhatian Section */}
+                                {selectedNote.attention && (
+                                    <div className="mb-4 d-flex gap-2 align-items-start">
+                                        <IconExclamationCircle className="text-warning flex-shrink-0 mt-1" size={18} />
+                                        <div>
+                                            <span className="fw-semibold text-dark d-block" style={{ fontSize: "0.85rem" }}>
+                                                Perlu perhatian
+                                            </span>
+                                            <span className="text-muted" style={{ fontSize: "0.85rem" }}>
+                                                {selectedNote.attention}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <hr className="my-3 text-border" />
+
+                                {/* Teacher Profile Info */}
+                                <div className="d-flex align-items-center gap-2">
                                     <img 
-                                        src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=600" 
-                                        alt="Aktivitas Daffa" 
-                                        className="img-fluid rounded-3 object-fit-cover w-100"
-                                        style={{ height: "180px" }}
+                                        src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=100" 
+                                        alt="Siti Aisyah" 
+                                        className="rounded-circle object-fit-cover"
+                                        style={{ width: "36px", height: "36px" }}
                                     />
-                                </div>
-                                <div className="col-6">
-                                    <img 
-                                        src="https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&q=80&w=600" 
-                                        alt="Aktivitas Daffa 2" 
-                                        className="img-fluid rounded-3 object-fit-cover w-100"
-                                        style={{ height: "180px" }}
-                                    />
+                                    <div>
+                                        <h6 className="m-0 fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>Oleh Siti Aisyah</h6>
+                                        <span className="text-muted d-block" style={{ fontSize: "0.75rem" }}>Guru TK B</span>
+                                    </div>
                                 </div>
                             </div>
-
-                            {/* Hal yang bisa dilakukan di rumah */}
-                            <div className="mb-3 d-flex gap-2 align-items-start">
-                                <IconHome className="text-primary flex-shrink-0 mt-1" size={18} />
-                                <div>
-                                    <span className="fw-semibold text-dark d-block" style={{ fontSize: "0.85rem" }}>
-                                        Hal yang bisa dilakukan di rumah
-                                    </span>
-                                    <span className="text-muted" style={{ fontSize: "0.85rem" }}>
-                                        Latih pengenalan huruf E-H menggunakan kartu gambar. Bermain puzzle balok bersama.
-                                    </span>
-                                </div>
+                        ) : (
+                            <div className="card border-0 shadow-sm p-4 rounded-4 bg-white text-center">
+                                <p className="text-muted m-0">Tidak ada data catatan tersedia.</p>
                             </div>
-
-                            {/* Perlu Perhatian Section */}
-                            <div className="mb-4 d-flex gap-2 align-items-start">
-                                <IconExclamationCircle className="text-warning flex-shrink-0 mt-1" size={18} />
-                                <div>
-                                    <span className="fw-semibold text-dark d-block" style={{ fontSize: "0.85rem" }}>
-                                        Perlu perhatian
-                                    </span>
-                                    <span className="text-muted" style={{ fontSize: "0.85rem" }}>
-                                        Daffa terkadang masih bingung membedakan huruf B dan D.
-                                    </span>
-                                </div>
-                            </div>
-
-                            <hr className="my-3 text-border" />
-
-                            {/* Teacher Profile Info */}
-                            <div className="d-flex align-items-center gap-2">
-                                <img 
-                                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=100" 
-                                    alt="Siti Aisyah" 
-                                    className="rounded-circle object-fit-cover"
-                                    style={{ width: "36px", height: "36px" }}
-                                />
-                                <div>
-                                    <h6 className="m-0 fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>Oleh Siti Aisyah</h6>
-                                    <span className="text-muted d-block" style={{ fontSize: "0.75rem" }}>Guru TK B</span>
-                                </div>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Right Column - Stats & History */}
                     <div className="col-12 col-lg-4 d-flex flex-column gap-4">
                         
-                        {/* Perkembangan Daffa Progress Card */}
-                        <div className="card border-0 shadow-sm p-4 rounded-4 bg-white">
-                            <h5 className="fw-bold text-dark mb-3" style={{ fontSize: "1rem" }}>
-                                Perkembangan Daffa
-                            </h5>
-                            
-                            <div className="d-flex flex-column gap-3">
-                                {/* Kognitif */}
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center mb-1" style={{ fontSize: "0.8rem" }}>
-                                        <span className="text-muted">Perkembangan Kognitif</span>
-                                        <div className="text-warning">★ ★ ★ ★ ★</div>
-                                    </div>
-                                    <div className="progress" style={{ height: "6px" }}>
-                                        <div className="progress-bar rounded-pill" role="progressbar" style={{ width: "100%", backgroundColor: "#7C3AED" }}></div>
-                                    </div>
-                                </div>
-
-                                {/* Sosial & Emosional */}
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center mb-1" style={{ fontSize: "0.8rem" }}>
-                                        <span className="text-muted">Sosial & Emosional</span>
-                                        <div className="text-warning">★ ★ ★ ★ <span className="text-light-gray">☆</span></div>
-                                    </div>
-                                    <div className="progress" style={{ height: "6px" }}>
-                                        <div className="progress-bar rounded-pill" role="progressbar" style={{ width: "80%", backgroundColor: "#7C3AED" }}></div>
-                                    </div>
-                                </div>
-
-                                {/* Sikap & Karakter */}
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center mb-1" style={{ fontSize: "0.8rem" }}>
-                                        <span className="text-muted">Sikap & Karakter</span>
-                                        <div className="text-warning">★ ★ ★ ★ ★</div>
-                                    </div>
-                                    <div className="progress" style={{ height: "6px" }}>
-                                        <div className="progress-bar rounded-pill" role="progressbar" style={{ width: "100%", backgroundColor: "#7C3AED" }}></div>
-                                    </div>
-                                </div>
-
-                                {/* Kesehatan & Kemandirian */}
-                                <div>
-                                    <div className="d-flex justify-content-between align-items-center mb-1" style={{ fontSize: "0.8rem" }}>
-                                        <span className="text-muted">Kesehatan & Kemandirian</span>
-                                        <div className="text-warning">★ ★ ★ ★ <span className="text-light-gray">☆</span></div>
-                                    </div>
-                                    <div className="progress" style={{ height: "6px" }}>
-                                        <div className="progress-bar rounded-pill" role="progressbar" style={{ width: "80%", backgroundColor: "#7C3AED" }}></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Riwayat Catatan Card */}
                         <div className="card border-0 shadow-sm p-4 rounded-4 bg-white">
                             <h5 className="fw-bold text-dark mb-3" style={{ fontSize: "1rem" }}>
@@ -275,62 +336,32 @@ export function CatatanDashboard() {
                             </h5>
 
                             <div className="d-flex flex-column gap-3">
-                                {/* History Item 1 */}
-                                <div className="d-flex justify-content-between align-items-start pb-2 border-bottom">
-                                    <div>
-                                        <h6 className="m-0 fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>
-                                            Daffa mulai mewarnai dengan rapi
-                                        </h6>
-                                        <div className="d-flex align-items-center gap-2 mt-1">
-                                            <span className="badge rounded-pill" style={{ backgroundColor: "#FFF7ED", color: "#EA580C", fontSize: "0.7rem" }}>
-                                                Kreativitas
-                                            </span>
-                                            <span className="text-warning" style={{ fontSize: "0.75rem" }}>★ ★ ★ ★ ☆</span>
+                                {notes.map((item) => (
+                                    <div 
+                                        key={item.id} 
+                                        className={`d-flex justify-content-between align-items-start pb-2 border-bottom cursor-pointer p-2 rounded-2 ${selectedNote?.id === item.id ? "bg-light" : ""}`}
+                                        onClick={() => setSelectedNote(item)}
+                                        style={{ cursor: "pointer" }}
+                                    >
+                                        <div>
+                                            <h6 className="m-0 fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>
+                                                {item.title}
+                                            </h6>
+                                            <div className="d-flex align-items-center gap-2 mt-1">
+                                                <span className="badge rounded-pill" style={{ backgroundColor: "#FFF7ED", color: "#EA580C", fontSize: "0.7rem" }}>
+                                                    {item.category}
+                                                </span>
+                                                <span className="text-warning" style={{ fontSize: "0.75rem" }}>
+                                                    ★ {item.indicator}/5
+                                                </span>
+                                            </div>
                                         </div>
+                                        <span className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                            {formatDate(item.notedAt)}
+                                        </span>
                                     </div>
-                                    <span className="text-muted" style={{ fontSize: "0.75rem" }}>18 Mei</span>
-                                </div>
-
-                                {/* History Item 2 */}
-                                <div className="d-flex justify-content-between align-items-start pb-2 border-bottom">
-                                    <div>
-                                        <h6 className="m-0 fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>
-                                            Berbagi mainan dengan teman
-                                        </h6>
-                                        <div className="d-flex align-items-center gap-2 mt-1">
-                                            <span className="badge rounded-pill" style={{ backgroundColor: "#F0FDF4", color: "#16A34A", fontSize: "0.7rem" }}>
-                                                Sosial
-                                            </span>
-                                            <span className="text-warning" style={{ fontSize: "0.75rem" }}>★ ★ ★ ★ ★</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-muted" style={{ fontSize: "0.75rem"}}>15 Mei</span>
-                                </div>
-
-                                {/* History Item 3 */}
-                                <div className="d-flex justify-content-between align-items-start pb-2">
-                                    <div>
-                                        <h6 className="m-0 fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>
-                                            Kesulitan fokus saat bercerita
-                                        </h6>
-                                        <div className="d-flex align-items-center gap-2 mt-1">
-                                            <span className="badge rounded-pill" style={{ backgroundColor: "#FEF2F2", color: "#DC2626", fontSize: "0.7rem" }}>
-                                                Perhatian
-                                            </span>
-                                            <span className="text-warning" style={{ fontSize: "0.75rem" }}>★ ★ ★ ☆ ☆</span>
-                                        </div>
-                                    </div>
-                                    <span className="text-muted" style={{ fontSize: "0.75rem" }}>10 Mei</span>
-                                </div>
+                                ))}
                             </div>
-
-                            {/* View All Button */}
-                            <button 
-                                className="btn w-100 mt-3 rounded-3 py-2 fw-semibold"
-                                style={{ backgroundColor: "#F1F5F9", color: "#334155", fontSize: "0.85rem" }}
-                            >
-                                Lihat Semua Catatan
-                            </button>
                         </div>
 
                     </div>
