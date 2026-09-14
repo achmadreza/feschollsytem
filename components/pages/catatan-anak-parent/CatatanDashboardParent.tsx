@@ -30,38 +30,6 @@ interface StudentNote {
     updatedAt?: string;
 }
 
-// Dummy data sebagai fallback jika API Inquiry Disabled (Error 400)
-const FALLBACK_NOTES: StudentNote[] = [
-    {
-        id: "e99bd83c-d14e-4d1d-8562-54f5f97d9b15",
-        studentId: "e356ec65-4fdb-4af1-8572-7e738ac8d19b",
-        parentId: "1",
-        category: "HEALTH",
-        notedAt: "2026-09-06T09:00:00.000Z",
-        indicator: 4,
-        title: "Learning progress",
-        description: "Shows strong participation during reading activities.",
-        photo: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=600",
-        suggestion: "Practice reading for 15 minutes each day.",
-        attention: "Needs additional support with sentence construction.",
-        followUp: "Review progress with the parent next week."
-    },
-    {
-        id: "942b76c9-a208-49e3-b2f4-d9c81c005743",
-        studentId: "e356ec65-4fdb-4af1-8572-7e738ac8d19b",
-        parentId: "1",
-        category: "PROGRESS",
-        notedAt: "2026-09-14T00:00:00.000Z",
-        indicator: 3,
-        title: "TEST",
-        description: "test deskripsi",
-        photo: "https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&q=80&w=600",
-        suggestion: "test",
-        attention: "test",
-        followUp: "test"
-    }
-];
-
 export function CatatanDashboard() {
     const [notes, setNotes] = useState<StudentNote[]>([]);
     const [selectedNote, setSelectedNote] = useState<StudentNote | null>(null);
@@ -77,23 +45,26 @@ export function CatatanDashboard() {
             // Pemanggilan endpoint API
             const response = await callApi("/student-notes", { method: "GET" });
             
+            // Cek jika response berupa array data dari API
             if (Array.isArray(response)) {
                 setNotes(response);
                 setSelectedNote(response[0] || null);
-            } else if (response?.kode === 400 || response?.pesan) {
-                // Menangani response error backend: {"kode":400,"pesan":"Inquiry function is disabled"}
-                toast.error(`API Error: ${response.pesan || "Inquiry function disabled"}. Memuat data fallback.`);
-                setNotes(FALLBACK_NOTES);
-                setSelectedNote(FALLBACK_NOTES[0]);
+            } else if (response?.data && Array.isArray(response.data)) {
+                // Jika response di-wrap dalam objek data { data: [...] }
+                setNotes(response.data);
+                setSelectedNote(response.data[0] || null);
             } else {
-                setNotes(FALLBACK_NOTES);
-                setSelectedNote(FALLBACK_NOTES[0]);
+                // Jika API mengembalikan status error (misal 400 Inquiry Disabled)
+                const errorMsg = response?.pesan || response?.message || "Gagal mengambil data catatan.";
+                toast.error(errorMsg);
+                setNotes([]);
+                setSelectedNote(null);
             }
         } catch (error: any) {
             console.error("Fetch error:", error);
-            toast.error("Gagal mengambil data dari server. Memproses data cadangan.");
-            setNotes(FALLBACK_NOTES);
-            setSelectedNote(FALLBACK_NOTES[0]);
+            toast.error("Gagal terhubung ke server.");
+            setNotes([]);
+            setSelectedNote(null);
         } finally {
             setLoading(false);
         }
