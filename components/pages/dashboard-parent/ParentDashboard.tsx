@@ -46,11 +46,14 @@ interface StudentNote {
     __v?: number;
 }
 
-interface Media {
+interface Journal {
     id: string;
+    target?: string;
+    status?: string;
     title: string;
+    message: string;
     file?: string;
-    description: string;
+    photo?: string;
     createdAt: string;
     updatedAt: string;
     __v?: number;
@@ -60,11 +63,11 @@ export function ParentDashboard() {
     const [userData, setUserData] = useState<UserData | null>(null);
     const [studentNotes, setStudentNotes] = useState<StudentNote[]>([]);
     const [loadingNotes, setLoadingNotes] = useState<boolean>(true);
-    const [medias, setMedias] = useState<Media[]>([]);
-    const [loadingMedias, setLoadingMedias] = useState<boolean>(true);
+    const [journals, setJournals] = useState<Journal[]>([]);
+    const [loadingJournals, setLoadingJournals] = useState<boolean>(true);
 
     // State untuk Modal Detail
-    const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
+    const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
     const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
 
@@ -93,33 +96,37 @@ export function ParentDashboard() {
             }
         }
 
-        async function fetchMedias() {
+        async function fetchJournals() {
             try {
-                setLoadingMedias(true);
-                const response = await callApi("/media", { method: "GET" });
-                const data = Array.isArray(response) ? response : (response?.data || []);
-                setMedias(data);
+                setLoadingJournals(true);
+                const response = await callApi("/journals", { method: "GET" });
+                const rawData: Journal[] = Array.isArray(response) ? response : (response?.data || []);
+                
+                // Opsional: Filter hanya yang berstatus PUBLISHED
+                const publishedData = rawData.filter((item) => item.status === "PUBLISHED" || !item.status);
+                
+                setJournals(publishedData.length > 0 ? publishedData : rawData);
             } catch (error) {
-                console.error("Gagal mengambil data media pengumuman:", error);
+                console.error("Gagal mengambil data journals pengumuman:", error);
                 toast.error("Gagal memuat pengumuman terbaru");
             } finally {
-                setLoadingMedias(false);
+                setLoadingJournals(false);
             }
         }
 
         fetchUser();
         fetchStudentNotes();
-        fetchMedias();
+        fetchJournals();
     }, []);
 
-    // Function untuk fetch detail media/pengumuman berdasarkan ID
-    const handleOpenMediaDetail = async (id: string) => {
+    // Function untuk fetch detail journals/pengumuman berdasarkan ID
+    const handleOpenJournalDetail = async (id: string) => {
         try {
             setLoadingDetail(true);
             setShowModal(true);
-            const response = await callApi(`/media/${id}`, { method: "GET" });
+            const response = await callApi(`/journals/${id}`, { method: "GET" });
             const data = response?.data || response;
-            setSelectedMedia(data);
+            setSelectedJournal(data);
         } catch (error) {
             console.error("Gagal mengambil detail pengumuman:", error);
             toast.error("Gagal memuat detail pengumuman");
@@ -131,7 +138,7 @@ export function ParentDashboard() {
 
     const handleCloseModal = () => {
         setShowModal(false);
-        setSelectedMedia(null);
+        setSelectedJournal(null);
     };
 
     const formatDayDate = (dateString: string) => {
@@ -187,11 +194,8 @@ export function ParentDashboard() {
                         <div className="col-lg-7">
                             <h1 className="fw-bold mb-2 display-6">
                                 Welcome back, <br />
-                                {userData?.fullName || userData?.name || "Mr. Aria Wijaya"}
+                                {userData?.fullName || userData?.name || ""}
                             </h1>
-                            <p className="text-white-50 mb-0 max-w-md" style={{ maxWidth: '420px', fontSize: '0.95rem' }}>
-                                Stay updated with Lucas's academic progress and school activities in real-time. Everything is organized for your peace of mind.
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -300,28 +304,28 @@ export function ParentDashboard() {
                                     <h5 className="fw-bold mb-0">Informasi Pengumuman</h5>
                                 </div>
                                 <span className="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1">
-                                    {medias.length} Pengumuman
+                                    {journals.length} Pengumuman
                                 </span>
                             </div>
 
                             <div className="d-flex flex-column gap-3">
-                                {loadingMedias ? (
+                                {loadingJournals ? (
                                     <div className="p-4 text-center text-muted small">
                                         Memuat pengumuman...
                                     </div>
-                                ) : medias.length === 0 ? (
+                                ) : journals.length === 0 ? (
                                     <div className="p-4 text-center text-muted small">
                                         Tidak ada pengumuman terbaru.
                                     </div>
                                 ) : (
-                                    medias.map((item, index) => {
+                                    journals.map((item, index) => {
                                         const { day, month } = formatDayDate(item.createdAt);
-                                        const isLast = index === medias.length - 1;
+                                        const isLast = index === journals.length - 1;
 
                                         return (
                                             <div 
                                                 key={item.id} 
-                                                onClick={() => handleOpenMediaDetail(item.id)}
+                                                onClick={() => handleOpenJournalDetail(item.id)}
                                                 className={`d-flex gap-3 align-items-start cursor-pointer rounded-3 p-2 transition-all ${!isLast ? 'border-bottom' : ''}`}
                                                 style={{ cursor: "pointer" }}
                                             >
@@ -338,7 +342,7 @@ export function ParentDashboard() {
                                                         WebkitBoxOrient: "vertical",
                                                         overflow: "hidden"
                                                     }}>
-                                                        {item.description}
+                                                        {item.message}
                                                     </p>
                                                 </div>
                                             </div>
@@ -365,8 +369,8 @@ export function ParentDashboard() {
                                     </div>
                                     <div>
                                         <div className="d-flex align-items-center gap-2 mb-1">
-                                            <span className="badge bg-primary bg-opacity-10 text-primary fw-semibold rounded-pill px-2 py-1" style={{ fontSize: "0.75rem" }}>
-                                                Kegiatan Siswa
+                                            <span className="badge bg-primary bg-opacity-10 text-primary fw-semibold rounded-pill px-2 py-1 text-capitalize" style={{ fontSize: "0.75rem" }}>
+                                                {selectedJournal?.target || "Kegiatan Siswa"}
                                             </span>
                                             <small className="text-muted">• Resmi dari Sekolah</small>
                                         </div>
@@ -390,30 +394,30 @@ export function ParentDashboard() {
                                         <div className="spinner-border text-primary mb-2" role="status"></div>
                                         <p className="small mb-0">Memuat detail pengumuman...</p>
                                     </div>
-                                ) : selectedMedia ? (
+                                ) : selectedJournal ? (
                                     <div className="d-flex flex-column gap-3">
                                         {/* Title */}
                                         <h3 className="fw-bold text-dark mb-1" style={{ fontSize: "1.5rem" }}>
-                                            {selectedMedia.title}
+                                            {selectedJournal.title}
                                         </h3>
 
                                         {/* Meta Information */}
                                         <div className="d-flex flex-wrap gap-3 text-muted small border-bottom pb-3" style={{ fontSize: "0.85rem" }}>
                                             <span className="d-flex align-items-center gap-1">
-                                                <IconCalendar size={16} /> Diterbitkan: {formatFullDateTime(selectedMedia.createdAt)}
+                                                <IconCalendar size={16} /> Diterbitkan: {formatFullDateTime(selectedJournal.createdAt)}
                                             </span>
                                             <span className="d-flex align-items-center gap-1">
                                                 <IconUser size={16} /> Penerbit: Wali Kelas
                                             </span>
-                                            <span className="d-flex align-items-center gap-1">
-                                                <IconUsers size={16} /> Sasaran: Semua Orang Tua Siswa
+                                            <span className="d-flex align-items-center gap-1 text-capitalize">
+                                                <IconUsers size={16} /> Sasaran: {selectedJournal.target || "Semua Orang Tua Siswa"}
                                             </span>
                                         </div>
 
-                                        {/* Description Content Box */}
+                                        {/* Message Content Box */}
                                         <div className="p-3 rounded-3 bg-light bg-opacity-75 border border-light-subtle">
                                             <p className="text-dark mb-0 style-normal" style={{ whiteSpace: "pre-line", lineHeight: "1.6" }}>
-                                                {selectedMedia.description}
+                                                {selectedJournal.message}
                                             </p>
                                         </div>
 
