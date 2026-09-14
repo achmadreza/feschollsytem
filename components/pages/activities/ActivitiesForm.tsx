@@ -268,22 +268,6 @@ export function ActivitiesForm({ onBack, onNext }: ActivitiesFormProps) {
                             </li>
                         </ul>
                     </div>
-
-                    <div 
-                        className="card border-0 p-4 shadow-sm"
-                        style={{ 
-                            backgroundColor: "#F3E8FF", 
-                            borderRadius: "16px",
-                            border: "1px solid #E9D5FF" 
-                        }}
-                    >
-                        <h6 className="fw-semibold mb-2" style={{ color: "#7E22CE", fontSize: "14px" }}>
-                            Tips Fotografi
-                        </h6>
-                        <p className="mb-0" style={{ color: "#581C87", fontSize: "13px", lineHeight: "1.6" }}>
-                            Ambil foto &quot;candid&quot; saat anak sedang serius belajar atau tertawa bersama teman untuk memberikan kesan yang lebih autentik kepada orang tua.
-                        </p>
-                    </div>
                 </div>
             </div>
 

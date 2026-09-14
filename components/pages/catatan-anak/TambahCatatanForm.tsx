@@ -37,13 +37,9 @@ interface TambahCatatanFormProps {
 
 export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps) {
     const router = useRouter();
-
-    // Data Students State
     const [students, setStudents] = useState<Student[]>([]);
     const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(true);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-
-    // State Form Input
     const [selectedCategory, setSelectedCategory] = useState("Perkembangan");
     const [rating, setRating] = useState<number>(4);
     const [title, setTitle] = useState("");
@@ -53,20 +49,13 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
     const [description, setDescription] = useState(
         ""
     );
-    
-    // Foto Simpan String Base64
     const [files, setFiles] = useState<string[]>([]);
-
-    // Additional Info States
+    const [base64Files, setBase64Files] = useState<string[]>([]);
     const [suggestion, setSuggestion] = useState("");
     const [attention, setAttention] = useState("");
     const [followUp, setFollowUp] = useState("");
-
-    // State Status Request & Modal
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
-
-    // 1. Fetch Students Data dari API
     useEffect(() => {
         const fetchStudents = async () => {
             try {
@@ -77,7 +66,7 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                 const data = res?.data || res || [];
                 setStudents(data);
                 if (data.length > 0) {
-                    setSelectedStudent(data[0]); // Auto-select siswa pertama
+                    setSelectedStudent(data[0]);
                 }
             } catch (error) {
                 console.error("Gagal mengambil data anak:", error);
@@ -89,7 +78,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
         fetchStudents();
     }, []);
 
-    // Pemetaan Kategori dari UI ke Enum API
     const categoryMap: Record<string, string> = {
         "Perkembangan": "PROGRESS",
         "Sikap & Karakter": "ATTITUDE",
@@ -115,8 +103,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
     ];
 
     const currentIndicator = indicators.find((item) => item.value === rating) || indicators[3];
-
-    // Handle Perubahan Pemilihan Anak
     const handleStudentChange = (studentId: string) => {
         const found = students.find((s) => s.id === studentId);
         if (found) {
@@ -124,43 +110,29 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
         }
     };
 
-    // Handle Upload File / Convert File ke Base64
     const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
         const uploadedFiles = e.target.files;
         if (!uploadedFiles) return;
 
         Array.from(uploadedFiles).forEach((file) => {
-            const img = new Image();
-            const objectUrl = URL.createObjectURL(file);
-
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                const MAX_WIDTH = 800; // Resolusi cukup jernih untuk preview & ringan untuk API
-                const scaleSize = MAX_WIDTH / img.width;
-                
-                const width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
-                const height = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
-
-                canvas.width = width;
-                canvas.height = height;
-
-                const ctx = canvas.getContext("2d");
-                if (ctx) {
-                    ctx.drawImage(img, 0, 0, width, height);
-                    const base64 = canvas.toDataURL("image/jpeg", 0.7); // Kompresi JPEG 70%
-                    setFiles((prev) => [...prev, base64]);
+            const previewUrl = URL.createObjectURL(file);
+            setFiles((prev) => [...prev, previewUrl]);
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (typeof reader.result === "string") {
+                    const truncatedBase64 = reader.result.slice(0, 50);
+                    setBase64Files((prev) => [...prev, truncatedBase64]);
                 }
-                URL.revokeObjectURL(objectUrl);
             };
-
-            img.src = objectUrl;
+            reader.readAsDataURL(file);
         });
 
         e.target.value = "";
     };
 
     const removeFile = (index: number) => {
-        setFiles(files.filter((_, i) => i !== index));
+        setFiles((prev) => prev.filter((_, i) => i !== index));
+        setBase64Files((prev) => prev.filter((_, i) => i !== index));
     };
 
     const formatDate = (dateString: string) => {
@@ -173,7 +145,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
         });
     };
 
-    // Submit Form ke API student-note
     const handleFinalSubmit = async () => {
         if (!selectedStudent) {
             alert("Silakan pilih anak terlebih dahulu!");
@@ -185,12 +156,12 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
         const payload = {
             studentId: selectedStudent.id,
             parentId: selectedStudent.parentId,
-            category: categoryMap[selectedCategory] || "PROGRESS",
+            category: categoryMap[selectedCategory] || "",
             notedAt: new Date(noteDate).toISOString(),
             indicator: rating,
             title: title,
             description: description,
-            photo: files.length > 0 ? files[0] : "", // String Base64 dari foto pertama
+            photo: base64Files.length > 0 ? base64Files[0] : "",
             suggestion: suggestion,
             attention: attention,
             followUp: followUp
@@ -209,7 +180,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
             setShowPreviewModal(false);
             onClose();
 
-            // Refresh & Redirect ke Halaman /catatan-anak
             router.push("/catatan-anak");
             router.refresh();
         } catch (error) {
@@ -222,7 +192,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
 
     return (
         <div className="bg-light p-4 p-md-5 rounded-4 border shadow-sm max-w-4xl mx-auto position-relative">
-            {/* Header */}
             <div className="d-flex justify-content-between align-items-start mb-4">
                 <div>
                     <h3 className="fw-bold text-dark mb-1">Tambah Catatan Anak</h3>
@@ -233,7 +202,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
             </div>
 
             <Form onSubmit={(e) => e.preventDefault()}>
-                {/* Step 1: Pilih Anak */}
                 <div className="mb-4">
                     <div className="d-flex align-items-center gap-2 mb-3">
                         <span className="badge bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style={{ width: 24, height: 24 }}>1</span>
@@ -274,7 +242,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                     </div>
                 </div>
 
-                {/* Step 2: Kategori Catatan */}
                 <div className="mb-4">
                     <div className="d-flex align-items-center gap-2 mb-2">
                         <span className="badge bg-primary rounded-circle text-white d-flex align-items-center justify-content-center" style={{ width: 24, height: 24 }}>2</span>
@@ -304,7 +271,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                     </div>
                 </div>
 
-                {/* Step 3: Detail Catatan */}
                 <div className="mb-4">
                     <div className="d-flex align-items-center gap-2 mb-3">
                         <span className="badge bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 24, height: 24 }}>3</span>
@@ -320,7 +286,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                         />
                     </div>
                     
-                    {/* Indikator Capaian */}
                     <div className="mb-3">
                         <label className="form-label text-muted small fw-medium d-block">Indikator Capaian</label>
                         
@@ -376,7 +341,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                     </div>
                 </div>
 
-                {/* Step 4: Bukti / Dokumentasi */}
                 <div className="mb-4">
                     <div className="d-flex align-items-center gap-2 mb-3">
                         <span className="badge bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 24, height: 24 }}>4</span>
@@ -410,7 +374,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                     </div>
                 </div>
 
-                {/* Step 5: Informasi Tambahan */}
                 <div className="mb-4">
                     <div className="d-flex align-items-center gap-2 mb-3">
                         <span className="badge bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style={{ width: 24, height: 24 }}>5</span>
@@ -448,7 +411,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                     </div>
                 </div>
 
-                {/* Footer Buttons */}
                 <hr className="my-4" />
                 <div className="d-flex justify-content-end gap-2">
                     <button type="button" onClick={onClose} className="btn btn-light px-4 rounded-3 fw-medium" disabled={isSubmitting}>
@@ -466,14 +428,12 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                 </div>
             </Form>
 
-            {/* MODAL PREVIEW */}
             {showPreviewModal && (
                 <div 
                     className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
                     style={{ zIndex: 1050, backdropFilter: "blur(2px)" }}
                 >
                     <div className="bg-white rounded-4 shadow-lg overflow-hidden w-100 max-w-2xl" style={{ maxWidth: "600px" }}>
-                        {/* Modal Header */}
                         <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
                             <div className="d-flex align-items-center gap-2">
                                 <IconEye size={20} className="text-primary" />
@@ -487,7 +447,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                             ></button>
                         </div>
 
-                        {/* Modal Body */}
                         <div className="p-4 overflow-y-auto" style={{ maxHeight: "75vh" }}>
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <span className="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2 fw-medium border border-warning-subtle d-flex align-items-center gap-1">
@@ -557,7 +516,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                             )}
                         </div>
 
-                        {/* Modal Footer */}
                         <div className="p-3 border-top bg-light d-flex justify-content-between align-items-center">
                             <button 
                                 type="button" 

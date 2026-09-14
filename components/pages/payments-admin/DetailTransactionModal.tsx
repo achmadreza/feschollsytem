@@ -46,6 +46,7 @@ interface BillingDetailResponse {
     dueDate: string;
     status: string;
     paidAt: string | null;
+    payment?: string | null; // Tambahkan payment di interface
     id: string; 
     createdAt: string;
     updatedAt: string;
@@ -298,54 +299,67 @@ export function DetailTransactionModal({
                             </div>
                         </div>
 
-                        <div className="mb-2">
-                            <div className="d-flex align-items-center gap-2 mb-2 text-uppercase fw-bold" style={{ fontSize: "11px", color: "#1E3A8A", letterSpacing: "0.05em" }}>
-                                <IconPhoto size={16} />
-                                <span>Bukti Pembayaran</span>
-                            </div>
-
-                            <div 
-                                className="p-3 position-relative" 
-                                style={{ 
-                                    backgroundColor: "#FFFFFF", 
-                                    borderRadius: "16px",
-                                    border: "1.5px solid #CBD5E1"
-                                }}
-                            >
-                                <div className="d-flex align-items-center justify-content-between pb-3 border-bottom border-dashed" style={{ borderColor: "#CBD5E1" }}>
-                                    <div className="d-flex align-items-center gap-2">
-                                        <div 
-                                            className="rounded-2 d-flex align-items-center justify-content-center fw-bold text-white"
-                                            style={{ width: "38px", height: "26px", backgroundColor: "#00529C", fontSize: "11px" }}
-                                        >
-                                            BCA
-                                        </div>
-                                        <div>
-                                            <div className="fw-bold text-dark" style={{ fontSize: "13px", lineHeight: "1.2" }}>Bank Central Asia</div>
-                                            <div className="text-secondary" style={{ fontSize: "11px" }}>Transfer Antar Bank</div>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Menggunakan komponen BadgeStatus */}
-                                    <BadgeStatus status={statusBadge} />
+                        {/* Tampilkan Bukti Pembayaran hanya jika paidAt tidak null */}
+                        {billingData?.paidAt && (
+                            <div className="mb-2">
+                                <div className="d-flex align-items-center gap-2 mb-2 text-uppercase fw-bold" style={{ fontSize: "11px", color: "#1E3A8A", letterSpacing: "0.05em" }}>
+                                    <IconPhoto size={16} />
+                                    <span>Bukti Pembayaran</span>
                                 </div>
 
-                                <div className="py-3 d-flex flex-column gap-2" style={{ fontSize: "13px" }}>
-                                    <div className="d-flex justify-content-between">
-                                        <span className="text-secondary">Transaction ID</span>
-                                        <span className="fw-medium text-dark">{transaction.bankTransactionId || ""}</span>
+                                <div 
+                                    className="p-3 position-relative" 
+                                    style={{ 
+                                        backgroundColor: "#FFFFFF", 
+                                        borderRadius: "16px",
+                                        border: "1.5px solid #CBD5E1"
+                                    }}
+                                >
+                                    <div className="d-flex align-items-center justify-content-between pb-3 border-bottom border-dashed" style={{ borderColor: "#CBD5E1" }}>
+                                        <div className="d-flex align-items-center gap-2">
+                                            <div 
+                                                className="rounded-2 d-flex align-items-center justify-content-center fw-bold text-white"
+                                                style={{ width: "38px", height: "26px", backgroundColor: "#00529C", fontSize: "11px" }}
+                                            >
+                                                BCA
+                                            </div>
+                                            <div>
+                                                <div className="fw-bold text-dark" style={{ fontSize: "13px", lineHeight: "1.2" }}>Bank Central Asia</div>
+                                                <div className="text-secondary" style={{ fontSize: "11px" }}>Transfer Antar Bank</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <BadgeStatus status={statusBadge} />
                                     </div>
-                                    <div className="d-flex justify-content-between">
-                                        <span className="text-secondary">Amount</span>
-                                        <span className="fw-bold text-dark">{transaction.amount}</span>
+
+                                    <div className="py-3 d-flex flex-column gap-2" style={{ fontSize: "13px" }}>
+                                        <div className="d-flex justify-content-between">
+                                            <span className="text-secondary">Transaction ID</span>
+                                            <span className="fw-medium text-dark">{transaction.bankTransactionId || ""}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between">
+                                            <span className="text-secondary">Amount</span>
+                                            <span className="fw-bold text-dark">{transaction.amount}</span>
+                                        </div>
+                                        <div className="d-flex justify-content-between">
+                                            <span className="text-secondary">Recipient</span>
+                                            <span className="fw-medium text-dark">{transaction.recipient || "Yayasan Pendidikan"}</span>
+                                        </div>
                                     </div>
-                                    <div className="d-flex justify-content-between">
-                                        <span className="text-secondary">Recipient</span>
-                                        <span className="fw-medium text-dark">{transaction.recipient || "Yayasan Pendidikan"}</span>
-                                    </div>
+
+                                    {billingData?.payment && (
+                                        <div className="mt-2 pt-3 border-top" style={{ borderColor: "#F1F5F9" }}>
+                                            <img 
+                                                src={billingData.payment} 
+                                                alt="Bukti Transfer" 
+                                                className="img-fluid rounded-3 border w-100"
+                                                style={{ maxHeight: "250px", objectFit: "cover" }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     <div className="modal-footer border-0 p-4 pt-2">
