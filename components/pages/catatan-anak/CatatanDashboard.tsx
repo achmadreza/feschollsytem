@@ -108,7 +108,6 @@ export function CatatanDashboard() {
 
         return (
             <span className={`px-3 py-1 rounded-pill fw-medium border d-inline-flex align-items-center gap-2 ${styleClass}`} style={{ fontSize: "13px" }}>
-                <span className={`rounded-circle ${dotColor}`} style={{ width: "6px", height: "6px" }}></span>
                 {category === "PROGRESS" ? "Perkembangan" : category}
             </span>
         );
@@ -265,10 +264,7 @@ export function CatatanDashboard() {
                         <div className="bg-white rounded-4 border border-gray-100 shadow-sm overflow-hidden">
                             <div className="p-4 d-flex justify-content-between align-items-center border-bottom border-gray-100">
                                 <div>
-                                    <h5 className="fw-bold text-dark m-0">Catatan Terbaru</h5>
-                                    <p className="text-muted m-0 mt-1" style={{ fontSize: "13px" }}>
-                                        Pantauan pencatatan terkini untuk siswa di kelas TK B
-                                    </p>
+                                    <h4 className="fw-bold text-dark m-0">Catatan Terbaru</h4>
                                 </div>
                             </div>
 

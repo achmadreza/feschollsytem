@@ -45,8 +45,7 @@ export function ActivitiesForm({ onBack, onNext }: ActivitiesFormProps) {
         reader.onload = () => {
             const rawBase64 = reader.result as string;
             setPreviewUrl(rawBase64);
-            const truncatedBase64 = rawBase64.substring(0, 50);
-            setFileBase64(truncatedBase64);
+            setFileBase64(rawBase64);
             
             setFileName(file.name);
             toast.success("Gambar berhasil diproses");
@@ -221,9 +220,6 @@ export function ActivitiesForm({ onBack, onNext }: ActivitiesFormProps) {
                                         <p className="mb-0 fw-medium text-dark text-truncate" style={{ fontSize: "14px" }}>
                                             {fileName}
                                         </p>
-                                        <span className="text-muted" style={{ fontSize: "11px" }}>
-                                            Base64 (Maks 50 char): <code className="text-break">{fileBase64}</code>
-                                        </span>
                                     </div>
                                 </div>
                                 <button 

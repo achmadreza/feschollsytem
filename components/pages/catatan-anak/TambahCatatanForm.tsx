@@ -117,11 +117,12 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
         Array.from(uploadedFiles).forEach((file) => {
             const previewUrl = URL.createObjectURL(file);
             setFiles((prev) => [...prev, previewUrl]);
+            
             const reader = new FileReader();
             reader.onload = () => {
                 if (typeof reader.result === "string") {
-                    const truncatedBase64 = reader.result.slice(0, 50);
-                    setBase64Files((prev) => [...prev, truncatedBase64]);
+                    const fullBase64 = reader.result;
+                    setBase64Files((prev) => [...prev, fullBase64]);
                 }
             };
             reader.readAsDataURL(file);

@@ -153,25 +153,8 @@ export function DashboardTeacher() {
                         </div>
                         <div>
                             <h2 className="fw-bold mb-1 fs-3 text-white">
-                                Selamat Pagi, {userData?.fullName || "Bu Ani"}
+                                Selamat Pagi, {userData?.fullName || ""}
                             </h2>
-                            <p className="mb-2 small" style={{ color: "rgba(255, 255, 255, 0.9)" }}>
-                                Hari ini ada 31 siswa yang terdaftar di kelas Anda. Mari buat hari ini produktif!
-                            </p>
-                            <div className="d-flex flex-wrap gap-2 pt-1">
-                                <span 
-                                    className="badge fw-normal px-3 py-2 rounded-pill d-flex align-items-center gap-1 text-white"
-                                    style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", backdropFilter: "blur(4px)" }}
-                                >
-                                    <IconCalendar size={14} className="text-white" /> Selasa, 24 Okt 2023
-                                </span>
-                                <span 
-                                    className="badge fw-normal px-3 py-2 rounded-pill d-flex align-items-center gap-1 text-white"
-                                    style={{ backgroundColor: "rgba(255, 255, 255, 0.2)", backdropFilter: "blur(4px)" }}
-                                >
-                                    <IconClock size={14} className="text-white" /> 07:45 WIB
-                                </span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -181,7 +164,6 @@ export function DashboardTeacher() {
                         <div className="card border-0 shadow-sm rounded-3 mb-4">
                             <div className="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
                                 <h4 className="fw-bold mb-0 text-dark">Pengumuman Terbaru</h4>
-                                <a href="#" className="text-primary text-decoration-none small fw-semibold">Lihat Semua &gt;</a>
                             </div>
                             <div className="card-body p-0">
                                 <div className="list-group list-group-flush">
@@ -240,7 +222,6 @@ export function DashboardTeacher() {
                                     {medias.map((item) => (
                                         <div key={item._id || item.id} className="col-12 col-md-6">
                                             <div className="card border-0 shadow-sm rounded-3 overflow-hidden h-100">
-                                                
                                                 <div 
                                                     className="position-relative bg-light d-flex align-items-center justify-content-center overflow-hidden" 
                                                     style={{ height: "160px" }}
@@ -249,18 +230,15 @@ export function DashboardTeacher() {
                                                         <img 
                                                             src={item.file} 
                                                             className="w-100 h-100" 
-                                                            alt=""
+                                                            alt={item.title || "Gambar Kegiatan"}
                                                             style={{ objectFit: "cover" }}
-                                                            onError={(e) => {
-                                                                (e.target as HTMLElement).style.display = 'none';
-                                                            }}
                                                         />
-                                                    ) : null}
-
-                                                    <div className="position-absolute text-muted d-flex flex-column align-items-center gap-1" style={{ zIndex: 0 }}>
-                                                        <IconPhoto size={36} stroke={1.5} />
-                                                        <span className="fs-xs text-secondary">Tidak ada gambar</span>
-                                                    </div>
+                                                    ) : (
+                                                        <div className="text-muted d-flex flex-column align-items-center gap-1">
+                                                            <IconPhoto size={36} stroke={1.5} />
+                                                            <span className="fs-xs text-secondary">Tidak ada gambar</span>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 <div className="card-body p-3 d-flex flex-column justify-content-between">
@@ -278,10 +256,6 @@ export function DashboardTeacher() {
                                                     </div>
 
                                                     <div className="d-flex align-items-center justify-content-between pt-2 border-top">
-                                                        <div className="avatar-group d-flex align-items-center">
-                                                            <img src="https://i.pravatar.cc/100?img=1" className="rounded-circle border border-white" style={{ width: "24px", height: "24px", marginRight: "-8px" }} alt="" />
-                                                            <img src="https://i.pravatar.cc/100?img=2" className="rounded-circle border border-white" style={{ width: "24px", height: "24px" }} alt="" />
-                                                        </div>
                                                         <span className="text-muted small" style={{ fontSize: "11px" }}>
                                                             {formatTimeAgo(item.createdAt)}
                                                         </span>
