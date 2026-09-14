@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
     IconPlus, 
     IconFileText, 
@@ -9,14 +9,36 @@ import {
     IconCalendar, 
     IconDotsVertical, 
     IconMail,
-    IconArrowLeft
+    IconArrowLeft,
+    IconLoader2
 } from "@tabler/icons-react";
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { Button } from "../../../components/ui/Button"; 
-import { TambahCatatanForm } from "./TambahCatatanForm"; // Import Komponen Form Baru
+import { TambahCatatanForm } from "./TambahCatatanForm"; 
+import { callApi } from "@/lib/api";
+
+interface StudentNote {
+    id: string;
+    studentId: string;
+    parentId: string;
+    category: string;
+    notedAt: string;
+    indicator: number;
+    title: string;
+    description: string;
+    photo?: string;
+    suggestion?: string;
+    attention?: string;
+    followUp?: string;
+    createdAt: string;
+    updatedAt: string;
+}
 
 export function CatatanDashboard() {
     const [showForm, setShowForm] = useState(false);
+    const [notes, setNotes] = useState<StudentNote[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+
     const today = new Date();
     
     const optionsDate: Intl.DateTimeFormatOptions = { 
@@ -45,51 +67,82 @@ export function CatatanDashboard() {
 
     const currentWeekNumber = getWeekNumber(today);
 
-    const [notes] = useState([
-        {
-            id: "#TK-021",
-            name: "Daffa Alfareza",
-            avatar: "https://i.pravatar.cc/150?img=11",
-            title: "Daffa mampu mengenal huruf A-D",
-            category: "Perkembangan",
-            categoryType: "purple",
-            time: today.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-            subTime: "10:30 WIB"
-        },
-        {
-            id: "#TK-014",
-            name: "Aurelia Putri",
-            avatar: "https://i.pravatar.cc/150?img=5",
-            title: "Berbagi mainan dengan teman",
-            category: "Sosial & Emosional",
-            categoryType: "green",
-            time: today.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
-            subTime: "09:45 WIB"
+    // Fetch Data dari API
+    const fetchStudentNotes = async () => {
+        setLoading(true);
+        try {
+            const response = await callApi<StudentNote[] | { data: StudentNote[] }>("student-notes", {
+                method: "GET",
+            });
+            
+            const data = Array.isArray(response) ? response : response?.data;
+            if (Array.isArray(data)) {
+                setNotes(data);
+            }
+        } catch (error: any) {
+            console.error("Gagal mengambil data catatan:", error);
+            toast.error("Gagal memuat catatan siswa");
+        } finally {
+            setLoading(false);
         }
-    ]);
+    };
 
-    const getBadgeStyle = (type: string) => {
-        switch (type) {
-            case "purple": return "bg-purple-100 text-purple-700 border-purple-200";
-            case "green": return "bg-emerald-100 text-emerald-700 border-emerald-200";
-            default: return "bg-gray-100 text-gray-700 border-gray-200";
+    useEffect(() => {
+        fetchStudentNotes();
+    }, []);
+
+    // Format Badge Kategori persis seperti contoh di screenshot (dengan bullet dot)
+    const renderCategoryBadge = (category: string) => {
+        let styleClass = "bg-purple-50 text-purple-600 border-purple-100";
+        let dotColor = "bg-purple-600";
+
+        const catLower = category?.toLowerCase() || "";
+
+        if (catLower.includes("sosial") || catLower.includes("social")) {
+            styleClass = "bg-emerald-50 text-emerald-600 border-emerald-100";
+            dotColor = "bg-emerald-600";
+        } else if (catLower.includes("perkembangan") || catLower.includes("progress")) {
+            styleClass = "bg-purple-50 text-purple-600 border-purple-100";
+            dotColor = "bg-purple-600";
         }
+
+        return (
+            <span className={`px-3 py-1 rounded-pill fw-medium border d-inline-flex align-items-center gap-2 ${styleClass}`} style={{ fontSize: "13px" }}>
+                <span className={`rounded-circle ${dotColor}`} style={{ width: "6px", height: "6px" }}></span>
+                {category === "PROGRESS" ? "Perkembangan" : category}
+            </span>
+        );
+    };
+
+    // Format Tanggal dan Waktu (misal: 20 Mei 2025 \n 10:30 WIB)
+    const formatDate = (dateString: string) => {
+        if (!dateString) return { date: "-", time: "-" };
+        const dateObj = new Date(dateString);
+        return {
+            date: dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+            time: dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + " WIB"
+        };
     };
 
     return (
         <>
             <div style={{ backgroundColor: "#F8FAFC", minHeight: "100vh" }}>
                 
-                {/* Switch View antara Dashboard dan Form Tambah Catatan */}
                 {showForm ? (
                     <div>
                         <button 
                             className="btn btn-link text-decoration-none text-secondary mb-3 p-0 d-flex align-items-center gap-1"
-                            onClick={() => setShowForm(false)}
+                            onClick={() => {
+                                setShowForm(false);
+                                fetchStudentNotes();
+                            }}
                         >
                             <IconArrowLeft size={18} /> Kembali ke Dashboard
                         </button>
-                        <TambahCatatanForm onClose={() => setShowForm(false)} />
+                        <TambahCatatanForm onClose={() => {
+                            setShowForm(false);
+                            fetchStudentNotes();
+                        }} />
                     </div>
                 ) : (
                     <>
@@ -119,7 +172,7 @@ export function CatatanDashboard() {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span className="text-secondary fw-semibold" style={{ fontSize: "13px" }}>Catatan Hari Ini</span>
-                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>8</h3>
+                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>{notes.length}</h3>
                                         </div>
                                         <div className="p-2 bg-light rounded-3 text-secondary">
                                             <IconFileText size={20} />
@@ -134,7 +187,7 @@ export function CatatanDashboard() {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span className="text-secondary fw-semibold" style={{ fontSize: "13px" }}>Terkirim ke Orang Tua</span>
-                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>7</h3>
+                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>{notes.length}</h3>
                                         </div>
                                         <div className="p-2 bg-emerald-50 text-emerald-600 rounded-3">
                                             <IconSend size={20} />
@@ -149,7 +202,7 @@ export function CatatanDashboard() {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span className="text-secondary fw-semibold" style={{ fontSize: "13px" }}>Belum Dibaca Orang Tua</span>
-                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>1</h3>
+                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>0</h3>
                                         </div>
                                         <div className="p-2 bg-amber-50 text-amber-600 rounded-3">
                                             <IconMail size={20} />
@@ -164,7 +217,11 @@ export function CatatanDashboard() {
                                     <div className="d-flex justify-content-between align-items-start">
                                         <div>
                                             <span className="text-secondary fw-semibold" style={{ fontSize: "13px" }}>Rata-rata Perkembangan</span>
-                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>4.6</h3>
+                                            <h3 className="fw-bold text-dark mt-2 mb-1" style={{ fontSize: "28px" }}>
+                                                {notes.length > 0 
+                                                    ? (notes.reduce((acc, curr) => acc + (curr.indicator || 0), 0) / notes.length).toFixed(1)
+                                                    : "0"}
+                                            </h3>
                                         </div>
                                         <div className="p-2 bg-purple-50 text-purple-600 rounded-3">
                                             <IconStar size={20} />
@@ -219,42 +276,75 @@ export function CatatanDashboard() {
                                 <table className="table table-hover align-middle mb-0">
                                     <thead className="bg-light">
                                         <tr>
-                                            <th className="py-3 px-4 text-muted fw-semibold uppercase" style={{ fontSize: "11px" }}>SISWA</th>
+                                            <th className="py-3 px-4 text-muted fw-semibold uppercase" style={{ fontSize: "11px"}}>SISWA</th>
                                             <th className="py-3 px-4 text-muted fw-semibold uppercase" style={{ fontSize: "11px" }}>JUDUL CATATAN</th>
                                             <th className="py-3 px-4 text-muted fw-semibold uppercase" style={{ fontSize: "11px" }}>KATEGORI</th>
                                             <th className="py-3 px-4 text-muted fw-semibold uppercase" style={{ fontSize: "11px" }}>WAKTU</th>
-                                            <th className="py-3 px-4 text-muted fw-semibold uppercase text-end" style={{ fontSize: "11px" }}>AKSI</th>
+                                            {/* <th className="py-3 px-4 text-muted fw-semibold uppercase text-end" style={{ fontSize: "11px" }}>AKSI</th> */}
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {notes.map((item, idx) => (
-                                            <tr key={idx} className="border-bottom border-gray-100">
-                                                <td className="py-3 px-4">
-                                                    <div className="d-flex align-items-center gap-3">
-                                                        <img src={item.avatar} alt={item.name} className="rounded-circle object-fit-cover" style={{ width: "40px", height: "40px" }} />
-                                                        <div>
-                                                            <div className="fw-bold text-dark" style={{ fontSize: "14px" }}>{item.name}</div>
-                                                            <div className="text-muted" style={{ fontSize: "12px" }}>ID: {item.id}</div>
-                                                        </div>
+                                        {loading ? (
+                                            <tr>
+                                                <td colSpan={5} className="text-center py-5">
+                                                    <div className="d-flex align-items-center justify-content-center gap-2 text-muted">
+                                                        <IconLoader2 className="spinner-border text-primary border-0" size={24} />
+                                                        <span>Memuat data catatan...</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-3 px-4 text-dark fw-medium" style={{ fontSize: "14px" }}>{item.title}</td>
-                                                <td className="py-3 px-4">
-                                                    <span className={`px-3 py-1 rounded-pill fw-medium border ${getBadgeStyle(item.categoryType)}`} style={{ fontSize: "12px" }}>
-                                                        {item.category}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <div className="text-dark fw-medium" style={{ fontSize: "13px" }}>{item.time}</div>
-                                                    <div className="text-muted" style={{ fontSize: "11px" }}>{item.subTime}</div>
-                                                </td>
-                                                <td className="py-3 px-4 text-end">
-                                                    <button className="btn btn-link text-muted p-1">
-                                                        <IconDotsVertical size={18} />
-                                                    </button>
+                                            </tr>
+                                        ) : notes.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} className="text-center py-5 text-muted">
+                                                    Belum ada catatan siswa yang tersedia.
                                                 </td>
                                             </tr>
-                                        ))}
+                                        ) : (
+                                            notes.map((item) => {
+                                                const formatted = formatDate(item.notedAt || item.createdAt);
+
+                                                return (
+                                                    <tr key={item.id} className="border-bottom border-gray-100">
+                                                        {/* SISWA Column (Avatar + Nama + ID) */}
+                                                        <td className="py-3 px-4">
+                                                            <div className="d-flex align-items-center gap-3">
+                                                                <div>
+                                                                    <div className="fw-bold text-dark" style={{ fontSize: "14px" }}>
+                                                                        {item.title || "Siswa"}
+                                                                    </div>
+                                                                    <div className="text-muted" style={{ fontSize: "12px" }}>
+                                                                        ID: #{item.studentId ? item.studentId.substring(0, 7) : item.id.substring(0, 7)}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* JUDUL CATATAN Column */}
+                                                        <td className="py-3 px-4 text-dark fw-medium" style={{ fontSize: "14px" }}>
+                                                            {item.title}
+                                                        </td>
+
+                                                        {/* KATEGORI Column */}
+                                                        <td className="py-3 px-4">
+                                                            {renderCategoryBadge(item.category)}
+                                                        </td>
+
+                                                        {/* WAKTU Column */}
+                                                        <td className="py-3 px-4">
+                                                            <div className="text-dark fw-medium" style={{ fontSize: "13px" }}>{formatted.date}</div>
+                                                            <div className="text-muted" style={{ fontSize: "11px" }}>{formatted.time}</div>
+                                                        </td>
+
+                                                        {/* AKSI Column */}
+                                                        {/* <td className="py-3 px-4 text-end">
+                                                            <button className="btn btn-link text-muted p-1 border-0">
+                                                                <IconDotsVertical size={18} />
+                                                            </button>
+                                                        </td> */}
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
                                     </tbody>
                                 </table>
                             </div>

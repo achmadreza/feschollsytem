@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import { 
     IconThumbUp, 
     IconHeart, 
@@ -18,6 +19,16 @@ import {
 import { Label } from "../../ui/Label";
 import { Input } from "../../ui/Input";
 import { Form } from "../../ui/Form";
+import { callApi } from "@/lib/api";
+
+interface Student {
+    id: string;
+    name: string;
+    class?: string;
+    parentId: string;
+    parentName?: string;
+    [key: string]: any;
+}
 
 interface TambahCatatanFormProps {
     onClose: () => void;
@@ -25,29 +36,67 @@ interface TambahCatatanFormProps {
 }
 
 export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps) {
+    const router = useRouter();
+
+    // Data Students State
+    const [students, setStudents] = useState<Student[]>([]);
+    const [isLoadingStudents, setIsLoadingStudents] = useState<boolean>(true);
+    const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
     // State Form Input
-    const [selectedChild, setSelectedChild] = useState("Daffa Alfareza (TK B)");
     const [selectedCategory, setSelectedCategory] = useState("Perkembangan");
-    const [rating, setRating] = useState<number>(4); // Default 4 bintang (BSB)
-    const [title, setTitle] = useState("Daffa mampu mengenal huruf A–D");
+    const [rating, setRating] = useState<number>(4);
+    const [title, setTitle] = useState("");
     const [noteDate, setNoteDate] = useState<string>(
         new Date().toISOString().split("T")[0]
     );
     const [description, setDescription] = useState(
-        "Daffa menunjukkan perkembangan yang baik dalam mengenal huruf.\nHari ini Daffa dapat menyebutkan dan menulis huruf A, B, C, dan D dengan bantuan minimal."
+        ""
     );
-    const [files, setFiles] = useState<string[]>([
-        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=200",
-        "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=200"
-    ]);
+    
+    // Foto Simpan String Base64
+    const [files, setFiles] = useState<string[]>([]);
 
     // Additional Info States
-    const [atHome, setAtHome] = useState("");
+    const [suggestion, setSuggestion] = useState("");
     const [attention, setAttention] = useState("");
     const [followUp, setFollowUp] = useState("");
 
-    // State Modal Preview
+    // State Status Request & Modal
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+    // 1. Fetch Students Data dari API
+    useEffect(() => {
+        const fetchStudents = async () => {
+            try {
+                setIsLoadingStudents(true);
+                const res = await callApi("students", { 
+                    method: "GET" 
+                });
+                const data = res?.data || res || [];
+                setStudents(data);
+                if (data.length > 0) {
+                    setSelectedStudent(data[0]); // Auto-select siswa pertama
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data anak:", error);
+            } finally {
+                setIsLoadingStudents(false);
+            }
+        };
+
+        fetchStudents();
+    }, []);
+
+    // Pemetaan Kategori dari UI ke Enum API
+    const categoryMap: Record<string, string> = {
+        "Perkembangan": "PROGRESS",
+        "Sikap & Karakter": "ATTITUDE",
+        "Sosial & Emosional": "SOCIAL",
+        "Kesehatan": "HEALTH",
+        "Informasi": "INFORMATION"
+    };
 
     const categories = [
         { id: "Perkembangan", label: "Perkembangan", sub: "Perkembangan belajar & motorik", icon: IconThumbUp },
@@ -57,7 +106,6 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
         { id: "Informasi", label: "Informasi", sub: "Informasi penting untuk orang tua", icon: IconInfoCircle },
     ];
 
-    // Pemetaan Indikator Capaian (1-5)
     const indicators = [
         { value: 1, label: "BB (Belum Berkembang)" },
         { value: 2, label: "MB (Mulai Berkembang)" },
@@ -68,11 +116,53 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
 
     const currentIndicator = indicators.find((item) => item.value === rating) || indicators[3];
 
+    // Handle Perubahan Pemilihan Anak
+    const handleStudentChange = (studentId: string) => {
+        const found = students.find((s) => s.id === studentId);
+        if (found) {
+            setSelectedStudent(found);
+        }
+    };
+
+    // Handle Upload File / Convert File ke Base64
+    const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+        const uploadedFiles = e.target.files;
+        if (!uploadedFiles) return;
+
+        Array.from(uploadedFiles).forEach((file) => {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                const MAX_WIDTH = 800; // Resolusi cukup jernih untuk preview & ringan untuk API
+                const scaleSize = MAX_WIDTH / img.width;
+                
+                const width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
+                const height = img.width > MAX_WIDTH ? img.height * scaleSize : img.height;
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64 = canvas.toDataURL("image/jpeg", 0.7); // Kompresi JPEG 70%
+                    setFiles((prev) => [...prev, base64]);
+                }
+                URL.revokeObjectURL(objectUrl);
+            };
+
+            img.src = objectUrl;
+        });
+
+        e.target.value = "";
+    };
+
     const removeFile = (index: number) => {
         setFiles(files.filter((_, i) => i !== index));
     };
 
-    // Format Tanggal untuk Tampilan Preview (Contoh: 20 Mei 2025)
     const formatDate = (dateString: string) => {
         if (!dateString) return "";
         const date = new Date(dateString);
@@ -83,26 +173,51 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
         });
     };
 
-    const handleFinalSubmit = () => {
+    // Submit Form ke API student-note
+    const handleFinalSubmit = async () => {
+        if (!selectedStudent) {
+            alert("Silakan pilih anak terlebih dahulu!");
+            return;
+        }
+
+        setIsSubmitting(true);
+
         const payload = {
-            selectedChild,
-            selectedCategory,
-            rating,
-            indicator: currentIndicator.label,
-            noteDate,
-            title,
-            description,
-            files,
-            atHome,
-            attention,
-            followUp
+            studentId: selectedStudent.id,
+            parentId: selectedStudent.parentId,
+            category: categoryMap[selectedCategory] || "PROGRESS",
+            notedAt: new Date(noteDate).toISOString(),
+            indicator: rating,
+            title: title,
+            description: description,
+            photo: files.length > 0 ? files[0] : "", // String Base64 dari foto pertama
+            suggestion: suggestion,
+            attention: attention,
+            followUp: followUp
         };
 
-        if (onSuccess) {
-            onSuccess(payload);
+        try {
+            await callApi("student-notes", {
+                method: "POST",
+                body: payload
+            });
+
+            if (onSuccess) {
+                onSuccess(payload);
+            }
+
+            setShowPreviewModal(false);
+            onClose();
+
+            // Refresh & Redirect ke Halaman /catatan-anak
+            router.push("/catatan-anak");
+            router.refresh();
+        } catch (error) {
+            console.error("Gagal mengirim catatan anak:", error);
+            alert("Gagal menyimpan catatan anak. Silakan coba lagi.");
+        } finally {
+            setIsSubmitting(false);
         }
-        setShowPreviewModal(false);
-        onClose();
     };
 
     return (
@@ -129,11 +244,19 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                             <Label className="form-label text-muted small fw-medium">Pilih Anak</Label>
                             <select 
                                 className="form-select border-0 py-2"
-                                value={selectedChild}
-                                onChange={(e) => setSelectedChild(e.target.value)}
+                                value={selectedStudent?.id || ""}
+                                onChange={(e) => handleStudentChange(e.target.value)}
+                                disabled={isLoadingStudents}
                             >
-                                <option value="Daffa Alfareza (TK B)">Daffa Alfareza (TK B)</option>
-                                <option value="Aurelia Putri (TK B)">Aurelia Putri (TK B)</option>
+                                {isLoadingStudents ? (
+                                    <option value="">Memuat data anak...</option>
+                                ) : (
+                                    students.map((student) => (
+                                        <option key={student.id} value={student.id}>
+                                            {student.name} {student.class ? `(${student.class})` : ""}
+                                        </option>
+                                    ))
+                                )}
                             </select>
                         </div>
                         
@@ -197,7 +320,7 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                         />
                     </div>
                     
-                    {/* Pembaruan Tampilan Indikator Capaian */}
+                    {/* Indikator Capaian */}
                     <div className="mb-3">
                         <label className="form-label text-muted small fw-medium d-block">Indikator Capaian</label>
                         
@@ -260,11 +383,17 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                         <h4 className="fw-bold mb-0">Bukti / Dokumentasi <span className="text-muted fw-normal">(Opsional)</span></h4>
                     </div>
                     <div className="d-flex gap-3 flex-wrap align-items-center">
-                        <div className="border border-dashed rounded-3 p-4 text-center cursor-pointer" style={{ width: 200, height: 120 }}>
+                        <label className="border border-dashed rounded-3 p-4 text-center cursor-pointer" style={{ width: 200, height: 120 }}>
                             <IconUpload className="text-primary mb-1" size={24} />
                             <div className="fw-semibold text-primary small">Klik untuk unggah</div>
-                            <div className="text-muted" style={{ fontSize: "10px" }}>Maks. 5 file (20MB)</div>
-                        </div>
+                            <div className="text-muted" style={{ fontSize: "10px" }}>Format Gambar (Max 20MB)</div>
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="d-none" 
+                                onChange={handleFileUpload} 
+                            />
+                        </label>
                         {files.map((src, index) => (
                             <div key={index} className="position-relative rounded-3 overflow-hidden" style={{ width: 120, height: 120 }}>
                                 <img src={src} alt="Upload" className="w-100 h-100 object-fit-cover" />
@@ -288,17 +417,17 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                         <h4 className="fw-bold mb-0">Informasi Tambahan untuk Orang Tua</h4>
                     </div>
                     <div className="mb-3">
-                        <label className="form-label text-muted small fw-medium">Hal yang bisa dilakukan di rumah</label>
+                        <label className="form-label text-muted small fw-medium">Hal yang bisa dilakukan di rumah (Suggestion)</label>
                         <input 
                             type="text" 
                             className="form-control border-0 py-2" 
                             placeholder="Contoh: Ajak anak bermain tebak huruf..." 
-                            value={atHome}
-                            onChange={(e) => setAtHome(e.target.value)}
+                            value={suggestion}
+                            onChange={(e) => setSuggestion(e.target.value)}
                         />
                     </div>
                     <div className="mb-3">
-                        <label className="form-label text-muted small fw-medium">Perlu perhatian</label>
+                        <label className="form-label text-muted small fw-medium">Perlu perhatian (Attention)</label>
                         <input 
                             type="text" 
                             className="form-control border-0 py-2" 
@@ -308,7 +437,7 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                         />
                     </div>
                     <div className="mb-3">
-                        <label className="form-label text-muted small fw-medium">Tindak lanjut di sekolah</label>
+                        <label className="form-label text-muted small fw-medium">Tindak lanjut di sekolah (Follow Up)</label>
                         <input 
                             type="text" 
                             className="form-control border-0 py-2" 
@@ -322,14 +451,14 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                 {/* Footer Buttons */}
                 <hr className="my-4" />
                 <div className="d-flex justify-content-end gap-2">
-                    <button type="button" onClick={onClose} className="btn btn-light px-4 rounded-3 fw-medium">
+                    <button type="button" onClick={onClose} className="btn btn-light px-4 rounded-3 fw-medium" disabled={isSubmitting}>
                         Batal
                     </button>
-                    {/* Tombol memicu modal Preview */}
                     <button 
                         type="button" 
                         onClick={() => setShowPreviewModal(true)} 
                         className="btn btn-primary px-4 rounded-3 fw-medium d-flex align-items-center gap-2"
+                        disabled={isSubmitting || !selectedStudent}
                     >
                         <IconEye size={18} />
                         Preview & Simpan
@@ -337,7 +466,7 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                 </div>
             </Form>
 
-            {/* MODAL PREVIEW (Meniru Tampilan Gambar Referensi) */}
+            {/* MODAL PREVIEW */}
             {showPreviewModal && (
                 <div 
                     className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3"
@@ -354,24 +483,22 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                                 type="button" 
                                 className="btn-close" 
                                 onClick={() => setShowPreviewModal(false)}
+                                disabled={isSubmitting}
                             ></button>
                         </div>
 
-                        {/* Modal Body - Desain Meniru Gambar Referensi */}
+                        {/* Modal Body */}
                         <div className="p-4 overflow-y-auto" style={{ maxHeight: "75vh" }}>
-                            
-                            {/* Header Card (Kategori & Tanggal) */}
                             <div className="d-flex justify-content-between align-items-center mb-3">
                                 <span className="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2 fw-medium border border-warning-subtle d-flex align-items-center gap-1">
                                     <IconStar size={14} className="text-warning fill-warning" />
-                                    {selectedCategory}
+                                    {selectedCategory} ({categoryMap[selectedCategory]})
                                 </span>
                                 <span className="text-secondary small fw-medium">
                                     {formatDate(noteDate)}
                                 </span>
                             </div>
 
-                            {/* Card Indicator / Rating Bintang */}
                             <div className="p-3 rounded-4 border border-purple-subtle bg-purple-light mb-4" style={{ backgroundColor: "#F9F5FF", borderColor: "#E9D7FE" }}>
                                 <div className="d-flex justify-content-between align-items-center">
                                     <div className="d-flex align-items-center gap-1">
@@ -390,31 +517,21 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                                 </div>
                             </div>
 
-                            {/* Judul Catatan */}
                             <h5 className="fw-bold text-dark mb-3">
                                 {title || "Tanpa Judul"}
                             </h5>
 
-                            {/* Informasi Pembuat (Guru) */}
                             <div className="d-flex align-items-center gap-3 mb-3">
-                                <img 
-                                    src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=100" 
-                                    alt="Guru" 
-                                    className="rounded-circle object-fit-cover"
-                                    style={{ width: 44, height: 44 }}
-                                />
                                 <div>
-                                    <div className="fw-semibold text-dark">Oleh Siti Aisyah</div>
-                                    <div className="text-muted small">Guru TK B</div>
+                                    <div className="fw-semibold text-dark">Anak: {selectedStudent?.name}</div>
+                                    <div className="text-muted small">Parent ID: {selectedStudent?.parentId}</div>
                                 </div>
                             </div>
 
-                            {/* Deskripsi Catatan */}
                             <div className="text-secondary mb-4 style-description" style={{ whiteSpace: "pre-line", lineHeight: "1.6" }}>
                                 {description}
                             </div>
 
-                            {/* Foto / Bukti Dokumentasi */}
                             {files.length > 0 && (
                                 <div className="row g-2 mb-4">
                                     {files.map((img, idx) => (
@@ -430,23 +547,23 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                                 </div>
                             )}
 
-                            {/* Informasi Tambahan (Jika Ada) */}
-                            {(atHome || attention || followUp) && (
+                            {(suggestion || attention || followUp) && (
                                 <div className="p-3 bg-light rounded-3 border mb-2 small">
                                     <h6 className="fw-bold mb-2 text-dark">Catatan Tambahan:</h6>
-                                    {atHome && <div className="mb-1"><strong>Di Rumah:</strong> {atHome}</div>}
+                                    {suggestion && <div className="mb-1"><strong>Saran (Di Rumah):</strong> {suggestion}</div>}
                                     {attention && <div className="mb-1"><strong>Perhatian:</strong> {attention}</div>}
                                     {followUp && <div><strong>Tindak Lanjut:</strong> {followUp}</div>}
                                 </div>
                             )}
                         </div>
 
-                        {/* Modal Footer / Action Buttons */}
+                        {/* Modal Footer */}
                         <div className="p-3 border-top bg-light d-flex justify-content-between align-items-center">
                             <button 
                                 type="button" 
                                 className="btn btn-outline-secondary px-3 rounded-3 d-flex align-items-center gap-2"
                                 onClick={() => setShowPreviewModal(false)}
+                                disabled={isSubmitting}
                             >
                                 <IconEdit size={16} />
                                 Edit Kembali
@@ -455,9 +572,16 @@ export function TambahCatatanForm({ onClose, onSuccess }: TambahCatatanFormProps
                                 type="button" 
                                 className="btn btn-primary px-4 rounded-3 fw-medium d-flex align-items-center gap-2"
                                 onClick={handleFinalSubmit}
+                                disabled={isSubmitting}
                             >
-                                <IconSend size={16} />
-                                Konfirmasi & Kirim
+                                {isSubmitting ? (
+                                    <span>Mengirim...</span>
+                                ) : (
+                                    <>
+                                        <IconSend size={16} />
+                                        Konfirmasi & Kirim
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
