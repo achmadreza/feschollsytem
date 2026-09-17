@@ -12,7 +12,8 @@ import {
     IconInfoCircle,
     IconUser,
     IconUsers,
-    IconCheck
+    IconCheck,
+    IconX
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
 import { callApi } from "@/lib/api";
@@ -191,9 +192,11 @@ export function ParentDashboard() {
                 setLoadingJournals(true);
                 const response = await callApi("/journals", { method: "GET" });
                 const rawData: Journal[] = Array.isArray(response) ? response : (response?.data || []);
-                const publishedData = rawData.filter((item) => item.status === "PUBLISHED" || !item.status);
                 
-                setJournals(publishedData.length > 0 ? publishedData : rawData);
+                // Mengambil pengumuman yang berstatus PUBLISHED sesuai payload
+                const publishedData = rawData.filter((item) => item.status === "PUBLISHED");
+                
+                setJournals(publishedData);
             } catch (error) {
                 console.error("Gagal mengambil data journals pengumuman:", error);
                 toast.error("Gagal memuat pengumuman terbaru");
@@ -212,9 +215,17 @@ export function ParentDashboard() {
         try {
             setLoadingDetail(true);
             setShowModal(true);
-            const response = await callApi(`/journals/${id}`, { method: "GET" });
-            const data = response?.data || response;
-            setSelectedJournal(data);
+            
+            // Mengambil langsung dari list journals yang sudah difetch sesuai payload
+            const foundItem = journals.find((item) => item.id === id);
+
+            if (foundItem) {
+                setSelectedJournal(foundItem);
+            } else {
+                const response = await callApi(`/journals/${id}`, { method: "GET" });
+                const data = response?.data || response;
+                setSelectedJournal(data);
+            }
         } catch (error) {
             console.error("Gagal mengambil detail pengumuman:", error);
             toast.error("Gagal memuat detail pengumuman");
@@ -502,10 +513,13 @@ export function ParentDashboard() {
                                 </div>
                                 <button 
                                     type="button" 
-                                    className="btn-close bg-light rounded-circle p-2 shadow-sm" 
+                                    className="btn btn-light btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center border shadow-sm" 
                                     onClick={handleCloseModal}
                                     aria-label="Close"
-                                ></button>
+                                    style={{ width: "36px", height: "36px", flexShrink: 0 }}
+                                >
+                                    <IconX size={20} className="text-dark" />
+                                </button>
                             </div>
 
                             <div className="modal-body p-4">
@@ -537,6 +551,32 @@ export function ParentDashboard() {
                                                 {selectedJournal.message}
                                             </p>
                                         </div>
+
+                                        {/* Tampilkan Foto Base64 jika ada */}
+                                        {selectedJournal.photo && (
+                                            <div className="mt-2 text-center">
+                                                <img 
+                                                    src={selectedJournal.photo.startsWith("data:image") ? selectedJournal.photo : `data:image/png;base64,${selectedJournal.photo}`} 
+                                                    alt="Lampiran Pengumuman" 
+                                                    className="img-fluid rounded-3 border"
+                                                    style={{ maxHeight: "300px", objectFit: "cover" }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Tampilkan File jika ada */}
+                                        {selectedJournal.file && (
+                                            <div className="mt-1">
+                                                <a 
+                                                    href={selectedJournal.file} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-2"
+                                                >
+                                                    Lihat Lampiran File
+                                                </a>
+                                            </div>
+                                        )}
 
                                         <div className="p-3 rounded-3 bg-warning bg-opacity-10 border border-warning border-opacity-20 d-flex gap-2 align-items-start mt-2">
                                             <IconInfoCircle className="text-warning flex-shrink-0 mt-1" size={18} />
