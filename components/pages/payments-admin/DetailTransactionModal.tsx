@@ -169,9 +169,16 @@ export function DetailTransactionModal({
     };
 
     const statusBadge = getStatusBadge();
-    const isWaiting = currentStatus === "menunggu" || currentStatus === "waiting" || billingData?.status.toLowerCase() === "waiting";
-    const showActionButtons = billingData && isWaiting && billingData.paidAt !== null;
+    const isWaitingApproval =
+    billingData?.status.toUpperCase() === "WAITING_APPROVAL" ||
+    transaction.status.toUpperCase() === "WAITING_APPROVAL";
 
+    const showActionButtons = Boolean(
+        billingData &&
+        billingData.paidAt !== null &&
+        isWaitingApproval
+    );
+    
     return (
         <div 
             className="modal fade show d-block" 
