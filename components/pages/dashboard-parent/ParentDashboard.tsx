@@ -18,6 +18,7 @@ import {
 import { Toaster, toast } from 'react-hot-toast';
 import { callApi } from "@/lib/api";
 import { getUser } from "@/lib/auth";
+import { AddStudentModal } from "./AddStudentModal"; 
 
 interface UserData {
     id?: string;
@@ -124,6 +125,44 @@ export function ParentDashboard() {
     const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null);
     const [loadingDetail, setLoadingDetail] = useState<boolean>(false);
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [showAddStudentModal, setShowAddStudentModal] = useState<boolean>(false);
+
+    const fetchStudentAndBilling = async () => {
+        try {
+            setLoadingBilling(true);
+            const studentRes = await callApi<StudentData[] | { data: StudentData[] }>("/students", {
+                method: "GET"
+            });
+            
+            const studentData = Array.isArray(studentRes) ? studentRes : (studentRes?.data || []);
+            
+            if (!studentData || studentData.length === 0) {
+                setUrgentBilling(null);
+                return;
+            }
+            
+            const currentStudent = studentData[0];
+            setStudent(currentStudent);
+            if (currentStudent && currentStudent.id) {
+                const billingRes = await callApi<Billing[] | { data: Billing[] }>(
+                    `/billings?studentId=${currentStudent.id}`, 
+                    { method: "GET" }
+                );
+                
+                const billings = Array.isArray(billingRes) ? billingRes : (billingRes?.data || []);
+                
+                if (Array.isArray(billings)) {
+                    const unpaid = billings.find((b) => b.paidAt === null);
+                    setUrgentBilling(unpaid || null);
+                }
+            }
+        } catch (error) {
+            console.error("Gagal mengambil data siswa / tagihan:", error);
+            toast.error("Gagal memuat data tagihan");
+        } finally {
+            setLoadingBilling(false);
+        }
+    };
 
     useEffect(() => {
         async function fetchUser() {
@@ -133,43 +172,6 @@ export function ParentDashboard() {
                 setUserData(user); 
             } catch (error) {
                 console.error("Gagal mengambil data user:", error);
-            }
-        }
-
-        async function fetchStudentAndBilling() {
-            try {
-                setLoadingBilling(true);
-                const studentRes = await callApi<StudentData[] | { data: StudentData[] }>("/students", {
-                    method: "GET"
-                });
-                
-                const studentData = Array.isArray(studentRes) ? studentRes : (studentRes?.data || []);
-                
-                if (!studentData || studentData.length === 0) {
-                    setUrgentBilling(null);
-                    return;
-                }
-                
-                const currentStudent = studentData[0];
-                setStudent(currentStudent);
-                if (currentStudent && currentStudent.id) {
-                    const billingRes = await callApi<Billing[] | { data: Billing[] }>(
-                        `/billings?studentId=${currentStudent.id}`, 
-                        { method: "GET" }
-                    );
-                    
-                    const billings = Array.isArray(billingRes) ? billingRes : (billingRes?.data || []);
-                    
-                    if (Array.isArray(billings)) {
-                        const unpaid = billings.find((b) => b.paidAt === null);
-                        setUrgentBilling(unpaid || null);
-                    }
-                }
-            } catch (error) {
-                console.error("Gagal mengambil data siswa / tagihan:", error);
-                toast.error("Gagal memuat data tagihan");
-            } finally {
-                setLoadingBilling(false);
             }
         }
 
@@ -193,7 +195,6 @@ export function ParentDashboard() {
                 const response = await callApi("/journals", { method: "GET" });
                 const rawData: Journal[] = Array.isArray(response) ? response : (response?.data || []);
                 
-                // Mengambil pengumuman yang berstatus PUBLISHED sesuai payload
                 const publishedData = rawData.filter((item) => item.status === "PUBLISHED");
                 
                 setJournals(publishedData);
@@ -216,7 +217,6 @@ export function ParentDashboard() {
             setLoadingDetail(true);
             setShowModal(true);
             
-            // Mengambil langsung dari list journals yang sudah difetch sesuai payload
             const foundItem = journals.find((item) => item.id === id);
 
             if (foundItem) {
@@ -296,15 +296,79 @@ export function ParentDashboard() {
         <>
             <div className="container-xl p-3 p-md-4" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", fontFamily: "sans-serif" }}>
                 <div 
-                    className="card border-0 text-white mb-4 p-4 rounded-4 shadow-sm" 
-                    style={{ background: "linear-gradient(135deg, #3B4CCA 0%, #6157F6 100%)" }}
+                    className="card border-0 text-white mb-4 p-4 p-md-5 rounded-4 shadow-sm position-relative overflow-hidden" 
+                    style={{ 
+                        background: "linear-gradient(135deg, #303EB1 0%, #685AF6 50%, #8352F7 100%)",
+                        minHeight: "260px"
+                    }}
                 >
-                    <div className="row align-items-center g-4">
+                    <div className="row align-items-center g-4 position-relative z-1">
                         <div className="col-lg-7">
-                            <h1 className="fw-bold mb-2 display-6">
-                                Welcome back, <br />
+                            <h1 className="fw-bold mb-3 display-6 text-white" style={{ lineHeight: "1.2" }}>
+                                Welcome back,<br />
                                 {userData?.fullName || userData?.name || ""}
                             </h1>
+                            <p className="text-white-50 mb-0 small pe-lg-4" style={{ maxWidth: "500px", lineHeight: "1.6" }}>
+                                Stay updated with {student?.name ? `${student.name.split(" ")[0]}'s` : ""} academic progress and school activities in real-time. Everything is organized for your peace of mind.
+                            </p>
+                        </div>
+
+                        <div className="col-lg-5">
+                            <div 
+                                className="p-3 p-md-4 rounded-4" 
+                                style={{ 
+                                    backgroundColor: "rgba(255, 255, 255, 0.12)", 
+                                    backdropFilter: "blur(12px)",
+                                    border: "1px solid rgba(255, 255, 255, 0.2)"
+                                }}
+                            >
+                                {student ? (
+                                    <>
+                                        <div className="d-flex align-items-center gap-3 mb-3">
+                                            <div 
+                                                className="rounded-3 p-1 bg-white flex-shrink-0 d-flex align-items-center justify-content-center overflow-hidden" 
+                                                style={{ width: 56, height: 56 }}
+                                            >
+                                                {student.photo ? (
+                                                    <img 
+                                                        src={student.photo.startsWith("data:") ? student.photo : `data:image/png;base64,${student.photo}`} 
+                                                        alt={student.name} 
+                                                        className="w-100 h-100 object-fit-cover rounded-2"
+                                                    />
+                                                ) : (
+                                                    <div className="w-100 h-100 bg-primary bg-opacity-10 rounded-2 d-flex align-items-center justify-content-center text-primary fw-bold">
+                                                        <IconUser size={28} />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="overflow-hidden">
+                                                <h5 className="fw-bold text-white mb-0 text-truncate">{student.name}</h5>
+                                                <small className="text-white-50 text-truncate d-block">
+                                                    Grade {student.class || "-"}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="text-center py-2 text-white-50 small mb-3">
+                                        Belum ada data siswa terhubung.
+                                    </div>
+                                )}
+
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowAddStudentModal(true)}
+                                    className="btn w-100 py-2.5 px-3 rounded-3 text-white fw-semibold d-flex align-items-center justify-content-center gap-2 border-0 transition-all"
+                                    style={{ 
+                                        backgroundColor: "#0B1536",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+                                    }}
+                                >
+                                    <span className="fs-5 lh-1">+</span>
+                                    <span style={{ fontSize: "0.9rem" }}>Tambah Data Siswa</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -490,6 +554,7 @@ export function ParentDashboard() {
 
             </div>
 
+            {/* Modal Detail Pengumuman */}
             {showModal && (
                 <div className="modal fade show d-block" tabIndex={-1} style={{ backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)" }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg">
@@ -552,7 +617,6 @@ export function ParentDashboard() {
                                             </p>
                                         </div>
 
-                                        {/* Tampilkan Foto Base64 jika ada */}
                                         {selectedJournal.photo && (
                                             <div className="mt-2 text-center">
                                                 <img 
@@ -564,7 +628,6 @@ export function ParentDashboard() {
                                             </div>
                                         )}
 
-                                        {/* Tampilkan File jika ada */}
                                         {selectedJournal.file && (
                                             <div className="mt-1">
                                                 <a 
@@ -593,6 +656,13 @@ export function ParentDashboard() {
                     </div>
                 </div>
             )}
+
+            {/* Modal Tambah Data Siswa */}
+            <AddStudentModal 
+                isOpen={showAddStudentModal} 
+                onClose={() => setShowAddStudentModal(false)} 
+                onSuccess={fetchStudentAndBilling}
+            />
 
             <Toaster position="top-right" />
         </>

@@ -5,13 +5,11 @@ import {
     IconPlus,
     IconChevronLeft,
     IconChevronRight,
-    IconPencil,
     IconTrash,
-    IconEye,
-    IconDotsVertical,
     IconUser,
     IconUsers,
-    IconSchool
+    IconSchool,
+    IconChevronDown,
 } from "@tabler/icons-react";
 import { Toaster, toast } from 'react-hot-toast';
 import { AddRole } from "./AddRole";
@@ -79,6 +77,9 @@ export function UserTableList() {
   const [activeTab, setActiveTab] = useState("Semua");
   const [items, setItems] = useState<AdminData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(5);
+
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -99,6 +100,10 @@ export function UserTableList() {
       fetchUsers();
     }
   }, [viewMode, fetchUsers]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, pageSize]);
 
   const handleEdit = (item: AdminData) => toast.success(`Editing ${item.fullName}`);
   const handleView = (item: AdminData) => toast.success(`Viewing ${item.fullName}`);
@@ -136,6 +141,11 @@ export function UserTableList() {
     if (activeTab === "Admin") return item.role.toLowerCase() === "admin";
     return true;
   });
+
+  const totalData = filteredItems.length;
+  const totalPages = Math.ceil(totalData / pageSize) || 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + pageSize);
 
   const totalUsers = items.length;
   const totalTeachers = items.filter(item => item.role.toLowerCase() === "teacher" || item.role.toLowerCase() === "guru").length;
@@ -209,8 +219,8 @@ export function UserTableList() {
                   <tr>
                     <td colSpan={4} className="text-center p-5 text-muted">Memuat data...</td>
                   </tr>
-                ) : filteredItems.length > 0 ? (
-                  filteredItems.map((item) => (
+                ) : paginatedItems.length > 0 ? (
+                  paginatedItems.map((item) => (
                     <TableRow key={item._id} data={item} onEdit={handleEdit} onView={handleView} onDelete={handleDelete} />
                   ))
                 ) : (
@@ -223,29 +233,84 @@ export function UserTableList() {
           </div>
           
           <div className="card-footer bg-white d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 px-4 py-3 border-top">
-            <p className="m-0 text-secondary" style={{ fontSize: "14px" }}>
-              Menampilkan {filteredItems.length} dari {items.length} Pengguna
-            </p>
-            <div className="d-flex gap-1 align-items-center">
-              <Button 
-                variant="link" 
-                className="btn-icon btn-sm btn-white border rounded-2 p-2"
-                disabled={true}
-              >
-                <IconChevronLeft size={16} className="text-secondary" />
-              </Button>
-              
-              <Button className="btn-sm rounded-2 px-3 fw-bold" style={{ backgroundColor: '#002B7F', borderColor: '#002B7F' }}>
-                1
-              </Button>
+            <div className="d-flex align-items-center gap-2 text-secondary" style={{ fontSize: "14px" }}>
+              <span>Menampilkan</span>
+              <div className="position-relative d-inline-block">
+                <select
+                  className="form-select border rounded-3 ps-3 pe-4 py-1"
+                  style={{
+                    width: "64px",
+                    height: "36px",
+                    cursor: "pointer",
+                    borderColor: "#E2E8F0",
+                    backgroundColor: "#FFFFFF",
+                    fontSize: "14px",
+                    color: "#334155",
+                    appearance: "none",
+                    WebkitAppearance: "none",
+                    MozAppearance: "none",
+                    backgroundImage: "none"
+                  }}
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                </select>
+                
+                <div 
+                  className="position-absolute top-50 end-0 translate-middle-y pe-2 pointer-events-none d-flex align-items-center text-muted"
+                  style={{ pointerEvents: "none" }}
+                >
+                  <IconChevronDown size={16} />
+                </div>
+              </div>
 
-              <Button 
-                variant="link" 
-                className="btn-icon btn-sm btn-white border rounded-2 p-2"
-                disabled={true}
+              <span>dari <strong>{totalData}</strong> data</span>
+            </div>
+
+            <div className="d-flex gap-2 align-items-center">
+              <button 
+                type="button"
+                className="btn btn-sm btn-white border rounded-3 p-2 d-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               >
-                <IconChevronRight size={16} className="text-secondary" />
-              </Button>
+                <IconChevronLeft size={16} className={currentPage === 1 ? "text-muted opacity-50" : "text-dark"} />
+              </button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                const isActive = page === currentPage;
+                return (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className="btn btn-sm rounded-3 fw-bold"
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      backgroundColor: isActive ? '#0B1939' : 'transparent',
+                      color: isActive ? '#FFFFFF' : '#475569',
+                      border: isActive ? 'none' : '1px solid transparent'
+                    }}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+              <button 
+                type="button"
+                className="btn btn-sm btn-white border rounded-3 p-2 d-flex align-items-center justify-content-center"
+                style={{ width: "36px", height: "36px" }}
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              >
+                <IconChevronRight size={16} className={currentPage === totalPages || totalPages === 0 ? "text-muted opacity-50" : "text-dark"} />
+              </button>
             </div>
           </div>
         </div>
