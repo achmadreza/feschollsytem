@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
     IconX, 
     IconId, 
@@ -20,15 +20,45 @@ interface AddStudentModalProps {
     onSuccess?: () => void;
 }
 
+const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            const result = reader.result as string;
+            const rawBase64 = result.split(',')[1] || result;
+            const truncatedBase64 = rawBase64.substring(0, 50);
+            
+            resolve(truncatedBase64);
+        };
+        reader.onerror = (error) => reject(error);
+    });
+};
+
 export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalProps) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
+        schoolCode: "",
         name: "",
         class: "",
-        gender: "Laki-laki",
+        gender: "",
+        birthPlace: "",
         birthdate: "",
         address: "",
+        emergencyContact: "",
+        schoolYear: "",
     });
+
+    // Menghasilkan opsi tahun ajaran dinamis (5 tahun dari tahun saat ini)
+    const yearOptions = useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        const options: string[] = [];
+        for (let i = 0; i < 5; i++) {
+            const startYear = currentYear + i;
+            options.push(`${startYear}/${startYear + 1}`);
+        }
+        return options;
+    }, []);
 
     const [documents, setDocuments] = useState<{
         kartuKeluarga: File | null;
@@ -55,16 +85,33 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
         e.preventDefault();
         try {
             setLoading(true);
+            const user = await getUser();
+            const kkBase64 = documents.kartuKeluarga ? await fileToBase64(documents.kartuKeluarga) : "";
+            const birthCertBase64 = documents.aktaKelahiran ? await fileToBase64(documents.aktaKelahiran) : "";
+            const photoBase64 = documents.pasFoto ? await fileToBase64(documents.pasFoto) : "";
+            const payload = {
+                schoolCode: formData.schoolCode || "",
+                name: formData.name,
+                class: formData.class,
+                gender: formData.gender,
+                status: "PROCESS",
+                address: formData.address,
+                birthPlace: formData.birthPlace || "",
+                birthdate: formData.birthdate,
+                parentId: user?.id || user?.parentId || "",
+                parentEmail: user?.email || user?.parentEmail || "",
+                parentName: user?.fullName || user?.fullName || "",
+                phoneNumber: user?.phone || user?.phoneNumber || "-",
+                emergencyContact: formData.emergencyContact || "-",
+                schoolYear: formData.schoolYear || "",
+                kk: kkBase64,
+                birthCertificate: birthCertBase64,
+                photo: photoBase64,
+            };
 
-            const data = new FormData();
-            Object.entries(formData).forEach(([key, val]) => data.append(key, val));
-            if (documents.kartuKeluarga) data.append("kartuKeluarga", documents.kartuKeluarga);
-            if (documents.aktaKelahiran) data.append("aktaKelahiran", documents.aktaKelahiran);
-            if (documents.pasFoto) data.append("pasFoto", documents.pasFoto);
-
-            await callApi("/students", {
+            await callApi("students", {
                 method: "POST",
-                body: data,
+                body: payload,
             });
 
             toast.success("Data siswa berhasil ditambahkan!");
@@ -171,6 +218,38 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
                                                 </label>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <div className="col-md-6">
+                                        <label className="form-label small text-muted mb-1 fw-medium">Tahun Ajaran <span className="text-danger">*</span></label>
+                                        <select 
+                                            name="schoolYear" 
+                                            value={formData.schoolYear} 
+                                            onChange={handleChange} 
+                                            className="form-select rounded-3 py-2 border-1 shadow-none"
+                                            style={{ borderColor: "#E2E8F0" }}
+                                            required
+                                        >
+                                            <option value="" disabled>Pilih Tahun Ajaran</option>
+                                            {yearOptions.map((year) => (
+                                                <option key={year} value={year}>
+                                                    {year}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="col-md-6">
+                                        <label className="form-label small text-muted mb-1 fw-medium">Tempat Lahir</label>
+                                        <input 
+                                            type="text" 
+                                            name="birthPlace"
+                                            className="form-control rounded-3 py-2 border-1" 
+                                            placeholder="Contoh: Jakarta"
+                                            value={formData.birthPlace}
+                                            onChange={handleChange}
+                                            style={{ borderColor: "#E2E8F0" }}
+                                        />
                                     </div>
 
                                     <div className="col-md-6">
