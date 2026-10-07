@@ -465,8 +465,7 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
                             </h5>
 
                             <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-1 gap-sm-2">
-                                <span 
-                                    className="fw-bold text-break" 
+                                <span className="fw-bold text-break" 
                                     style={{ fontSize: "13px", color: "#1E3A8A", wordBreak: "break-word" }}
                                 >
                                     {isEditMode ? (student?.id || "REGISTRASI") : "Registrasi Baru"}

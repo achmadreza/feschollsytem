@@ -5,7 +5,6 @@ import {
     IconX, 
     IconId, 
     IconFileText, 
-    IconUpload, 
     IconCheck, 
     IconHierarchy, 
     IconMoodSmile, 
@@ -13,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { toast } from "react-hot-toast";
 import { callApi } from "@/lib/api";
+import { getUser } from "@/lib/auth";
 
 interface AddStudentModalProps {
     isOpen: boolean;
@@ -127,20 +127,16 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
 
                                     <div className="col-md-6">
                                         <label className="form-label small text-muted mb-1 fw-medium">Kelas</label>
-                                        <select 
+                                        <input 
+                                            type="text"
                                             name="class"
                                             required 
-                                            className="form-select rounded-3 py-2 border-1 text-secondary" 
+                                            className="form-control rounded-3 py-2 border-1" 
+                                            placeholder="Contoh: 10-A"
                                             value={formData.class}
                                             onChange={handleChange}
                                             style={{ borderColor: "#E2E8F0" }}
-                                        >
-                                            <option value="">Pilih Kelas</option>
-                                            <option value="10-A">10-A</option>
-                                            <option value="10-B">10-B</option>
-                                            <option value="11-A">11-A</option>
-                                            <option value="12-A">12-A</option>
-                                        </select>
+                                        />
                                     </div>
 
                                     <div className="col-md-6">
