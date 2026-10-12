@@ -164,7 +164,7 @@ export function PaymentAdmin() {
         fetchBillings();
     };
 
-    const totalMenungguVerifikasi = transactions.filter(t => t.status === "WAITING_VERIFICATION").length;
+    const totalMenungguVerifikasi = transactions.filter(t => t.status === "WAITING_APPROVAL").length;
     const totalBelumBayarCount = transactions.filter(t => t.status === "WAITING_PAYMENT").length;
     const totalLunasToday = transactions.filter(t => t.status === "LUNAS").length;
     
@@ -177,6 +177,10 @@ export function PaymentAdmin() {
         .reduce((sum, t) => sum + parseInt(t.amount.replace(/[^0-9]/g, "")), 0);
 
     const totalPemasukan = nominalLunas;
+
+    const nominalVerifikasi = transactions
+        .filter(t => t.status === "WAITING_APPROVAL")
+        .reduce((sum, t) => sum + parseInt(t.amount.replace(/[^0-9]/g, "")), 0);
 
     const formatRupiah = (num: number) => {
         return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(num);
@@ -219,6 +223,7 @@ export function PaymentAdmin() {
                                     <span className="fw-bold text-dark" style={{ fontSize: "32px", lineHeight: "1" }}>{totalMenungguVerifikasi}</span>
                                     <span className="text-secondary font-medium" style={{ fontSize: "14px" }}>Transaksi</span>
                                 </div>
+                                <div className="fw-bold text-dark mt-1" style={{ fontSize: "20px" }}>{formatRupiah(nominalVerifikasi)}</div>
                             </div>
                         </div>
                         <div className="position-absolute text-secondary opacity-10 pointer-events-none" style={{ right: "-10px", bottom: "-15px", color: "#E2E8F0" }}>
