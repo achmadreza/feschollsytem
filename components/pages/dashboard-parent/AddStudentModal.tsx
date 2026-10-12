@@ -117,9 +117,14 @@ export function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalP
             toast.success("Data siswa berhasil ditambahkan!");
             if (onSuccess) onSuccess();
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Gagal menambah data siswa:", error);
-            toast.error("Gagal menambahkan data siswa");
+            const apiMessage = error?.response?.data?.message || error?.data?.message || error?.message;
+            const errorMessage = Array.isArray(apiMessage)
+                ? apiMessage.join(", ")
+                : apiMessage || "Gagal menambahkan data siswa";
+
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
