@@ -33,6 +33,7 @@ export interface TrialData {
   phoneNumber: string;
   programClass: string;
   registrationDate: string;
+  scheduleDate: string;
   status: string;
   avatarUrl?: string;
   initials?: string;
@@ -119,6 +120,9 @@ function TableRow({
             </td>
             <td className="text-secondary px-3" style={{ fontSize: "15px", lineHeight: "1.4" }}>
                 {data.registrationDate}
+            </td>
+            <td className="text-secondary px-3" style={{ fontSize: "15px", lineHeight: "1.4" }}>
+                {data.scheduleDate}
             </td>
             <td className="px-3">
                 <BadgeStatus status={data.status} />
@@ -212,6 +216,7 @@ export function TrialTableList() {
                     phoneNumber: item.student?.phoneNumber || "-",
                     programClass: item.student?.class || "-",
                     registrationDate: formatDate(item.registeredAt || item.createdAt),
+                    scheduleDate: formatDate(item.scheduledAt),
                     status: mapStatusToUI(item.status),
                     avatarUrl: item.student?.photo && item.student?.photo !== "test.jpg" ? item.student.photo : undefined
                 }));
@@ -467,6 +472,7 @@ export function TrialTableList() {
                                     <th className="text-muted fw-bold py-3 px-4" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>SISWA / ORANG TUA</th>
                                     <th className="text-muted fw-bold py-3 px-3" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>PROGRAM / KELAS</th>
                                     <th className="text-muted fw-bold py-3 px-3" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>TGL DAFTAR</th>
+                                    <th className="text-muted fw-bold py-3 px-3" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>TGL TRIAL</th>
                                     <th className="text-muted fw-bold py-3 px-3" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>STATUS</th>
                                     <th className="text-muted fw-bold text-end py-3 px-4" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>AKSI</th> 
                                 </tr>

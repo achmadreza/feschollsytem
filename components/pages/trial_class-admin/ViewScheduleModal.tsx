@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { IconX, IconCalendarEvent, IconUser, IconUsers, IconPhone, IconLoader2 } from "@tabler/icons-react";
+import { IconX, IconCalendarEvent, IconUser, IconUsers, IconLoader2 } from "@tabler/icons-react";
 import { TrialData } from "./TrialTableList";
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
 import { callApi } from "@/lib/api";
+
 export interface StudentDetail {
   _id: string;
   schoolCode: string;
@@ -47,6 +48,8 @@ export interface TrialClassDetail {
   studentId: string;
   teacherId: string;
   registeredAt: string;
+  scheduledAt?: string;
+  notes?: string;
   status: string;
   id: string;
   createdAt: string;
@@ -67,15 +70,36 @@ export function ViewScheduleModal({ isOpen, onClose, data }: ViewScheduleModalPr
     const [detail, setDetail] = useState<TrialClassDetail | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
     const formatDate = (dateString?: string) => {
         if (!dateString) return "-";
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return dateString;
         return new Intl.DateTimeFormat("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
         }).format(date);
+    };
+
+    const formatDateTime = (dateString?: string) => {
+        if (!dateString) return "-";
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        
+        const formattedDate = new Intl.DateTimeFormat("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }).format(date);
+
+        const formattedTime = new Intl.DateTimeFormat("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).format(date).replace(":", ".");
+
+        return `${formattedDate}, ${formattedTime} WIB`;
     };
 
     useEffect(() => {
@@ -227,35 +251,38 @@ export function ViewScheduleModal({ isOpen, onClose, data }: ViewScheduleModalPr
                             </div>
 
                             <div className="row g-3">
-                                <div className="col-6 col-md-3">
-                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px" }}>
+                                <div className="col-12 col-sm-6 col-lg-3">
+                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                     Tanggal Pendaftaran
                                 </div>
-                                <div className="fw-semibold text-dark" style={{ fontSize: "15px" }}>
+                                <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>
                                     {formatDate(detail?.registeredAt || data.registrationDate)}
                                 </div>
                                 </div>
-                                <div className="col-6 col-md-3">
-                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px" }}>
+
+                                <div className="col-12 col-sm-6 col-lg-3">
+                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
+                                    Jadwal Trial Class
+                                </div>
+                                <div className="fw-bold text-primary" style={{ fontSize: "14px", lineHeight: "1.4" }}>
+                                    {formatDateTime(detail?.scheduledAt)}
+                                </div>
+                                </div>
+
+                                <div className="col-12 col-sm-6 col-lg-3">
+                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                     Tahun Ajaran
                                 </div>
-                                <div className="fw-semibold text-dark" style={{ fontSize: "15px" }}>
+                                <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>
                                     {student?.schoolYear || "-"}
                                 </div>
                                 </div>
-                                <div className="col-6 col-md-3">
-                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px" }}>
-                                    Kode Sekolah
-                                </div>
-                                <div className="fw-semibold text-dark" style={{ fontSize: "15px" }}>
-                                    {student?.schoolCode || teacher?.schoolCode || "-"}
-                                </div>
-                                </div>
-                                <div className="col-6 col-md-3">
-                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px" }}>
+
+                                <div className="col-12 col-sm-6 col-lg-3">
+                                <div className="text-uppercase text-muted fw-bold mb-1" style={{ fontSize: "11px", letterSpacing: "0.5px" }}>
                                     Pengajar / Teacher
                                 </div>
-                                <div className="fw-semibold text-dark" style={{ fontSize: "15px" }}>
+                                <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>
                                     {teacher?.fullName || "-"}
                                 </div>
                                 </div>
