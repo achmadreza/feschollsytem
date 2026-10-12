@@ -5,7 +5,7 @@ import { TrialData } from "./TrialTableList";
 import { IconCalendar, IconUser, IconPhone, IconMessage, IconCheck } from "@tabler/icons-react";
 import { Button } from "../../ui/Button"; 
 import { callApi } from "@/lib/api";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 interface ReviewRescheduleModalProps {
     isOpen: boolean;
@@ -123,7 +123,6 @@ export function ReviewRescheduleModal({ isOpen, onClose, data, onApprove, onReje
 
     return (
         <>
-            <Toaster position="top-right" />
             <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }} tabIndex={-1}>
                 <div className="modal-dialog modal-dialog-centered modal-lg">
                     <div className="modal-content border-0 shadow-lg" style={{ borderRadius: "20px" }}>

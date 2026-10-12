@@ -18,7 +18,7 @@ import {
 } from "@tabler/icons-react";
 import { getUser } from "@/lib/auth";
 import { callApi } from "@/lib/api";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 interface UploadProofProps {
   billingId: string | number;
@@ -183,7 +183,6 @@ export function UploadProof({
     if (isSubmitted) {
         return (
             <>
-                <Toaster position="top-right" reverseOrder={false} />
                 <div className="min-vh-100 bg-light d-flex flex-column align-items-center justify-content-center py-5 px-3">
                     <div className="d-flex align-items-center justify-content-center mb-5 gap-2">
                         <div className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style={{ width: 32, height: 32 }}>
@@ -337,7 +336,6 @@ export function UploadProof({
 
     return (
         <>
-            <Toaster position="top-right" reverseOrder={false} />
             <div className="w-100 min-vh-100 px-3 px-md-5 bg-light py-4">
                 {onBack && (
                     <button 

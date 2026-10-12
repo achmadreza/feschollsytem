@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, getUser, removeUser, removeToken } from "@/lib/auth";
 import { useRouter, usePathname } from "next/navigation";
-import Swal from "sweetalert2";
 import * as auth from "@/lib/auth";
 import { callApi } from "@/lib/api";
 
@@ -39,14 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isAccessingRestricted = !allowedPaths.includes(pathname);
 
     if (isPublic && isAccessingRestricted) {
-      Swal.fire({
-        title: "Session Expired",
-        text: "Your session has expired. Please log in again..",
-        icon: "warning",
-        confirmButtonText: "OK",
-        allowOutsideClick: false,
-      }).then(() => {
-        logout();
+      import("sweetalert2").then(({ default: Swal }) => {
+        Swal.fire({
+          title: "Session Expired",
+          text: "Your session has expired. Please log in again..",
+          icon: "warning",
+          confirmButtonText: "OK",
+          allowOutsideClick: false,
+        }).then(() => {
+          logout();
+        });
       });
       return;
     }

@@ -14,7 +14,6 @@ import {
     IconArrowLeft,
     IconEdit
 } from "@tabler/icons-react";
-import Swal from "sweetalert2";
 import { callApi } from "@/lib/api";
 
 interface Student {
@@ -114,8 +113,8 @@ export function TrialParentDetail({ studentId, onBack, onReschedule }: TrialPare
 
     const handleApprove = async () => {
         if (!trialData) return;
-
         const targetId = trialData.id;
+        const { default: Swal } = await import("sweetalert2");
 
         const result = await Swal.fire({
             title: "Apakah Anda yakin?",

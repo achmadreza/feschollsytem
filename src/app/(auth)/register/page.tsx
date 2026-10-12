@@ -20,7 +20,6 @@ import { Label } from "../../../../components/ui/Label";
 import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Form, FormField } from "../../../../components/ui/Form";
-import Swal from 'sweetalert2';
 import { toast, Toaster } from 'react-hot-toast';
 
 export default function SignupPage() {
@@ -51,6 +50,7 @@ export default function SignupPage() {
             return;
         }
 
+        const { default: Swal } = await import("sweetalert2");
         const confirmResult = await Swal.fire({
             title: 'Apakah Anda yakin?',
             text: "Pastikan data yang Anda masukkan sudah benar.",

@@ -3,15 +3,37 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { mainMenu, MenuItem } from "../../config/menu";
-import * as TablerIcons from "@tabler/icons-react";
+import {
+  IconUsers,
+  IconMoneybag,
+  IconLayoutDashboard,
+  IconCalendarEvent,
+  IconNotes,
+  IconSpeakerphone,
+  IconPhoto,
+  IconSettings,
+  IconHome,
+} from "@tabler/icons-react";
+import { type ComponentType } from "react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 
+// Map icon names used in menu.ts to their actual named imports
+const iconMap: Record<string, ComponentType<{ size?: number; className?: string }>> = {
+  users: IconUsers,
+  moneybag: IconMoneybag,
+  dashboard: IconLayoutDashboard,
+  calendar: IconCalendarEvent,
+  notes: IconNotes,
+  speakerphone: IconSpeakerphone,
+  photo: IconPhoto,
+  settings: IconSettings,
+  home: IconHome,
+};
+
 function IconResolver(name?: string) {
   if (!name) return null;
-  const iconName = "Icon" + name.charAt(0).toUpperCase() + name.slice(1);
-  const IconComponent = (TablerIcons as Record<string, any>)[iconName];
-
+  const IconComponent = iconMap[name.toLowerCase()];
   if (!IconComponent) return null;
   return <IconComponent size={22} className="me-3 ms-1 flex-shrink-0" />;
 }

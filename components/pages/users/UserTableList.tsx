@@ -11,12 +11,11 @@ import {
     IconSchool,
     IconChevronDown,
 } from "@tabler/icons-react";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { AddRole } from "./AddRole";
 import { StatCard } from "../../../components/ui/StatCard";
 import { Button } from "../../../components/ui/Button"; 
 import { callApi } from "@/lib/api";
-import Swal from 'sweetalert2';
 
 export interface AdminData {
   _id: string;
@@ -108,6 +107,7 @@ export function UserTableList() {
   const handleEdit = (item: AdminData) => toast.success(`Editing ${item.fullName}`);
   const handleView = (item: AdminData) => toast.success(`Viewing ${item.fullName}`);
   const handleDelete = async (item: AdminData) => {
+    const { default: Swal } = await import("sweetalert2");
     const confirmResult = await Swal.fire({
       title: 'Apakah Anda yakin?',
       text: `Data ${item.fullName} akan dihapus secara permanen.`,
@@ -155,7 +155,6 @@ export function UserTableList() {
     return (
       <>
         <AddRole onBack={() => setViewMode("list")} />
-        <Toaster position="top-right" />
       </>
     );
   }
@@ -316,7 +315,6 @@ export function UserTableList() {
         </div>
       </div>
       
-      <Toaster position="top-right" />
     </>
   );
 }

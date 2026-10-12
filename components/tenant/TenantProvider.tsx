@@ -6,9 +6,7 @@ import {
   useEffect,
   useState,
   ReactNode,
-  
 } from "react";
-import { callApi } from "@/lib/api"; 
 import { getUser } from "@/lib/auth";
 
 type Tenant = {
@@ -29,27 +27,34 @@ const STORAGE_KEY = "daf-active-tenant";
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [allTenants, setAllTenants] = useState<Tenant[]>([]);
   const [tenant, setTenant] = useState<Tenant | null>(null);
+
   useEffect(() => {
-    const loadCompanies = async () => {
+    const loadCompanies = () => {
       try {
-        const user = await getUser();
-        const mapped: Tenant[] =[];
-        if (mapped.length === 0 && user?.tenant) {
+        const user = getUser();
+        const mapped: Tenant[] = [];
+
+        if (user?.tenant) {
           mapped.push({
             id: String(user.tenant.id),
             name: user.tenant.name,
           });
         }
+
         setAllTenants(mapped);
 
-        // Restore saved tenant
+        // Restore saved tenant or fall back to first
         const storedId = window.localStorage.getItem(STORAGE_KEY);
         if (storedId) {
           const found = mapped.find((t) => t.id === storedId);
-          if (found) setTenant(found);
+          if (found) {
+            setTenant(found);
+            return;
+          }
         }
-        
-        if (!tenant && mapped.length > 0) {
+
+        // Fix: use mapped directly (not stale `tenant` state)
+        if (mapped.length > 0) {
           setTenant(mapped[0]);
         }
       } catch (e) {

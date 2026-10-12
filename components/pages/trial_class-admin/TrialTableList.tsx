@@ -14,16 +14,18 @@ import {
     IconPlus,
     IconTrash
 } from "@tabler/icons-react";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { StatCard } from "../../../components/ui/StatCard";
 import { Button } from "../../../components/ui/Button"; 
 import { callApi } from "@/lib/api";
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
-import Swal from 'sweetalert2';
-import { ScheduleModal } from "./ScheduleModal";
-import { ReviewRescheduleModal } from "./ReviewRescheduleModal";
-import { ViewScheduleModal } from "./ViewScheduleModal";
-import { AddTrialScheduleModal } from "./AddTrialScheduleModal";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+
+const ScheduleModal = dynamic(() => import("./ScheduleModal").then(m => ({ default: m.ScheduleModal })), { ssr: false });
+const ReviewRescheduleModal = dynamic(() => import("./ReviewRescheduleModal").then(m => ({ default: m.ReviewRescheduleModal })), { ssr: false });
+const ViewScheduleModal = dynamic(() => import("./ViewScheduleModal").then(m => ({ default: m.ViewScheduleModal })), { ssr: false });
+const AddTrialScheduleModal = dynamic(() => import("./AddTrialScheduleModal").then(m => ({ default: m.AddTrialScheduleModal })), { ssr: false });
 
 export interface TrialData {
   _id: string;
@@ -94,19 +96,9 @@ function TableRow({
         <tr className="align-middle">
             <td className="px-4 py-3">
                 <div className="d-flex align-items-center">
-                    {data.avatarUrl && !imgError ? (
-                        <img 
-                            src={data.avatarUrl} 
-                            alt={data.studentName} 
-                            className="rounded-circle me-3" 
-                            style={{ width: "42px", height: "42px", objectFit: "cover" }} 
-                            onError={() => setImgError(true)}
-                        />
-                    ) : (
-                        <div className="rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style={{ width: "42px", height: "42px", backgroundColor: "#EEF2FF", color: "#4F46E5", fontSize: "14px" }}>
-                            {initials}
-                        </div>
-                    )}
+                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style={{ width: "42px", height: "42px", backgroundColor: "#EEF2FF", color: "#4F46E5", fontSize: "14px" }}>
+                        {initials}
+                    </div>
                     <div>
                         <div className="fw-bold text-dark mb-0" style={{ fontSize: "15px" }}>{data.studentName}</div>
                         <div className="text-muted" style={{ fontSize: "13px", marginTop: "2px" }}>
@@ -252,6 +244,7 @@ export function TrialTableList() {
 
     const handleDelete = async (item: TrialData) => {
         const targetId = item.id;
+        const { default: Swal } = await import("sweetalert2");
 
         const result = await Swal.fire({
             title: 'Hapus Trial Class?',
@@ -306,12 +299,13 @@ export function TrialTableList() {
         fetchTrialClasses();
     };
 
-    const handleRejectReschedule = (data: any) => {
+    const handleRejectReschedule = async (data: any) => {
         const studentName = 
             data?.studentName || 
             data?.student?.name || 
             selectedTrialData?.studentName || 
             "Siswa";
+        const { default: Swal } = await import("sweetalert2");
 
         Swal.fire({
             title: 'Tolak Permintaan?',
@@ -554,8 +548,6 @@ export function TrialTableList() {
                 }}
                 data={selectedTrialData}
             />
-
-            <Toaster position="top-right" />
         </>
     );
 }

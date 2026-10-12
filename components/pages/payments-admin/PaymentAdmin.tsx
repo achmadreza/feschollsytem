@@ -17,9 +17,12 @@ import {
 } from "@tabler/icons-react";
 import { Button } from "../../../components/ui/Button"; 
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
-import { CreateInvoiceModal } from "./CreateInvoiceModal";
-import { DetailTransactionModal, Transaction } from "./DetailTransactionModal";
 import { callApi } from "@/lib/api";
+import dynamic from "next/dynamic";
+import type { Transaction } from "./DetailTransactionModal";
+
+const CreateInvoiceModal = dynamic(() => import("./CreateInvoiceModal").then(m => ({ default: m.CreateInvoiceModal })), { ssr: false });
+const DetailTransactionModal = dynamic(() => import("./DetailTransactionModal").then(m => ({ default: m.DetailTransactionModal })), { ssr: false });
 
 interface PaymentItem {
     paymentType: string;

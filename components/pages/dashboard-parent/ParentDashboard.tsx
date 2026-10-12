@@ -15,10 +15,12 @@ import {
     IconCheck,
     IconX
 } from "@tabler/icons-react";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { callApi } from "@/lib/api";
 import { getUser } from "@/lib/auth";
-import { AddStudentModal } from "./AddStudentModal"; 
+import dynamic from "next/dynamic";
+
+const AddStudentModal = dynamic(() => import("./AddStudentModal").then(m => ({ default: m.AddStudentModal })), { ssr: false });
 
 interface UserData {
     id?: string;
@@ -127,89 +129,76 @@ export function ParentDashboard() {
     const [showModal, setShowModal] = useState<boolean>(false);
     const [showAddStudentModal, setShowAddStudentModal] = useState<boolean>(false);
 
-    const fetchStudentAndBilling = async () => {
-        try {
-            setLoadingBilling(true);
-            const studentRes = await callApi<StudentData[] | { data: StudentData[] }>("/students", {
-                method: "GET"
-            });
-            
-            const studentData = Array.isArray(studentRes) ? studentRes : (studentRes?.data || []);
-            
-            if (!studentData || studentData.length === 0) {
-                setUrgentBilling(null);
-                return;
-            }
-            
-            const currentStudent = studentData[0];
-            setStudent(currentStudent);
-            if (currentStudent && currentStudent.id) {
-                const billingRes = await callApi<Billing[] | { data: Billing[] }>(
-                    `/billings?studentId=${currentStudent.id}`, 
-                    { method: "GET" }
-                );
-                
-                const billings = Array.isArray(billingRes) ? billingRes : (billingRes?.data || []);
-                
-                if (Array.isArray(billings)) {
-                    const unpaid = billings.find((b) => b.paidAt === null);
-                    setUrgentBilling(unpaid || null);
-                }
-            }
-        } catch (error) {
-            console.error("Gagal mengambil data siswa / tagihan:", error);
-            toast.error("Gagal memuat data tagihan");
-        } finally {
-            setLoadingBilling(false);
-        }
-    };
-
     useEffect(() => {
-        async function fetchUser() {
-            try {
-                const response = await getUser();
-                const user = response?.user || response;
-                setUserData(user); 
-            } catch (error) {
-                console.error("Gagal mengambil data user:", error);
-            }
-        }
+        // User from localStorage is sync — set immediately, no API call needed
+        const storedUser = getUser();
+        if (storedUser) setUserData(storedUser as any);
 
-        async function fetchStudentNotes() {
-            try {
-                setLoadingNotes(true);
-                const response = await callApi("/student-notes", { method: "GET" });
-                const data = Array.isArray(response) ? response : (response?.data || []);
+        const loadAll = async () => {
+            // Fire all 3 independent fetches in parallel
+            const [studentResult, notesResult, journalsResult] = await Promise.allSettled([
+                callApi<StudentData[] | { data: StudentData[] }>("/students", { method: "GET" }),
+                callApi("/student-notes", { method: "GET" }),
+                callApi("/journals", { method: "GET" }),
+            ]);
+
+            // --- Student + Billing (billing depends on student id, keep sequential) ---
+            if (studentResult.status === "fulfilled") {
+                const studentData = Array.isArray(studentResult.value)
+                    ? studentResult.value
+                    : (studentResult.value?.data || []);
+                if (studentData.length > 0) {
+                    const currentStudent = studentData[0];
+                    setStudent(currentStudent);
+                    if (currentStudent?.id) {
+                        try {
+                            const billingRes = await callApi<Billing[] | { data: Billing[] }>(
+                                `/billings?studentId=${currentStudent.id}`,
+                                { method: "GET" }
+                            );
+                            const billings = Array.isArray(billingRes) ? billingRes : (billingRes?.data || []);
+                            const unpaid = billings.find((b) => b.paidAt === null);
+                            setUrgentBilling(unpaid || null);
+                        } catch (error) {
+                            console.error("Gagal mengambil data tagihan:", error);
+                            toast.error("Gagal memuat data tagihan");
+                        }
+                    }
+                } else {
+                    setUrgentBilling(null);
+                }
+            } else {
+                console.error("Gagal mengambil data siswa:", studentResult.reason);
+                toast.error("Gagal memuat data tagihan");
+            }
+            setLoadingBilling(false);
+
+            // --- Student Notes ---
+            if (notesResult.status === "fulfilled") {
+                const data = Array.isArray(notesResult.value)
+                    ? notesResult.value
+                    : (notesResult.value?.data || []);
                 setStudentNotes(data);
-            } catch (error) {
-                console.error("Gagal mengambil data catatan harian:", error);
+            } else {
+                console.error("Gagal mengambil catatan harian:", notesResult.reason);
                 toast.error("Gagal memuat catatan harian");
-            } finally {
-                setLoadingNotes(false);
             }
-        }
+            setLoadingNotes(false);
 
-        async function fetchJournals() {
-            try {
-                setLoadingJournals(true);
-                const response = await callApi("/journals", { method: "GET" });
-                const rawData: Journal[] = Array.isArray(response) ? response : (response?.data || []);
-                
-                const publishedData = rawData.filter((item) => item.status === "PUBLISHED");
-                
-                setJournals(publishedData);
-            } catch (error) {
-                console.error("Gagal mengambil data journals pengumuman:", error);
+            // --- Journals ---
+            if (journalsResult.status === "fulfilled") {
+                const rawData: Journal[] = Array.isArray(journalsResult.value)
+                    ? journalsResult.value
+                    : (journalsResult.value?.data || []);
+                setJournals(rawData.filter((item) => item.status === "PUBLISHED"));
+            } else {
+                console.error("Gagal mengambil pengumuman:", journalsResult.reason);
                 toast.error("Gagal memuat pengumuman terbaru");
-            } finally {
-                setLoadingJournals(false);
             }
-        }
+            setLoadingJournals(false);
+        };
 
-        fetchUser();
-        fetchStudentAndBilling();
-        fetchStudentNotes();
-        fetchJournals();
+        loadAll();
     }, []);
 
     const handleOpenJournalDetail = async (id: string) => {
@@ -329,18 +318,10 @@ export function ParentDashboard() {
                                                 className="rounded-3 p-1 bg-white flex-shrink-0 d-flex align-items-center justify-content-center overflow-hidden" 
                                                 style={{ width: 56, height: 56 }}
                                             >
-                                                {student.photo ? (
-                                                    <img 
-                                                        src={student.photo.startsWith("data:") ? student.photo : `data:image/png;base64,${student.photo}`} 
-                                                        alt={student.name} 
-                                                        className="w-100 h-100 object-fit-cover rounded-2"
-                                                    />
-                                                ) : (
-                                                    <div className="w-100 h-100 bg-primary bg-opacity-10 rounded-2 d-flex align-items-center justify-content-center text-primary fw-bold">
+                                                <div className="w-100 h-100 bg-primary bg-opacity-10 rounded-2 d-flex align-items-center justify-content-center text-primary fw-bold">
                                                         <IconUser size={28} />
                                                     </div>
-                                                )}
-                                            </div>
+                                                </div>
 
                                             <div className="overflow-hidden">
                                                 <h5 className="fw-bold text-white mb-0 text-truncate">{student.name}</h5>
@@ -661,10 +642,8 @@ export function ParentDashboard() {
             <AddStudentModal 
                 isOpen={showAddStudentModal} 
                 onClose={() => setShowAddStudentModal(false)} 
-                onSuccess={fetchStudentAndBilling}
+                onSuccess={() => window.location.reload()}
             />
-
-            <Toaster position="top-right" />
         </>
     );
 }

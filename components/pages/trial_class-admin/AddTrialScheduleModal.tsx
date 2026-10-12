@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { IconUsers, IconCalendar, IconLoader2 } from "@tabler/icons-react";
 import { callApi } from "@/lib/api";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { Label } from "../../ui/Label";
 import { Input } from "../../ui/Input";
 import { Form } from "../../ui/Form";
@@ -187,9 +187,6 @@ export function AddTrialScheduleModal({
 
     return (
         <>
-            <Toaster position="top-right" reverseOrder={false} toastOptions={{
-                duration: 2000,
-            }} />
             <div
                 className="modal fade show d-block"
                 tabIndex={-1}

@@ -12,7 +12,7 @@ import {
     IconArrowLeft,
     IconLoader2
 } from "@tabler/icons-react";
-import toast, { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { Button } from "../../../components/ui/Button"; 
 import { TambahCatatanForm } from "./TambahCatatanForm"; 
 import { callApi } from "@/lib/api";
@@ -334,7 +334,6 @@ export function CatatanDashboard() {
                 )}
 
             </div>
-            <Toaster position="top-right" />
         </>
     );
 }

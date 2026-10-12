@@ -11,7 +11,7 @@ import {
     IconChevronDown,
     IconChevronUp
 } from "@tabler/icons-react";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { callApi } from "@/lib/api";
 import { getUser } from "@/lib/auth";
 
@@ -47,47 +47,36 @@ export function CatatanDashboard() {
     const [loading, setLoading] = useState<boolean>(true);
     const [openNoteId, setOpenNoteId] = useState<string | null>(null);
 
-    const fetchUser = async () => {
-        try {
-            const response = await getUser();
-            const user = response?.user || response;
-            setUserData(user); 
-        } catch (error) {
-            console.error("Gagal mengambil data user:", error);
-        }
-    };
-
-    const fetchStudentNotes = async () => {
-        setLoading(true);
-        try {
-            const response = await callApi("/student-notes", { method: "GET" });
-            
-            let data: StudentNote[] = [];
-            if (Array.isArray(response)) {
-                data = response;
-            } else if (response?.data && Array.isArray(response.data)) {
-                data = response.data;
-            } else {
-                const errorMsg = response?.pesan || response?.message || "Gagal mengambil data catatan.";
-                toast.error(errorMsg);
-            }
-
-            setNotes(data);
-            if (data.length > 0) {
-                setOpenNoteId(data[0].id);
-            }
-        } catch (error: any) {
-            console.error("Fetch error:", error);
-            toast.error("Gagal terhubung ke server.");
-            setNotes([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchStudentNotes();
-        fetchUser();
+        // User is sync from localStorage — set immediately
+        const storedUser = getUser();
+        if (storedUser) setUserData(storedUser as any);
+
+        const loadAll = async () => {
+            setLoading(true);
+            try {
+                const response = await callApi("/student-notes", { method: "GET" });
+                let data: StudentNote[] = [];
+                if (Array.isArray(response)) {
+                    data = response;
+                } else if (response?.data && Array.isArray(response.data)) {
+                    data = response.data;
+                } else {
+                    const errorMsg = response?.pesan || response?.message || "Gagal mengambil data catatan.";
+                    toast.error(errorMsg);
+                }
+                setNotes(data);
+                if (data.length > 0) setOpenNoteId(data[0].id);
+            } catch (error: any) {
+                console.error("Fetch error:", error);
+                toast.error("Gagal terhubung ke server.");
+                setNotes([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadAll();
     }, []);
 
     const toggleAccordion = (id: string) => {
@@ -358,7 +347,6 @@ export function CatatanDashboard() {
                 </div>
 
             </div>
-            <Toaster position="top-right" />
         </>
     );
 }

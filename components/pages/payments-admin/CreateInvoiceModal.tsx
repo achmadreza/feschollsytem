@@ -17,7 +17,6 @@ import { Label } from "../../ui/Label";
 import { Form } from "../../ui/Form";
 import { Button } from "../../ui/Button";
 import { callApi } from "@/lib/api";
-import Swal from "sweetalert2";
 
 export interface Student {
     id: string | number;
@@ -184,9 +183,10 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
         }
     };
 
-    const handleAddCustomPayment = () => {
+    const handleAddCustomPayment = async () => {
         const trimmedValue = customPaymentInput.trim().toUpperCase();
         if (!trimmedValue) return;
+        const { default: Swal } = await import("sweetalert2");
         if (formData.paymentTypes.includes(trimmedValue)) {
             Swal.fire({
                 icon: 'warning',
@@ -240,6 +240,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        const { default: Swal } = await import("sweetalert2");
         
         if (!formData.studentId) {
             Swal.fire({

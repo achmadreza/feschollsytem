@@ -11,8 +11,7 @@ import {
 import { TrialParentDetail } from "./TrialParentDetail"; 
 import { TrialParentReschedule } from "./TrialParentReschedule"; 
 import { callApi } from "@/lib/api";
-import { Toaster, toast } from "react-hot-toast";
-import Swal from "sweetalert2";
+import { toast } from "react-hot-toast";
 
 interface Student {
     id: string;
@@ -74,6 +73,7 @@ export function TrialParentTableList({ studentId }: { studentId?: string }) {
     }, [studentId]);
 
     const handleCancelSession = async (id: string) => {
+        const { default: Swal } = await import("sweetalert2");
         const result = await Swal.fire({
             title: "Are you sure?",
             text: "Apakah Anda yakin ingin membatalkan sesi trial class ini?",
@@ -167,7 +167,6 @@ export function TrialParentTableList({ studentId }: { studentId?: string }) {
 
     return (
         <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", paddingBottom: "2rem", fontFamily: "sans-serif" }}>
-            <Toaster position="top-right" />
             
             <div className="d-flex flex-column flex-md-row align-items-md-start justify-content-between gap-3 mb-4">
                 <div>

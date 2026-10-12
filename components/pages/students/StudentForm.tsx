@@ -21,7 +21,7 @@ import { Button } from "../../ui/Button";
 import { Modal } from "../../ui/Modal";
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
 import { callApi } from "@/lib/api";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { Label } from "../../ui/Label";
 import { Input } from "../../ui/Input";
 import { Form } from "../../ui/Form";
@@ -441,7 +441,6 @@ export function StudentForm({ isOpen, onClose, student, onSave }: StudentFormPro
 
     return (
         <>
-            <Toaster position="top-right" reverseOrder={false} />
             <Modal 
                 isOpen={isOpen} 
                 onClose={onClose} 

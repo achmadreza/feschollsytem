@@ -13,7 +13,7 @@ import {
     IconLoader2
 } from "@tabler/icons-react";
 import { callApi } from "@/lib/api";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 interface TrialClass {
     id: string;
@@ -157,8 +157,6 @@ export function TrialParentReschedule({ studentId, onBack, onNext }: TrialParent
 
     return (
         <>
-            <Toaster position="top-right" reverseOrder={false} />
-
             <div className="container-xl" style={{ backgroundColor: "#F8FAFC", minHeight: "100vh", paddingBottom: "2rem", fontFamily: "sans-serif" }}>
                 <button 
                     onClick={onBack}

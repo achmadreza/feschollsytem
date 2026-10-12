@@ -6,7 +6,7 @@ import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { FormField, Form } from "../../../components/ui/Form";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { callApi } from "@/lib/api";
 
 export function ChangePassword() {
@@ -189,7 +189,6 @@ export function ChangePassword() {
                     </Button>
                 </Form>
             </div>
-            <Toaster position="top-right" />
         </>
     );
 }

@@ -7,7 +7,7 @@ import {
     IconCircleCheck,
     IconTrash
 } from "@tabler/icons-react";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { Button } from "../../../components/ui/Button"; 
 import { callApi } from "@/lib/api";
 import { useRouter } from "next/navigation";
@@ -296,8 +296,6 @@ export function ActivitiesForm({ onBack, onNext }: ActivitiesFormProps) {
                     </Button>
                 </div>
             </div>
-
-            <Toaster position="top-right" />
         </div>
     );
 }

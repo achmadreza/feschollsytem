@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "",
+        hostname: "**",
         port: "",
         pathname: "/**",
       },
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
       {
         source: "/",
         destination: "/login",
-        permanent: true,
+        permanent: false,
       },
     ];
   },

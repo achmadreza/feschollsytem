@@ -18,9 +18,10 @@ import {
     IconBell,
     IconPhoto
 } from "@tabler/icons-react";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { callApi } from "@/lib/api";
 import { getUser } from "@/lib/auth";
+import Image from "next/image";
 
 interface UserData {
     id: string;
@@ -64,47 +65,41 @@ export function DashboardTeacher() {
     const [loadingMedias, setLoadingMedias] = useState<boolean>(true);
 
     useEffect(() => {
-        async function fetchUser() {
-            try {
-                const response = await getUser();
-                const user = response?.user || response;
-                setUserData(user); 
-            } catch (error) {
-                console.error("Gagal mengambil data user:", error);
-            }
-        }
+        // Fetch user from localStorage (sync — no loading state needed)
+        const storedUser = getUser();
+        if (storedUser) setUserData(storedUser as any);
 
-        async function fetchAnnouncements() {
-            try {
-                setLoadingAnnouncements(true);
-                const response = await callApi("/journals", { method: "GET" });
-                const data = Array.isArray(response) ? response : (response?.data || []);
+        // Fetch API data in parallel
+        const fetchData = async () => {
+            const [announcementsResult, mediasResult] = await Promise.allSettled([
+                callApi("/journals", { method: "GET" }),
+                callApi("/media", { method: "GET" }),
+            ]);
+
+            if (announcementsResult.status === "fulfilled") {
+                const data = Array.isArray(announcementsResult.value)
+                    ? announcementsResult.value
+                    : (announcementsResult.value?.data || []);
                 setAnnouncements(data);
-            } catch (error) {
-                console.error("Gagal mengambil data pengumuman:", error);
+            } else {
+                console.error("Gagal mengambil data pengumuman:", announcementsResult.reason);
                 toast.error("Gagal memuat pengumuman terbaru");
-            } finally {
-                setLoadingAnnouncements(false);
             }
-        }
+            setLoadingAnnouncements(false);
 
-        async function fetchMedias() {
-            try {
-                setLoadingMedias(true);
-                const response = await callApi("/media", { method: "GET" });
-                const data = Array.isArray(response) ? response : (response?.data || []);
+            if (mediasResult.status === "fulfilled") {
+                const data = Array.isArray(mediasResult.value)
+                    ? mediasResult.value
+                    : (mediasResult.value?.data || []);
                 setMedias(data);
-            } catch (error) {
-                console.error("Gagal mengambil data media kegiatan:", error);
+            } else {
+                console.error("Gagal mengambil data media kegiatan:", mediasResult.reason);
                 toast.error("Gagal memuat kegiatan terbaru");
-            } finally {
-                setLoadingMedias(false);
             }
-        }
+            setLoadingMedias(false);
+        };
 
-        fetchUser();
-        fetchAnnouncements();
-        fetchMedias();
+        fetchData();
     }, []);
 
     const formatDate = (dateString: string) => {
@@ -227,9 +222,10 @@ export function DashboardTeacher() {
                                                     style={{ height: "160px" }}
                                                 >
                                                     {item.file ? (
-                                                        <img 
+                                                        <Image 
                                                             src={item.file} 
-                                                            className="w-100 h-100" 
+                                                            fill
+                                                            sizes="(max-width: 768px) 100vw, 50vw"
                                                             alt={item.title || "Gambar Kegiatan"}
                                                             style={{ objectFit: "cover" }}
                                                         />
@@ -295,7 +291,6 @@ export function DashboardTeacher() {
 
             </div>
 
-            <Toaster position="top-right" />
         </>
     );
 }

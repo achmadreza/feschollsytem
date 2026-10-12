@@ -12,14 +12,16 @@ import {
     IconProgressCheck,
     IconTrash
 } from "@tabler/icons-react";
-import { Toaster, toast } from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
 import { StatCard } from "../../../components/ui/StatCard";
 import { Button } from "../../../components/ui/Button"; 
 import { callApi } from "@/lib/api";
-import { StudentDetailModal } from "./StudentDetailModal";
-import { StudentForm } from "./StudentForm";
 import { BadgeStatus } from "../../../components/ui/BadgeStatus";
-import Swal from 'sweetalert2';
+import dynamic from "next/dynamic";
+import Image from "next/image";
+
+const StudentDetailModal = dynamic(() => import("./StudentDetailModal").then(m => ({ default: m.StudentDetailModal })), { ssr: false });
+const StudentForm = dynamic(() => import("./StudentForm").then(m => ({ default: m.StudentForm })), { ssr: false });
 
 export interface StudentData {
   _id: string;
@@ -84,23 +86,13 @@ function TableRow({
         <tr style={{ verticalAlign: "middle" }}>
             <td>
                 <div className="d-flex align-items-center py-2 px-3">
-                {photoSrc && !imgError ? (
-                    <img 
-                        src={photoSrc} 
-                        alt={displayName} 
-                        className="rounded-circle me-3" 
-                        style={{ width: "40px", height: "40px", objectFit: "cover" }} 
-                        onError={() => setImgError(true)}
-                    />
-                ) : (
                     <div className="rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold flex-shrink-0" style={{ width: "40px", height: "40px", backgroundColor: "#EEF2FF", color: "#4F46E5", fontSize: "13px" }}>
-                    {initials}
+                        {initials}
                     </div>
-                )}
-                <div>
-                    <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{displayName}</div>
-                    <div className="text-muted small" style={{ fontSize: "12px" }}>ID: {data.id || data.regId || data._id}</div>
-                </div>
+                    <div>
+                        <div className="fw-semibold text-dark" style={{ fontSize: "14px" }}>{displayName}</div>
+                        <div className="text-muted small" style={{ fontSize: "12px" }}>ID: {data.id || data.regId || data._id}</div>
+                    </div>
                 </div>
             </td>
             <td className="text-secondary font-medium" style={{ fontSize: "14px" }}>
@@ -247,6 +239,7 @@ export function StudentTableList() {
     const handleDelete = async (item: StudentData) => {
         const name = item.name || item.studentName || "Siswa";
         const targetId = item.id;
+        const { default: Swal } = await import("sweetalert2");
 
         const confirmResult = await Swal.fire({
             title: 'Apakah Anda yakin?',
@@ -391,8 +384,6 @@ export function StudentTableList() {
                 student={selectedStudent}
                 onSave={handleSaveStudent}
             />
-
-            <Toaster position="top-right" />
         </>
     );
 }

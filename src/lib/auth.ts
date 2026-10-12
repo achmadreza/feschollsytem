@@ -1,5 +1,4 @@
 import { callApi } from "@/lib/api";
-import Swal from "sweetalert2";
 
 const TOKEN_KEY = "daf-token";
 const USER_KEY = "daf-user";
@@ -93,6 +92,7 @@ export async function logout() {
     removeUser();
     removeFcmToken();
 
+    const { default: Swal } = await import("sweetalert2");
     await Swal.fire({
       title: "Logged Out!",
       icon: "warning",
