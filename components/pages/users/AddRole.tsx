@@ -152,54 +152,6 @@ export function AddRole({ onBack }: AddRoleProps) {
           )}
         </div>
 
-        {userType === "Guru" && (
-          <div className="card shadow-sm border mb-4 bg-white" style={{ borderRadius: "16px", overflow: "hidden", borderColor: "#E2E8F0" }}>
-            <div className="p-4 border-bottom-0">
-              <h5 className="fw-bold m-0" style={{ color: "#0A192F", fontSize: "18px" }}>Permission Matrix</h5>
-            </div>
-            
-            <div className="table-responsive">
-              <table className="table table-vcenter table-hover m-0">
-                <thead>
-                  <tr className="text-center" style={{ backgroundColor: "#F8FAFC", borderTop: "1px solid #E2E8F0", borderBottom: "1px solid #E2E8F0" }}>
-                    <th className="text-start text-muted fw-semibold py-3 px-4" style={{ fontSize: "13px", width: "40%" }}>Page</th>
-                    {actions.map(action => (
-                      <th key={action} className="text-muted fw-semibold py-3" style={{ fontSize: "13px" }}>
-                        <div className="mb-2">{action}</div>
-                        <input 
-                          type="checkbox" 
-                          className="form-check-input"
-                          checked={pages.every(page => permissions[page][action])}
-                          onChange={() => toggleColumn(action)}
-                          style={{ width: "16px", height: "16px" }}
-                        />
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {pages.map((page) => (
-                    <tr key={page} style={{ verticalAlign: "middle" }} className="text-center">
-                      <td className="text-start fw-medium text-dark py-3 px-4" style={{ fontSize: "14px" }}>{page}</td>
-                      {actions.map(action => (
-                        <td key={action} className="py-3">
-                          <input 
-                            type="checkbox" 
-                            className="form-check-input" 
-                            checked={permissions[page][action]}
-                            onChange={() => togglePermission(page, action)}
-                            style={{ width: "16px", height: "16px" }}
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
         <div className="d-flex justify-content-end gap-3 mb-5">
           <Button 
             type="button" 

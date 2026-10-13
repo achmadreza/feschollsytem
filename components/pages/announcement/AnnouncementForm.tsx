@@ -46,14 +46,18 @@ export function AnnouncementForm({ onBack, onSaveDraft, onPublish }: Announcemen
     const maxLength = 500;
     const router = useRouter();
 
-    const fileToBase64Truncated = (file: File): Promise<string> => {
+    const fileToBase64 = (file: File, includePrefix: boolean = true): Promise<string> => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = () => {
                 const result = reader.result as string;
-                const base64Pure = result.split(',')[1] || result;
-                resolve(base64Pure.substring(0, 50));
+                if (includePrefix) {
+                    resolve(result);
+                } else {
+                    const base64Pure = result.split(',')[1] || result;
+                    resolve(base64Pure);
+                }
             };
             reader.onerror = (error) => reject(error);
         });
@@ -153,15 +157,21 @@ export function AnnouncementForm({ onBack, onSaveDraft, onPublish }: Announcemen
 
         setLoading(true);
         try {
-            let fileBase64 = "";
-            if (attachedFiles.length > 0) {
-                fileBase64 = await fileToBase64Truncated(attachedFiles[0]);
-            }
+            const filesBase64 = await Promise.all(
+                attachedFiles.map((file) => fileToBase64(file))
+            );
 
-            let photoBase64 = "";
-            if (attachedImages.length > 0) {
-                photoBase64 = await fileToBase64Truncated(attachedImages[0].file);
-            }
+            const imagesBase64 = await Promise.all(
+                attachedImages.map((img) => fileToBase64(img.file))
+            );
+
+            const fileBase64 = attachedFiles.length > 0 
+                ? await fileToBase64(attachedFiles[0]) 
+                : "";
+                
+            const photoBase64 = attachedImages.length > 0 
+                ? await fileToBase64(attachedImages[0].file) 
+                : "";
 
             const payload = {
                 target: targets.join(", "),
