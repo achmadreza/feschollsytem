@@ -6,14 +6,14 @@ import { useTranslation } from "../../../../components/i18n/LanguageProvider";
 import { callApi } from "@/lib/api";
 import { setToken, setUser } from "@/lib/auth";
 import { useAuth } from "../../../../components/auth/AuthProvider";
-import { IconEye, IconEyeOff } from "@tabler/icons-react";
+import { IconEye, IconEyeOff, IconX, IconMailForward } from "@tabler/icons-react";
 import Link from "next/link";
 import { Label } from "../../../../components/ui/Label";
 import { Button } from "../../../../components/ui/Button";
 import { Input } from "../../../../components/ui/Input";
 import { Card, CardBody } from "../../../../components/ui/Card";
 import { Form, FormField } from "../../../../components/ui/Form";
-import { mainMenu, MenuItem } from "../../../../config/menu"; 
+import { mainMenu, MenuItem } from "../../../../config/menu";
 
 function LoginContent() {
   const { t } = useTranslation();
@@ -26,6 +26,13 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+
+  // State untuk Modal Resend Email
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [resendEmailInput, setResendEmailInput] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendError, setResendError] = useState("");
+  const [resendSuccess, setResendSuccess] = useState("");
 
   const getFirstAllowedRoute = (userRoleInput: any): string => {
     const userRole = (typeof userRoleInput === "object" ? userRoleInput?.name : userRoleInput) || "";
@@ -99,6 +106,35 @@ function LoginContent() {
     }
   };
 
+  const handleResendEmail = async (e: FormEvent) => {
+    e.preventDefault();
+    setResendLoading(true);
+    setResendError("");
+    setResendSuccess("");
+
+    try {
+      const tokenBase64 = btoa(resendEmailInput);
+      await callApi(`auth/resend-email-verify?token=${encodeURIComponent(tokenBase64)}`, {
+        method: "GET",
+      });
+
+      setResendSuccess("Email verifikasi berhasil dikirim. Silakan cek kotak masuk email Anda.");
+      setResendEmailInput("");
+    } catch (err: any) {
+      console.error("Resend Email Error:", err);
+      setResendError(err.message || "Gagal mengirim ulang email verifikasi. Silakan coba lagi.");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const openResendModal = () => {
+    if (email) setResendEmailInput(email);
+    setResendError("");
+    setResendSuccess("");
+    setIsModalOpen(true);
+  };
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#ffffff" }}>
       <div style={{ 
@@ -155,7 +191,21 @@ function LoginContent() {
             </FormField>
 
             <div className="d-flex justify-content-between align-items-center mb-4" style={{ fontSize: "0.875rem" }}>
-              <label className="form-check m-0"></label>
+              <button
+                type="button"
+                onClick={openResendModal}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  color: "#032B88",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  textDecoration: "underline"
+                }}
+              >
+                Kirim Ulang Email Verifikasi?
+              </button>
               <Link href="/forgot-password" style={{ color: "#032B88", fontWeight: "600", textDecoration: "none" }}>
                 Lupa Password?
               </Link>
@@ -292,6 +342,114 @@ function LoginContent() {
           </div>
         </div>
       </div>
+
+      {/* Modal Kirim Ulang Email Verifikasi */}
+      {isModalOpen && (
+        <div 
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: "1rem"
+          }}
+        >
+          <div 
+            style={{
+              backgroundColor: "#ffffff",
+              borderRadius: "12px",
+              padding: "2rem",
+              width: "100%",
+              maxWidth: "420px",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              position: "relative"
+            }}
+          >
+            <button
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#718096"
+              }}
+            >
+              <IconX size={20} />
+            </button>
+
+            <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+              <div 
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "50%",
+                  backgroundColor: "#EBF8FF",
+                  color: "#032B88",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 1rem"
+                }}
+              >
+                <IconMailForward size={24} />
+              </div>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: "700", marginBottom: "0.5rem" }}>
+                Kirim Ulang Email Verifikasi
+              </h3>
+              <p style={{ fontSize: "0.875rem", color: "#718096", margin: 0 }}>
+                Masukkan email Anda yang terdaftar untuk menerima link verifikasi baru.
+              </p>
+            </div>
+
+            {resendError && <div className="alert alert-danger mb-3" style={{ fontSize: "0.875rem" }}>{resendError}</div>}
+            {resendSuccess && <div className="alert alert-success mb-3" style={{ fontSize: "0.875rem" }}>{resendSuccess}</div>}
+
+            <Form onSubmit={handleResendEmail}>
+              <FormField>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  placeholder="john@gmail.com"
+                  value={resendEmailInput}
+                  onChange={(e) => setResendEmailInput(e.target.value)}
+                  required
+                  disabled={resendLoading}
+                />
+              </FormField>
+
+              <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem" }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={resendLoading}
+                  style={{ flex: 1 }}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="submit"
+                  variant="default"
+                  disabled={resendLoading}
+                  style={{ flex: 1, backgroundColor: "#032B88" }}
+                >
+                  {resendLoading ? "Mengirim..." : "Kirim Link"}
+                </Button>
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
