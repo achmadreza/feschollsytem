@@ -167,7 +167,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
             updatedItems = formData.items.filter((item) => item.type !== type);
         } else {
             updatedTypes = [...formData.paymentTypes, type];
-            updatedItems = [...formData.items, { type, amount: "0" }];
+            updatedItems = [...formData.items, { type, amount: "" }];
         }
 
         const total = calculateTotal(updatedItems);
@@ -198,7 +198,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
         }
 
         const updatedTypes = [...formData.paymentTypes, trimmedValue];
-        const updatedItems = [...formData.items, { type: trimmedValue, amount: "0" }];
+        const updatedItems = [...formData.items, { type: trimmedValue, amount: "" }];
         const total = calculateTotal(updatedItems);
 
         setFormData({
@@ -257,6 +257,17 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
                 icon: 'error',
                 title: 'Data Belum Lengkap',
                 text: 'Silakan pilih minimal satu jenis pembayaran',
+                confirmButtonColor: '#3B82F6'
+            });
+            return;
+        }
+
+        const invalidItem = formData.items.find(item => !item.amount || Number(item.amount) < 1000);
+        if (invalidItem) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Nominal Tidak Valid',
+                text: `Nominal untuk "${invalidItem.type}" minimal harus Rp 1.000.`,
                 confirmButtonColor: '#3B82F6'
             });
             return;
@@ -533,7 +544,7 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
                                     className="p-3 d-flex align-items-center justify-content-between rounded-3 bg-light bg-opacity-25 border"
                                 >
                                     <span className="fw-semibold text-dark text-truncate pe-2 text-uppercase" style={{ fontSize: "13px", maxWidth: "60%" }}>
-                                        {item.type}
+                                        {item.type} <span className="text-danger">*</span>
                                     </span>
                                     <div className="d-flex align-items-center bg-white rounded-2 px-3 py-1.5 border" style={{ width: "160px" }}>
                                         <span className="text-secondary fw-medium me-2" style={{ fontSize: "12px" }}>Rp</span>
@@ -541,9 +552,11 @@ export function CreateInvoiceModal({ isOpen, onClose, onSubmitSuccess }: CreateI
                                             type="text" 
                                             className="border-0 p-0 text-end fw-bold w-100 text-dark"
                                             style={{ outline: "none", fontSize: "13px" }}
+                                            placeholder="1.000"
                                             value={formatNumber(item.amount)}
                                             onChange={(e) => handleItemAmountChange(item.type, e.target.value)}
                                             disabled={isSubmitting}
+                                            required
                                         />
                                     </div>
                                 </div>
